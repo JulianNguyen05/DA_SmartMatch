@@ -25,22 +25,36 @@ const LoginPage = () => {
         }),
       });
 
-      const data = await response.text();
+      // Đọc dữ liệu JSON từ Backend DTO trả về
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        // Xóa bỏ (parseError) ở đây
+        // Dự phòng trường hợp Backend bị sập và không trả về JSON
+        data = { message: "Lỗi định dạng phản hồi từ máy chủ!" };
+      }
 
       if (response.ok) {
         setMessage({
           type: "success",
-          text: "Đăng nhập thành công! Đang chuyển hướng...",
+          // Lấy thuộc tính message từ DTO (ví dụ: AuthResponse/ApiResponse)
+          text: data.message || "Đăng nhập thành công! Đang chuyển hướng...",
         });
-        // TODO: Lưu Token vào LocalStorage hoặc Zustand, sau đó chuyển hướng người dùng
+
+        // TODO: Lưu Token (data.token) vào LocalStorage hoặc Zustand
+        if (data.token) {
+          localStorage.setItem("accessToken", data.token);
+        }
       } else {
         setMessage({
           type: "error",
-          text: data || "Sai tài khoản hoặc mật khẩu!",
+          // Lấy thông báo lỗi cụ thể từ DTO mà Backend gửi về
+          text: data.message || "Sai tài khoản hoặc mật khẩu!",
         });
       }
     } catch (error) {
-      console.error("Lỗi đăng nhập:", error); // Sử dụng biến error ở đây
+      console.error("Lỗi đăng nhập:", error);
       setMessage({
         type: "error",
         text: "Không thể kết nối đến máy chủ Backend!",

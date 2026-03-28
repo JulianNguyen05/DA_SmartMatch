@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/smartmatch_db
+    url: jdbc:postgresql://localhost:5435/smartmatch_db
     username: root          
     password: rootpassword  
     driver-class-name: org.postgresql.Driver

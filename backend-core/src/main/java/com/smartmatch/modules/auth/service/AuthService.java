@@ -1,10 +1,11 @@
 package com.smartmatch.modules.auth.service;
 
+import com.smartmatch.core.dto.MessageResponse;
 import com.smartmatch.modules.auth.dto.LoginRequest;
 import com.smartmatch.modules.auth.dto.RegisterRequest;
 
 public interface AuthService {
-  String register(RegisterRequest request);
+  MessageResponse register(RegisterRequest request);
 
-  String login(LoginRequest request);
+  MessageResponse login(LoginRequest request);
 }

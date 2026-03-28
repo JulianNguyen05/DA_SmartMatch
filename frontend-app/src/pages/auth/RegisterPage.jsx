@@ -19,7 +19,7 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
 
-  // 2. Hàm xử lý khi submit form
+// 2. Hàm xử lý khi submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -39,26 +39,39 @@ const RegisterPage = () => {
         }),
       });
 
-      const data = await response.text();
+      // Xử lý Parse JSON tương tự như trang Login
+      let data;
+      try {
+        data = await response.json();
+      } catch { 
+        // Bắt lỗi parse JSON mà không khai báo biến để tránh lỗi ESLint
+        data = { message: "Lỗi định dạng phản hồi từ máy chủ!" };
+      }
 
       if (response.ok) {
         setMessage({
           type: "success",
-          text: "Đăng ký thành công! Vui lòng đăng nhập.",
+          // Lấy thông báo từ DTO của Backend, nếu không có thì dùng text mặc định
+          text: data.message || "Đăng ký thành công! Vui lòng đăng nhập.",
         });
+        
         // Reset form
         setUsername("");
         setEmail("");
         setPhoneNumber("");
         setPassword("");
+
+        // GỢI Ý THÊM: Bạn có thể import useNavigate và chuyển hướng người dùng về trang login sau 2-3 giây ở đây
+        
       } else {
         setMessage({
           type: "error",
-          text: data || "Đăng ký thất bại, vui lòng kiểm tra lại!",
+          // Lấy thông báo lỗi cụ thể (ví dụ: "Email đã tồn tại", "Username đã được sử dụng") từ Backend
+          text: data.message || "Đăng ký thất bại, vui lòng kiểm tra lại!",
         });
       }
     } catch (error) {
-      console.error("Lỗi kết nối API:", error); // Dùng biến error ở đây
+      console.error("Lỗi kết nối API:", error); // Đã dùng biến error để log ra console
       setMessage({
         type: "error",
         text: "Không thể kết nối đến máy chủ Backend!",
