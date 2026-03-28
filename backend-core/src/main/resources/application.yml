@@ -1,14 +1,14 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/smartmatch_db
-    username: postgres
-    password: your_password_here # Thay bằng mật khẩu Postgres của bạn
+    username: root          
+    password: rootpassword  
     driver-class-name: org.postgresql.Driver
   
   jpa:
     hibernate:
-      ddl-auto: update # Tự động tạo bảng dựa trên Entity
-    show-sql: true
+      ddl-auto: update 
+    show-sql: true     
     properties:
       hibernate:
         format_sql: true
