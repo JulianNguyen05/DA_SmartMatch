@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # 1. Cơ sở dữ liệu PostgreSQL
+  postgres-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: smartmatch_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # 2. Lưu trữ file MinIO
+  minio-storage:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+
+  # 3. FastAPI (AI Machine Learning)
+  backend-ml:
+    build: 
+      context: ./backend-ml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend-ml/app:/app/app # Để code Python cập nhật ngay khi bạn save (Hot-reload)
+
+  # 4. Spring Boot (Core API)
+  backend-core:
+    build: 
+      context: ./backend-core
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-db
+      - minio-storage
+      - backend-ml
+
+  # 5. React Vite (Frontend)
+  frontend-app:
+    build: 
+      context: ./frontend-app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend-app/src:/app/src # Hot-reload cho UI
+    depends_on:
+      - backend-core
+
+volumes:
+  pgdata:
+  miniodata:
