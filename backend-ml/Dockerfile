@@ -1,9 +1,9 @@
-# Sử dụng Python 3.10 bản slim cho nhẹ
-FROM python:3.10-slim
+# Sử dụng Python 3.11 bản slim để tương thích với requirements.txt của bạn
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Cài đặt thư viện hệ thống cần thiết (nếu có dùng các thư viện C++)
+# Cài đặt thư viện hệ thống cần thiết
 RUN apt-get update && apt-get install -y build-essential
 
 # Cài đặt thư viện Python
