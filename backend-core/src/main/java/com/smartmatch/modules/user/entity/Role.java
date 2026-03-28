@@ -1,4 +1,4 @@
-package com.smartmatch.entity;
+package com.smartmatch.modules.user.entity;
 
 public enum Role {
   ADMIN,
