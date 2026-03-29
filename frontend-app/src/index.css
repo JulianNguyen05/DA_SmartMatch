@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+:root {
+  --color-lavender-light: #EADDEF;
+  --color-lavender-dark: #A087FD;
+
+  --color-pink-light: #FDCBF2;
+  --color-purple-mid: #BA9BF8;
+  --color-blue-purple: #2044FA;
+
+  --color-periwinkle: #776EFE;
+  --color-blue-pure: #0034FE;
+  --color-navy-light: #0D0AA5;
+
+  --color-blue-electric: #0133FE;
+  --color-blue-ultra: #0601AB;
+  --color-navy-dark: #00003C;
+}
+
+@keyframes slideDownFade {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-message {
+  animation: slideDownFade 0.4s ease-out forwards;
+}

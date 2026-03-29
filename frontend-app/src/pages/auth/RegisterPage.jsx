@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 
 const RegisterPage = () => {
-  // 1. Khai báo các biến state để lưu dữ liệu form
   const [role, setRole] = useState("CANDIDATE");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -19,12 +18,10 @@ const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
 
-// 2. Hàm xử lý khi submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Gọi API sang Spring Boot
       const response = await fetch("http://localhost:8080/api/auth/register", {
         method: "POST",
         headers: {
@@ -39,39 +36,31 @@ const RegisterPage = () => {
         }),
       });
 
-      // Xử lý Parse JSON tương tự như trang Login
       let data;
       try {
         data = await response.json();
-      } catch { 
-        // Bắt lỗi parse JSON mà không khai báo biến để tránh lỗi ESLint
+      } catch {
         data = { message: "Lỗi định dạng phản hồi từ máy chủ!" };
       }
 
       if (response.ok) {
         setMessage({
           type: "success",
-          // Lấy thông báo từ DTO của Backend, nếu không có thì dùng text mặc định
           text: data.message || "Đăng ký thành công! Vui lòng đăng nhập.",
         });
-        
-        // Reset form
+
         setUsername("");
         setEmail("");
         setPhoneNumber("");
         setPassword("");
-
-        // GỢI Ý THÊM: Bạn có thể import useNavigate và chuyển hướng người dùng về trang login sau 2-3 giây ở đây
-        
       } else {
         setMessage({
           type: "error",
-          // Lấy thông báo lỗi cụ thể (ví dụ: "Email đã tồn tại", "Username đã được sử dụng") từ Backend
           text: data.message || "Đăng ký thất bại, vui lòng kiểm tra lại!",
         });
       }
     } catch (error) {
-      console.error("Lỗi kết nối API:", error); // Đã dùng biến error để log ra console
+      console.error("Lỗi kết nối API:", error);
       setMessage({
         type: "error",
         text: "Không thể kết nối đến máy chủ Backend!",
@@ -81,17 +70,18 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-screen flex w-full font-sans bg-white">
-      {/* CỘT TRÁI: Branding */}
-      <div className="hidden lg:flex w-1/2 bg-linear-to-br from-indigo-800 via-blue-700 to-blue-500 p-12 flex-col justify-between relative overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-125 h-125 rounded-full bg-white opacity-10 blur-3xl"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-100 h-100 rounded-full bg-blue-400 opacity-20 blur-3xl"></div>
+      {/* CỘT TRÁI: Branding áp dụng màu từ index.css */}
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[var(--color-navy-light)] via-[var(--color-blue-electric)] to-[var(--color-navy-dark)] p-12 flex-col justify-between relative overflow-hidden">
+        {/* Các mảng màu trang trí */}
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[var(--color-purple-mid)] opacity-20 blur-3xl"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[var(--color-periwinkle)] opacity-30 blur-3xl"></div>
 
         <div className="relative z-10">
           <Link
             to="/"
-            className="text-3xl font-extrabold text-white flex items-center gap-2 w-max"
+            className="text-3xl font-extrabold text-white flex items-center gap-2 w-max hover:scale-105 transition-transform"
           >
-            <Sparkles className="text-blue-300" /> SmartMatch
+            <Sparkles className="text-[var(--color-pink-light)]" /> SmartMatch
           </Link>
         </div>
 
@@ -99,12 +89,12 @@ const RegisterPage = () => {
           <h1 className="text-4xl font-bold leading-tight mb-6">
             Bắt đầu hành trình mới.
           </h1>
-          <p className="text-blue-100 text-lg mb-8">
+          <p className="text-[var(--color-lavender-light)] text-lg mb-8 opacity-90">
             Tạo tài khoản miễn phí và trải nghiệm sức mạnh kết nối của Trí tuệ
             nhân tạo.
           </p>
         </div>
-        <div className="relative z-10 text-blue-200 text-sm">
+        <div className="relative z-10 text-[var(--color-lavender-dark)] text-sm">
           © 2026 SmartMatch. Đã đăng ký bản quyền.
         </div>
       </div>
@@ -121,12 +111,23 @@ const RegisterPage = () => {
             </p>
           </div>
 
-          {/* HIỂN THỊ THÔNG BÁO TẠI ĐÂY */}
+          {/* HIỂN THỊ THÔNG BÁO VỚI HIỆU ỨNG ANIMATION */}
           {message && (
             <div
-              className={`p-4 rounded-xl text-sm font-medium ${message.type === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
+              className={`animate-message p-4 rounded-xl text-sm font-medium border ${
+                message.type === "success"
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-red-50 text-red-700 border-red-200"
+              }`}
             >
-              {message.text}
+              <div className="flex items-center gap-2">
+                {message.type === "error" ? (
+                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                ) : (
+                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                )}
+                {message.text}
+              </div>
             </div>
           )}
 
@@ -140,12 +141,18 @@ const RegisterPage = () => {
                 <button
                   type="button"
                   onClick={() => setRole("CANDIDATE")}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all ${role === "CANDIDATE" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"}`}
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                    role === "CANDIDATE"
+                      ? "border-[var(--color-blue-pure)] bg-[var(--color-lavender-light)] text-[var(--color-blue-pure)]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                  }`}
                 >
                   <User
                     size={20}
                     className={
-                      role === "CANDIDATE" ? "text-blue-600" : "text-gray-400"
+                      role === "CANDIDATE"
+                        ? "text-[var(--color-blue-pure)]"
+                        : "text-gray-400"
                     }
                   />
                   <span className="font-medium text-sm">Ứng viên</span>
@@ -153,12 +160,18 @@ const RegisterPage = () => {
                 <button
                   type="button"
                   onClick={() => setRole("EMPLOYER")}
-                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all ${role === "EMPLOYER" ? "border-blue-600 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"}`}
+                  className={`flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all ${
+                    role === "EMPLOYER"
+                      ? "border-[var(--color-blue-pure)] bg-[var(--color-lavender-light)] text-[var(--color-blue-pure)]"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-gray-300"
+                  }`}
                 >
                   <Briefcase
                     size={20}
                     className={
-                      role === "EMPLOYER" ? "text-blue-600" : "text-gray-400"
+                      role === "EMPLOYER"
+                        ? "text-[var(--color-blue-pure)]"
+                        : "text-gray-400"
                     }
                   />
                   <span className="font-medium text-sm">Nhà tuyển dụng</span>
@@ -179,7 +192,7 @@ const RegisterPage = () => {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none shadow-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
                   placeholder="Nhập tên đăng nhập..."
                   required
                 />
@@ -199,7 +212,7 @@ const RegisterPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none shadow-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
                   placeholder="name@example.com"
                   required
                 />
@@ -219,7 +232,7 @@ const RegisterPage = () => {
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none shadow-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
                   placeholder="0912345678"
                   required
                 />
@@ -239,7 +252,7 @@ const RegisterPage = () => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none shadow-sm"
+                  className="block w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
                   placeholder="••••••••"
                   required
                 />
@@ -248,7 +261,7 @@ const RegisterPage = () => {
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98] mt-4"
+              className="w-full flex items-center justify-center gap-2 bg-[var(--color-blue-pure)] hover:bg-[var(--color-blue-ultra)] text-white font-semibold py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] mt-4"
             >
               Hoàn tất đăng ký <ArrowRight size={18} />
             </button>
@@ -259,7 +272,7 @@ const RegisterPage = () => {
               Bạn đã có tài khoản?{" "}
               <Link
                 to="/login"
-                className="font-semibold text-blue-600 hover:text-blue-500"
+                className="font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-periwinkle)] transition-colors"
               >
                 Đăng nhập
               </Link>
