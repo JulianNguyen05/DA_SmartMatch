@@ -1,15 +1,43 @@
-# Bước 1: Build file .jar bằng Maven (Sử dụng JDK 21)
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
 WORKDIR /app
+
+# Copy Maven files trước để cache dependency
+COPY .mvn/ .mvn
+COPY mvnw mvnw
 COPY pom.xml .
-COPY src ./src
-# Build bỏ qua test để tăng tốc độ khởi chạy
-RUN mvn clean package -DskipTests
+COPY domain/pom.xml domain/
+COPY application/pom.xml application/
+COPY infrastructure/pom.xml infrastructure/
+COPY api/pom.xml api/
 
-# Bước 2: Chạy file .jar bằng JRE 21
-FROM eclipse-temurin:21-jre
+# Download dependencies (cache layer)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY domain/src domain/src
+COPY application/src application/src
+COPY infrastructure/src infrastructure/src
+COPY api/src api/src
+
+# Build toàn bộ project
+RUN ./mvnw clean package -DskipTests
+
+# Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
+
 WORKDIR /app
-COPY --from=build /app/target/*.jar app.jar
 
-EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Tạo user không root
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring
+
+# Copy jar từ module api
+COPY --from=builder /app/api/target/api-*.jar app.jar
+
+# Extract layered jar (tối ưu cache Docker)
+RUN java -Djarmode=layertools -jar app.jar extract
+
+# Run
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
