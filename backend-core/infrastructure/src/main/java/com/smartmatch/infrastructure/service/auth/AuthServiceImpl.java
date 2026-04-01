@@ -13,6 +13,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -30,21 +32,12 @@ public class AuthServiceImpl implements AuthService {
         // Chỉ cho phép EMPLOYER hoặc CANDIDATE tự đăng ký (ADMIN do admin tạo)
         Role role = Role.valueOf(request.getRole().toUpperCase());
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
-                .role(role)
-                .enabled(true)
-                .build();
+        User user = User.builder().email(request.getEmail()).password(passwordEncoder.encode(request.getPassword())).phone(request.getPhone()).role(role).enabled(true).build();
 
         User savedUser = userRepository.save(user);
 
         // Tạo token
-        var userDetails = new org.springframework.security.core.userdetails.User(
-                savedUser.getEmail(), savedUser.getPassword(),
-                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
-        );
+        var userDetails = new org.springframework.security.core.userdetails.User(savedUser.getEmail(), savedUser.getPassword(), List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name())));
 
         String token = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
@@ -54,17 +47,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Email hoặc mật khẩu không đúng");
         }
 
-        var userDetails = new org.springframework.security.core.userdetails.User(
-                user.getEmail(), user.getPassword(),
-                List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-        );
+        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
 
         String token = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
