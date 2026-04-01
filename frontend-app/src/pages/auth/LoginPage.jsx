@@ -1,189 +1,230 @@
+// frontend/src/pages/LoginPage.jsx
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Mail, Lock, Sparkles, ArrowRight, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Lock, ArrowRight, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { login } from "../../services/authService"; // ✅ Dùng service để clean & consistent
+import { parseToken } from "../../utils/parseToken";
+import { useUserStore } from "../../store/userStore"; // ✅ Tích hợp Zustand store
+import AuthLayout from "../../layouts/AuthLayout"; // ✅ Import AuthLayout
 
 const LoginPage = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+
+  const navigate = useNavigate();
+  const { setUser } = useUserStore();
+
+  // Tự động ẩn message sau 4 giây
+  React.useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setMessage(null);
 
     try {
-      const response = await fetch("http://localhost:8080/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usernameOrEmail: usernameOrEmail,
-          password: password,
-        }),
+      const data = await login({ usernameOrEmail, password });
+
+      // Lưu token
+      localStorage.setItem("accessToken", data.token);
+
+      // Parse token để lấy thông tin user + role
+      const userInfo = parseToken(data.token);
+      setUser(userInfo); // ✅ Cập nhật global store
+
+      setMessage({
+        type: "success",
+        text: "Đăng nhập thành công! Đang chuyển hướng...",
       });
 
-      let data;
-      try {
-        data = await response.json();
-      } catch {
-        data = { message: "Lỗi định dạng phản hồi từ máy chủ!" };
-      }
-
-      if (response.ok) {
-        setMessage({
-          type: "success",
-          text: data.message || "Đăng nhập thành công! Đang chuyển hướng...",
-        });
-
-        // TODO: Lưu Token
-        if (data.token) {
-          localStorage.setItem("accessToken", data.token);
-        }
-      } else {
-        setMessage({
-          type: "error",
-          text: data.message || "Sai tài khoản hoặc mật khẩu!",
-        });
-      }
+      // Redirect theo role (Candidate / Employer / Admin)
+      setTimeout(() => {
+        if (userInfo.role === "CANDIDATE") navigate("/candidate/dashboard");
+        else if (userInfo.role === "EMPLOYER") navigate("/employer/dashboard");
+        else if (userInfo.role === "ADMIN") navigate("/admin/dashboard");
+        else navigate("/");
+      }, 800);
     } catch (error) {
-      console.error("Lỗi đăng nhập:", error);
+      console.error("Login error:", error);
       setMessage({
         type: "error",
-        text: "Không thể kết nối đến máy chủ Backend!",
+        text: error.message || "Sai thông tin đăng nhập. Vui lòng thử lại!",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex w-full font-sans bg-white">
-      {/* CỘT TRÁI: Branding áp dụng màu từ index.css */}
-      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[var(--color-navy-light)] via-[var(--color-blue-electric)] to-[var(--color-navy-dark)] p-12 flex-col justify-between relative overflow-hidden">
-        {/* Các mảng màu trang trí */}
-        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[var(--color-purple-mid)] opacity-20 blur-3xl"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-[var(--color-periwinkle)] opacity-30 blur-3xl"></div>
-
-        <div className="relative z-10">
-          <Link
-            to="/"
-            className="text-3xl font-extrabold text-white flex items-center gap-2 w-max hover:scale-105 transition-transform"
-          >
-            <Sparkles className="text-[var(--color-pink-light)]" /> SmartMatch
-          </Link>
-        </div>
-
-        <div className="relative z-10 text-white max-w-lg">
-          <h1 className="text-4xl font-bold leading-tight mb-6">
-            Chào mừng bạn quay trở lại!
-          </h1>
-          <p className="text-[var(--color-lavender-light)] text-lg mb-8 opacity-90">
-            Đăng nhập để tiếp tục hành trình tìm kiếm cơ hội và nhân tài của
-            bạn.
+    <AuthLayout>
+      {/* Card */}
+      <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-gray-100 p-8 sm:p-10">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Đăng nhập
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Truy cập ngay tài khoản SmartMatch của bạn
           </p>
         </div>
-        <div className="relative z-10 text-[var(--color-lavender-dark)] text-sm">
-          © 2026 SmartMatch. Đã đăng ký bản quyền.
-        </div>
-      </div>
 
-      {/* CỘT PHẢI: Form Đăng nhập */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 xl:p-24 bg-gray-50 lg:bg-white">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center lg:text-left">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập</h2>
-            <p className="text-gray-500">
-              Vui lòng điền thông tin để truy cập hệ thống
-            </p>
-          </div>
-
-          {/* HIỂN THỊ THÔNG BÁO VỚI HIỆU ỨNG ANIMATION */}
-          {message && (
+        {/* Message Toast */}
+        {message && (
+          <div
+            className={`mb-6 px-5 py-4 rounded-2xl text-sm font-medium flex items-start gap-3 transition-all duration-300 ${
+              message.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : "bg-red-50 text-red-700 border border-red-100"
+            }`}
+          >
             <div
-              className={`animate-message p-4 rounded-xl text-sm font-medium border ${
-                message.type === "success"
-                  ? "bg-green-50 text-green-700 border-green-200"
-                  : "bg-red-50 text-red-700 border-red-200"
+              className={`w-5 h-5 rounded-xl flex-shrink-0 flex items-center justify-center text-lg ${
+                message.type === "success" ? "bg-emerald-100" : "bg-red-100"
               }`}
             >
-              <div className="flex items-center gap-2">
-                {message.type === "error" ? (
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                ) : (
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                )}
-                {message.text}
-              </div>
+              {message.type === "success" ? "✓" : "✕"}
             </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6 mt-8">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Email hoặc Tên đăng nhập
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <User size={18} className="text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={usernameOrEmail}
-                  onChange={(e) => setUsernameOrEmail(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
-                  placeholder="Nhập email hoặc tên đăng nhập..."
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
-                  Mật khẩu
-                </label>
-                <a
-                  href="#"
-                  className="text-sm font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-blue-ultra)] transition-colors"
-                >
-                  Quên mật khẩu?
-                </a>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock size={18} className="text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 focus:ring-2 focus:ring-[var(--color-blue-pure)] focus:border-transparent outline-none shadow-sm transition-all"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-2 bg-[var(--color-blue-pure)] hover:bg-[var(--color-blue-ultra)] text-white font-semibold py-3.5 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98]"
-            >
-              Đăng nhập <ArrowRight size={18} />
-            </button>
-          </form>
-
-          <div className="text-center pt-4">
-            <p className="text-gray-600">
-              Bạn chưa có tài khoản?{" "}
-              <Link
-                to="/register"
-                className="font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-blue-ultra)] transition-colors"
-              >
-                Đăng ký ngay
-              </Link>
-            </p>
+            <span>{message.text}</span>
           </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email / Username */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Email hoặc tên đăng nhập
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <User size={20} />
+              </div>
+              <input
+                type="text"
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="you@email.com hoặc username"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <label className="block text-sm font-semibold text-gray-700">
+                Mật khẩu
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-[var(--color-blue-pure)] hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Lock size={20} />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-12 pr-14 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Remember me */}
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+                className="w-4 h-4 accent-[var(--color-blue-pure)]"
+              />
+              Ghi nhớ đăng nhập
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-blue-pure)] to-[var(--color-blue-ultra)] hover:brightness-110 text-white font-semibold py-4 rounded-2xl transition-all active:scale-[0.97] shadow-lg shadow-blue-500/30 disabled:opacity-70"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={22} />
+                <span>Đang đăng nhập...</span>
+              </>
+            ) : (
+              <>
+                <span>Đăng nhập ngay</span>
+                <ArrowRight size={22} />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-8 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+            hoặc
+          </span>
+          <div className="flex-1 h-px bg-gray-200"></div>
         </div>
+
+        {/* Social Login */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 border border-gray-200 hover:bg-gray-50 py-4 rounded-2xl font-medium text-gray-700 transition-colors"
+        >
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3004/3004003.png"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Tiếp tục với Google
+        </button>
+
+        {/* Register link */}
+        <p className="text-center mt-8 text-gray-600">
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-blue-ultra)] transition-colors"
+          >
+            Đăng ký miễn phí ngay
+          </Link>
+        </p>
       </div>
-    </div>
+
+      {/* Footer nhỏ */}
+      <p className="text-center text-gray-400 text-xs mt-6">
+        Bảo mật • GDPR • AI Matching
+      </p>
+    </AuthLayout>
   );
 };
 
