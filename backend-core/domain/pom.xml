@@ -18,10 +18,23 @@
     <description>Entities, Value Objects, Repository Ports, Business Rules</description>
 
     <dependencies>
-        <!-- Chỉ dùng lombok + validation annotation nếu cần -->
+        <!-- JPA API (chỉ annotations) - quan trọng nhất để fix lỗi hiện tại -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+
+        <!-- Validation -->
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

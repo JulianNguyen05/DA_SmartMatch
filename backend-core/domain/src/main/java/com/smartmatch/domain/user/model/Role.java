@@ -1,4 +1,4 @@
-package comcom.smartmatch.domain.user.model;
+package com.smartmatch.domain.user.model;
 
 public enum Role {
     ADMIN,
