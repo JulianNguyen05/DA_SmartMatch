@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Component
+@Component("appJobMapper")
 public class JobMapper {
 
     public Job toDomain(CreateJobRequest request, Long companyId, Long postedById) {

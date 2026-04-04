@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-@Component
+@Component("appCompanyMapper")
 public class CompanyMapper {
 
     public Company toDomain(CreateCompanyRequest request, Long ownerId) {

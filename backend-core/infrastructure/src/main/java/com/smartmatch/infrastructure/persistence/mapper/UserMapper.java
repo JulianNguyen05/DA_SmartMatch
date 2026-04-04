@@ -4,7 +4,7 @@ import com.smartmatch.domain.user.model.User;
 import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("jpaUserMapper")
 public class UserMapper {
 
     /**

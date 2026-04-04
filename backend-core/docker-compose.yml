@@ -11,14 +11,13 @@ services:
       MYSQL_USER: smartmatch
       MYSQL_PASSWORD: smartmatch123
     ports:
-      - "3307:3306"                    # Tránh conflict với MySQL local (nếu có)
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # Tự động tạo bảng khi start lần đầu
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - smartmatch-network
 
-  # (Tùy chọn) phpMyAdmin để quản lý DB dễ dàng
   phpmyadmin:
     image: phpmyadmin:5.2
     container_name: smartmatch-phpmyadmin
@@ -32,6 +31,23 @@ services:
       PMA_PASSWORD: root123
     ports:
       - "8081:80"
+    networks:
+      - smartmatch-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartmatch-api
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      # Ghi đè URL kết nối DB để API gọi thẳng sang container mysql ở cổng 3306
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     networks:
       - smartmatch-network
 

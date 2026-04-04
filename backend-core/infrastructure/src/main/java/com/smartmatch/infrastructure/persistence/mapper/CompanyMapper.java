@@ -4,7 +4,7 @@ import com.smartmatch.domain.company.model.Company;
 import com.smartmatch.infrastructure.persistence.jpa.CompanyJpaEntity;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("jpaCompanyMapper")
 public class CompanyMapper {
 
     public CompanyJpaEntity toEntity(Company company) {

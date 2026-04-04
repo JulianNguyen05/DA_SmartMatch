@@ -1,0 +1,3083 @@
+﻿--- FILE: .idea\checkstyle-idea.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CheckStyle-IDEA" serialisationVersion="2">
+    <checkstyleVersion>11.1.0</checkstyleVersion>
+    <scanScope>JavaOnly</scanScope>
+    <copyLibs>true</copyLibs>
+    <option name="thirdPartyClasspath" />
+    <option name="activeLocationIds" />
+    <option name="locations">
+      <list>
+        <ConfigurationLocation id="bundled-sun-checks" type="BUNDLED" scope="All" description="Sun Checks">(bundled)</ConfigurationLocation>
+        <ConfigurationLocation id="bundled-google-checks" type="BUNDLED" scope="All" description="Google Checks">(bundled)</ConfigurationLocation>
+      </list>
+    </option>
+  </component>
+</project>
+
+
+
+--- FILE: .idea\compiler.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+      </profile>
+      <profile name="Annotation profile for api" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.0/mapstruct-processor-1.6.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.6.0/mapstruct-1.6.0.jar" />
+        </processorPath>
+        <module name="api" />
+      </profile>
+      <profile name="Annotation profile for application" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.0/mapstruct-processor-1.6.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.6.0/mapstruct-1.6.0.jar" />
+        </processorPath>
+        <module name="application" />
+      </profile>
+      <profile name="Annotation profile for domain" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+        </processorPath>
+        <module name="domain" />
+      </profile>
+      <profile name="Annotation profile for SmartMatch Backend Core" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.0/mapstruct-processor-1.6.0.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.6.0/mapstruct-1.6.0.jar" />
+        </processorPath>
+        <module name="infrastructure" />
+      </profile>
+    </annotationProcessing>
+  </component>
+</project>
+
+
+
+--- FILE: .idea\copilot.data.migration.agent.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AgentMigrationStateService">
+    <option name="migrationStatus" value="COMPLETED" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\copilot.data.migration.ask.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AskMigrationStateService">
+    <option name="migrationStatus" value="COMPLETED" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\copilot.data.migration.ask2agent.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Ask2AgentMigrationStateService">
+    <option name="migrationStatus" value="COMPLETED" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\copilot.data.migration.edit.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EditMigrationStateService">
+    <option name="migrationStatus" value="COMPLETED" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\encodings.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/api/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/api/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/application/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/application/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/domain/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/domain/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/infrastructure/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/infrastructure/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\jarRepositories.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteRepositoriesConfiguration">
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Central Repository" />
+      <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Maven Central repository" />
+      <option name="url" value="https://repo1.maven.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="jboss.community" />
+      <option name="name" value="JBoss Community repository" />
+      <option name="url" value="https://repository.jboss.org/nexus/content/repositories/public/" />
+    </remote-repository>
+  </component>
+</project>
+
+
+
+--- FILE: .idea\misc.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="MavenProjectsManager">
+    <option name="originalFiles">
+      <list>
+        <option value="$PROJECT_DIR$/pom.xml" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_23" default="true" project-jdk-name="23" project-jdk-type="JavaSDK" />
+</project>
+
+
+
+--- FILE: .idea\vcs.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$/.." vcs="Git" />
+  </component>
+</project>
+
+
+
+--- FILE: .idea\workspace.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/candidate/ApplicationController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/application/ApplyJobRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/application/JobApplicationResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobApplicationMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/service/candidate/ApplicationService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/application/model/JobApplication.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/application/repository/JobApplicationRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/common/enums/ApplicationStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/JobApplicationJpaEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobApplicationMapper.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobApplicationJpaRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobApplicationRepositoryImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/candidate/ApplicationServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/SmartMatchApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/SmartMatchApplication.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CompanyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CompanyMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CompanyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CompanyMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/UserMapper.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="3BlN1iMTU05ahUeBWdIoDKRAItG" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.SmartMatchApplication.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/2025_2026_(II)/DuAn/da_SmartMatch/backend-core",
+    "settings.editor.selected.configurable": "MavenSettings"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="SmartMatchApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.smartmatch.api.SmartMatchApplication" />
+      <module name="api" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.smartmatch.api.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.SmartMatchApplication" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="" />
+      <created>1775059483644</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1775059483644</updated>
+    </task>
+    <servers />
+  </component>
+</project>
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\auth\AuthController.java ---
+
+package com.smartmatch.api.controller.auth;
+
+import com.smartmatch.application.dto.auth.AuthResponse;
+import com.smartmatch.application.dto.auth.RegisterRequest;
+import com.smartmatch.application.dto.auth.LoginRequest;
+import com.smartmatch.application.service.auth.AuthService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\candidate\ApplicationController.java ---
+
+package com.smartmatch.api.controller.candidate;
+
+import com.smartmatch.application.dto.application.ApplyJobRequest;
+import com.smartmatch.application.dto.application.JobApplicationResponse;
+import com.smartmatch.application.service.candidate.ApplicationService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/candidate/applications")
+@RequiredArgsConstructor
+public class ApplicationController {
+
+    private final ApplicationService applicationService;
+
+    @PostMapping
+    public ResponseEntity<JobApplicationResponse> applyJob(
+            @RequestBody ApplyJobRequest request,
+            Authentication authentication) {
+
+        Long candidateId = Long.parseLong(authentication.getName());
+        JobApplicationResponse response = applicationService.applyJob(request, candidateId);
+        return ResponseEntity.ok(response);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\employer\CompanyController.java ---
+
+package com.smartmatch.api.controller.employer;
+
+import com.smartmatch.application.dto.company.CompanyResponse;
+import com.smartmatch.application.dto.company.CreateCompanyRequest;
+import com.smartmatch.application.service.employer.CompanyService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/employer/company")
+@RequiredArgsConstructor
+public class CompanyController {
+
+    private final CompanyService companyService;
+
+    @PostMapping
+    public ResponseEntity<CompanyResponse> createOrUpdateCompany(
+            @RequestBody CreateCompanyRequest request,
+            Authentication authentication) {
+
+        Long ownerId = Long.parseLong(authentication.getName()); // táº¡m thá»i, sau sáº½ láº¥y tá»« CustomUserDetails
+        CompanyResponse response = companyService.createOrUpdateCompany(request, ownerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<CompanyResponse> getMyCompany(Authentication authentication) {
+        Long ownerId = Long.parseLong(authentication.getName());
+        CompanyResponse response = companyService.getCompanyByOwnerId(ownerId);
+        return ResponseEntity.ok(response);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\employer\JobController.java ---
+
+package com.smartmatch.api.controller.employer;
+
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.service.employer.JobService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/employer/jobs")
+@RequiredArgsConstructor
+public class JobController {
+
+    private final JobService jobService;
+
+    @PostMapping
+    public ResponseEntity<JobResponse> createJob(
+            @RequestBody CreateJobRequest request,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse response = jobService.createJob(request, employerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<JobResponse>> getMyJobs(Authentication authentication) {
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobResponse> jobs = jobService.getMyJobs(employerId);
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getJobById(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse job = jobService.getJobById(id, employerId);
+        return ResponseEntity.ok(job);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\SmartMatchApplication.java ---
+
+package com.smartmatch.api;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+/**
+ * SmartMatch Backend Main Application
+ */
+@SpringBootApplication
+@EntityScan(basePackages = "com.smartmatch.infrastructure.persistence.jpa")
+@EnableJpaRepositories(basePackages = "com.smartmatch.infrastructure.persistence.repository")
+@ComponentScan(basePackages = {
+        "com.smartmatch.api",
+        "com.smartmatch.application",
+        "com.smartmatch.infrastructure"
+})
+public class SmartMatchApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SmartMatchApplication.class, args);
+    }
+}
+
+
+
+--- FILE: api\src\main\resources\application-dev.yml ---
+
+spring:
+  datasource:
+    # Káº¿t ná»‘i qua cá»•ng 3307 cá»§a Docker, tá»± táº¡o DB náº¿u chÆ°a cÃ³
+    url: jdbc:mysql://localhost:3307/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: root
+    password: root123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+logging:
+  level:
+    com.smartmatch: DEBUG
+    org.hibernate.SQL: DEBUG
+
+
+
+--- FILE: api\src\main\resources\application.yml ---
+
+spring:
+  application:
+    name: smartmatch-api
+
+  # Database Configuration (MySQL)
+  datasource:
+    url: jdbc:mysql://mysql:3306/smartmatch_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+    username: smartmatch
+    password: smartmatch123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update          # dev: update | test: validate | prod: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+
+  # Security & JWT
+  security:
+    jwt:
+      secret: your-very-long-secret-key-at-least-512-bits-smartmatch-2026
+      expiration: 86400000        # 24 hours in milliseconds
+      refresh-expiration: 604800000  # 7 days
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+# Logging
+logging:
+  level:
+    com.smartmatch: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Swagger / OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  packages-to-scan: com.smartmatch.api.controller
+
+# Profiles
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+server:
+  port: 8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:mysql://prod-db-host:3306/smartmatch_db?useSSL=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+logging:
+  level:
+    com.smartmatch: INFO
+    org.hibernate.SQL: ERROR
+
+server:
+  port: 8080
+  compression:
+    enabled: true
+
+
+
+--- FILE: api\pom.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.smartmatch</groupId>
+    <artifactId>backend-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>api</artifactId>
+  <packaging>jar</packaging>
+
+  <name>SmartMatch API</name>
+  <description>REST Controllers, Exception Handler, Main Application</description>
+
+  <dependencies>
+    <!-- Phá»¥ thuá»™c cÃ¡c module khÃ¡c -->
+    <dependency>
+      <groupId>com.smartmatch</groupId>
+      <artifactId>infrastructure</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.smartmatch</groupId>
+      <artifactId>application</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <!-- Spring Boot Web -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- @EntityScan vÃ  JPA support -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+
+    <!-- OpenAPI / Swagger -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.6.0</version>
+    </dependency>
+
+    <!-- Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <!-- ThÃªm cáº¥u hÃ¬nh mainClass Ä‘á»ƒ trá» Ä‘áº¿n file cháº¡y chÃ­nh cá»§a báº¡n -->
+                <configuration>
+                    <mainClass>com.smartmatch.api.SmartMatchApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\application\ApplyJobRequest.java ---
+
+package com.smartmatch.application.dto.application;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ApplyJobRequest {
+    private Long jobId;
+    private String coverLetter;   // optional
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\application\JobApplicationResponse.java ---
+
+package com.smartmatch.application.dto.application;
+
+import com.smartmatch.domain.common.enums.ApplicationStatus;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobApplicationResponse {
+    private Long id;
+    private Long jobId;
+    private Long candidateId;
+    private String coverLetter;
+    private LocalDateTime appliedAt;
+    private ApplicationStatus status;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\auth\AuthResponse.java ---
+
+package com.smartmatch.application.dto.auth;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class AuthResponse {
+    private String token;
+    private String refreshToken;
+    private String role;
+    private String email;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\auth\LoginRequest.java ---
+
+package com.smartmatch.application.dto.auth;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class LoginRequest {
+    @NotBlank @Email
+    private String email;
+    @NotBlank
+    private String password;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\auth\RegisterRequest.java ---
+
+package com.smartmatch.application.dto.auth;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class RegisterRequest {
+    @NotBlank @Email
+    private String email;
+
+    @NotBlank
+    private String password;
+
+    @NotBlank
+    private String phone;
+
+    private String role; // "EMPLOYER" hoáº·c "CANDIDATE" (Admin sáº½ táº¡o riÃªng)
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\company\CompanyResponse.java ---
+
+package com.smartmatch.application.dto.company;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompanyResponse {
+    private Long id;
+    private String name;
+    private String description;
+    private String address;
+    private String location;
+    private String website;
+    private String logoUrl;
+    private String industry;
+    private String companySize;
+    private LocalDateTime createdAt;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\company\CreateCompanyRequest.java ---
+
+package com.smartmatch.application.dto.company;
+
+import lombok.*;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateCompanyRequest {
+    private String name;
+    private String description;
+    private String address;
+    private String location;
+    private String website;
+    private String logoUrl;
+    private String industry;
+    private String companySize;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\job\CreateJobRequest.java ---
+
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobType;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateJobRequest {
+    private String title;
+    private String description;
+    private String location;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+    private Integer minExperienceYears;
+    private List<String> requirements;
+    private List<String> benefits;
+    private LocalDate deadline;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\job\JobResponse.java ---
+
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobResponse {
+    private Long id;
+    private String title;
+    private String description;
+    private Long companyId;
+    private String location;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+    private Integer minExperienceYears;
+    private List<String> requirements;
+    private List<String> benefits;
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+    private JobStatus status;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\mapper\CompanyMapper.java ---
+
+package com.smartmatch.application.mapper;
+
+import com.smartmatch.application.dto.company.CompanyResponse;
+import com.smartmatch.application.dto.company.CreateCompanyRequest;
+import com.smartmatch.domain.company.model.Company;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+
+@Component("appCompanyMapper")
+public class CompanyMapper {
+
+    public Company toDomain(CreateCompanyRequest request, Long ownerId) {
+        if (request == null) return null;
+        return Company.builder()
+                .name(request.getName())
+                .description(request.getDescription())
+                .address(request.getAddress())
+                .location(request.getLocation())
+                .website(request.getWebsite())
+                .logoUrl(request.getLogoUrl())
+                .industry(request.getIndustry())
+                .companySize(request.getCompanySize())
+                .ownerId(ownerId)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    public CompanyResponse toResponse(Company company) {
+        if (company == null) return null;
+        return CompanyResponse.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .description(company.getDescription())
+                .address(company.getAddress())
+                .location(company.getLocation())
+                .website(company.getWebsite())
+                .logoUrl(company.getLogoUrl())
+                .industry(company.getIndustry())
+                .companySize(company.getCompanySize())
+                .createdAt(company.getCreatedAt())
+                .build();
+    }
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\mapper\JobApplicationMapper.java ---
+
+package com.smartmatch.application.mapper;
+
+import com.smartmatch.application.dto.application.ApplyJobRequest;
+import com.smartmatch.application.dto.application.JobApplicationResponse;
+import com.smartmatch.domain.application.model.JobApplication;
+import com.smartmatch.domain.common.enums.ApplicationStatus;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+
+@Component("appJobApplicationMapper")
+public class JobApplicationMapper {
+
+    public JobApplication toDomain(ApplyJobRequest request, Long candidateId) {
+        if (request == null) return null;
+        return JobApplication.builder()
+                .jobId(request.getJobId())
+                .candidateId(candidateId)
+                .coverLetter(request.getCoverLetter())
+                .appliedAt(LocalDateTime.now())
+                .status(ApplicationStatus.PENDING)
+                .build();
+    }
+
+    public JobApplicationResponse toResponse(JobApplication app) {
+        if (app == null) return null;
+        return JobApplicationResponse.builder()
+                .id(app.getId())
+                .jobId(app.getJobId())
+                .candidateId(app.getCandidateId())
+                .coverLetter(app.getCoverLetter())
+                .appliedAt(app.getAppliedAt())
+                .status(app.getStatus())
+                .build();
+    }
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\mapper\JobMapper.java ---
+
+package com.smartmatch.application.mapper;
+
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.job.model.Job;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Component("appJobMapper")
+public class JobMapper {
+
+    public Job toDomain(CreateJobRequest request, Long companyId, Long postedById) {
+        if (request == null) return null;
+        return Job.builder()
+                .title(request.getTitle())
+                .description(request.getDescription())
+                .companyId(companyId)
+                .location(request.getLocation())
+                .minSalary(request.getMinSalary())
+                .maxSalary(request.getMaxSalary())
+                .currency(request.getCurrency() != null ? request.getCurrency() : "VND")
+                .jobType(request.getJobType())
+                .experienceLevel(request.getExperienceLevel())
+                .minExperienceYears(request.getMinExperienceYears())
+                .requirements(request.getRequirements())
+                .benefits(request.getBenefits())
+                .deadline(request.getDeadline())
+                .status(JobStatus.PUBLISHED)
+                .postedAt(LocalDateTime.now())
+                .postedById(postedById)
+                .build();
+    }
+
+    public JobResponse toResponse(Job job) {
+        if (job == null) return null;
+        return JobResponse.builder()
+                .id(job.getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .companyId(job.getCompanyId())
+                .location(job.getLocation())
+                .minSalary(job.getMinSalary())
+                .maxSalary(job.getMaxSalary())
+                .currency(job.getCurrency())
+                .jobType(job.getJobType())
+                .experienceLevel(job.getExperienceLevel())
+                .minExperienceYears(job.getMinExperienceYears())
+                .requirements(job.getRequirements())
+                .benefits(job.getBenefits())
+                .postedAt(job.getPostedAt())
+                .deadline(job.getDeadline())
+                .status(job.getStatus())
+                .build();
+    }
+
+    public List<JobResponse> toResponseList(List<Job> jobs) {
+        return jobs.stream().map(this::toResponse).toList();
+    }
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\auth\AuthService.java ---
+
+package com.smartmatch.application.service.auth;
+
+import com.smartmatch.application.dto.auth.AuthResponse;
+import com.smartmatch.application.dto.auth.LoginRequest;
+import com.smartmatch.application.dto.auth.RegisterRequest;
+
+public interface AuthService {
+    AuthResponse register(RegisterRequest request);
+    AuthResponse login(LoginRequest request);
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\candidate\ApplicationService.java ---
+
+package com.smartmatch.application.service.candidate;
+
+import com.smartmatch.application.dto.application.ApplyJobRequest;
+import com.smartmatch.application.dto.application.JobApplicationResponse;
+
+public interface ApplicationService {
+    JobApplicationResponse applyJob(ApplyJobRequest request, Long candidateId);
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\employer\CompanyService.java ---
+
+package com.smartmatch.application.service.employer;
+
+import com.smartmatch.application.dto.company.CompanyResponse;
+import com.smartmatch.application.dto.company.CreateCompanyRequest;
+
+public interface CompanyService {
+    CompanyResponse createOrUpdateCompany(CreateCompanyRequest request, Long ownerId);
+    CompanyResponse getCompanyByOwnerId(Long ownerId);
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\employer\JobService.java ---
+
+package com.smartmatch.application.service.employer;
+
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+
+import java.util.List;
+
+public interface JobService {
+    JobResponse createJob(CreateJobRequest request, Long employerId);
+    List<JobResponse> getMyJobs(Long employerId);
+    JobResponse getJobById(Long jobId, Long employerId);
+}
+
+
+
+--- FILE: application\pom.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.smartmatch</groupId>
+        <artifactId>backend-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>application</artifactId>
+    <packaging>jar</packaging>
+
+    <name>SmartMatch Application</name>
+    <description>Use Cases, Services, DTOs, Mappers</description>
+
+    <dependencies>
+        <!-- Phá»¥ thuá»™c vÃ o domain -->
+        <dependency>
+            <groupId>com.smartmatch</groupId>
+            <artifactId>domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <!-- Validation -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\application\model\JobApplication.java ---
+
+package com.smartmatch.domain.application.model;
+
+import com.smartmatch.domain.common.enums.ApplicationStatus;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobApplication {
+    private Long id;
+    private Long jobId;
+    private Long candidateId;      // userId cá»§a candidate
+    private String coverLetter;    // ThÆ° xin viá»‡c (cÃ³ thá»ƒ Ä‘á»ƒ trá»‘ng)
+    private LocalDateTime appliedAt;
+    private ApplicationStatus status;
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\application\repository\JobApplicationRepository.java ---
+
+package com.smartmatch.domain.application.repository;
+
+import com.smartmatch.domain.application.model.JobApplication;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface JobApplicationRepository {
+    JobApplication save(JobApplication application);
+    Optional<JobApplication> findById(Long id);
+    boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId); // chá»‘ng ná»™p trÃ¹ng
+    List<JobApplication> findByJobId(Long jobId);                     // employer xem ai ná»™p
+    List<JobApplication> findByCandidateId(Long candidateId);         // candidate xem Ä‘Æ¡n cá»§a mÃ¬nh
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\common\enums\ApplicationStatus.java ---
+
+package com.smartmatch.domain.common.enums;
+
+public enum ApplicationStatus {
+    PENDING,    // Äang chá»
+    REVIEWING,  // Äang xem xÃ©t
+    ACCEPTED,   // Cháº¥p nháº­n
+    REJECTED    // Tá»« chá»‘i
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\common\enums\ExperienceLevel.java ---
+
+package com.smartmatch.domain.common.enums;
+
+public enum ExperienceLevel {
+    ENTRY, MID, SENIOR, LEAD, MANAGER
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\common\enums\JobStatus.java ---
+
+package com.smartmatch.domain.common.enums;
+
+public enum JobStatus {
+    DRAFT, PUBLISHED, CLOSED, EXPIRED
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\common\enums\JobType.java ---
+
+package com.smartmatch.domain.common.enums;
+
+public enum JobType {
+    FULL_TIME, PART_TIME, CONTRACT, INTERNSHIP, FREELANCE, REMOTE
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\company\model\Company.java ---
+
+package com.smartmatch.domain.company.model;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Company {
+    private Long id;
+    private String name;
+    private String description;
+    private String address;
+    private String location;          // Nha Trang, TP.HCM...
+    private String website;
+    private String logoUrl;
+    private String industry;          // CNTT, TÃ i chÃ­nh, Sáº£n xuáº¥t...
+    private String companySize;       // "10-50", "51-200"...
+    private LocalDateTime createdAt;
+    private Long ownerId;             // userId cá»§a employer
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\company\repository\CompanyRepository.java ---
+
+package com.smartmatch.domain.company.repository;
+
+import com.smartmatch.domain.company.model.Company;
+
+import java.util.Optional;
+
+public interface CompanyRepository {
+    Company save(Company company);
+    Optional<Company> findById(Long id);
+    Optional<Company> findByOwnerId(Long ownerId);
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\job\model\Job.java ---
+
+package com.smartmatch.domain.job.model;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Job {
+    private Long id;
+    private String title;
+    private String description;
+    private Long companyId;
+    private String location;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+    private Integer minExperienceYears;
+    private List<String> requirements;
+    private List<String> benefits;
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+    private JobStatus status;
+    private Long postedById;
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\job\repository\JobRepository.java ---
+
+package com.smartmatch.domain.job.repository;
+
+import com.smartmatch.domain.job.model.Job;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface JobRepository {
+    Job save(Job job);
+    Optional<Job> findById(Long id);
+    List<Job> findByCompanyId(Long companyId);     // giá»¯ láº¡i cho sau
+    List<Job> findByPostedById(Long postedById);   // â† Má»šI: GetMyJobs
+    List<Job> findAllPublished();                  // giá»¯ láº¡i cho public
+    Optional<Job> findByIdAndPostedById(Long id, Long postedById); // â† Má»šI: báº£o vá»‡ Job cá»§a employer
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\model\Profile.java ---
+
+package com.smartmatch.domain.user.model;
+
+public class Profile {
+  
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\model\Role.java ---
+
+package com.smartmatch.domain.user.model;
+
+public enum Role {
+    ADMIN,
+    EMPLOYER,
+    CANDIDATE
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\model\User.java ---
+
+package com.smartmatch.domain.user.model;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User {
+
+    private Long id;
+    private String email;
+    private String password;
+    private String phone;
+    private Role role;
+    private boolean enabled = true;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    public static User createNewUser(String email, String hashedPassword, String phone, Role role) {
+        User user = User.builder()
+                .email(email.toLowerCase().trim())
+                .password(hashedPassword)
+                .phone(phone.trim())
+                .role(role)
+                .enabled(true)
+                .build();
+        user.onCreate();
+        return user;
+    }
+
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\repository\UserRepository.java ---
+
+package com.smartmatch.domain.user.repository;
+
+import com.smartmatch.domain.user.model.User;
+
+import java.util.Optional;
+
+public interface UserRepository {
+
+    User save(User user);
+
+    Optional<User> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
+
+    // CÃ³ thá»ƒ thÃªm sau nÃ y:
+    // Optional<User> findById(Long id);
+    // boolean existsById(Long id);
+}
+
+
+
+--- FILE: domain\pom.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.smartmatch</groupId>
+        <artifactId>backend-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>domain</artifactId>
+    <packaging>jar</packaging>
+
+    <name>SmartMatch Domain</name>
+    <description>Entities, Value Objects, Repository Ports, Business Rules</description>
+
+    <dependencies>
+        <!-- JPA API (chá»‰ annotations) - quan trá»ng nháº¥t Ä‘á»ƒ fix lá»—i hiá»‡n táº¡i -->
+        <dependency>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+
+        <!-- Validation -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>1.18.30</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\CompanyJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "companies")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompanyJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private String address;
+    private String location;
+    private String website;
+    private String logoUrl;
+    private String industry;
+    private String companySize;
+
+    private LocalDateTime createdAt;
+
+    private Long ownerId;
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\JobApplicationJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import com.smartmatch.domain.common.enums.ApplicationStatus;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "job_applications")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobApplicationJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long jobId;
+    private Long candidateId;
+
+    @Column(columnDefinition = "TEXT")
+    private String coverLetter;
+
+    private LocalDateTime appliedAt;
+
+    @Enumerated(EnumType.STRING)
+    private ApplicationStatus status;
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\JobJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "jobs")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private Long companyId;
+    private String location;
+
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+
+    @Enumerated(EnumType.STRING)
+    private JobType jobType;
+
+    @Enumerated(EnumType.STRING)
+    private ExperienceLevel experienceLevel;
+
+    private Integer minExperienceYears;
+
+    @ElementCollection
+    @CollectionTable(name = "job_requirements", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "requirement")
+    private List<String> requirements;
+
+    @ElementCollection
+    @CollectionTable(name = "job_benefits", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "benefit")
+    private List<String> benefits;
+
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+
+    @Enumerated(EnumType.STRING)
+    private JobStatus status;
+
+    private Long postedById;
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\UserJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import com.smartmatch.domain.user.model.Role;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(unique = true, nullable = false)
+    private String phone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    private boolean enabled = true;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\CompanyMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.company.model.Company;
+import com.smartmatch.infrastructure.persistence.jpa.CompanyJpaEntity;
+import org.springframework.stereotype.Component;
+
+@Component("jpaCompanyMapper")
+public class CompanyMapper {
+
+    public CompanyJpaEntity toEntity(Company company) {
+        if (company == null) return null;
+        return CompanyJpaEntity.builder()
+                .id(company.getId())
+                .name(company.getName())
+                .description(company.getDescription())
+                .address(company.getAddress())
+                .location(company.getLocation())
+                .website(company.getWebsite())
+                .logoUrl(company.getLogoUrl())
+                .industry(company.getIndustry())
+                .companySize(company.getCompanySize())
+                .createdAt(company.getCreatedAt())
+                .ownerId(company.getOwnerId())
+                .build();
+    }
+
+    public Company toDomain(CompanyJpaEntity entity) {
+        if (entity == null) return null;
+        return Company.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .address(entity.getAddress())
+                .location(entity.getLocation())
+                .website(entity.getWebsite())
+                .logoUrl(entity.getLogoUrl())
+                .industry(entity.getIndustry())
+                .companySize(entity.getCompanySize())
+                .createdAt(entity.getCreatedAt())
+                .ownerId(entity.getOwnerId())
+                .build();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\JobApplicationMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.application.model.JobApplication;
+import com.smartmatch.infrastructure.persistence.jpa.JobApplicationJpaEntity;
+import org.springframework.stereotype.Component;
+
+@Component("jpaJobApplicationMapper")
+public class JobApplicationMapper {
+
+    public JobApplicationJpaEntity toEntity(JobApplication app) {
+        if (app == null) return null;
+        return JobApplicationJpaEntity.builder()
+                .id(app.getId())
+                .jobId(app.getJobId())
+                .candidateId(app.getCandidateId())
+                .coverLetter(app.getCoverLetter())
+                .appliedAt(app.getAppliedAt())
+                .status(app.getStatus())
+                .build();
+    }
+
+    public JobApplication toDomain(JobApplicationJpaEntity entity) {
+        if (entity == null) return null;
+        return JobApplication.builder()
+                .id(entity.getId())
+                .jobId(entity.getJobId())
+                .candidateId(entity.getCandidateId())
+                .coverLetter(entity.getCoverLetter())
+                .appliedAt(entity.getAppliedAt())
+                .status(entity.getStatus())
+                .build();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\JobMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
+
+@Component("jpaJobMapper")
+public class JobMapper {
+
+    public JobJpaEntity toEntity(Job job) {
+        if (job == null) return null;
+        return JobJpaEntity.builder()
+                .id(job.getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .companyId(job.getCompanyId())
+                .location(job.getLocation())
+                .minSalary(job.getMinSalary())
+                .maxSalary(job.getMaxSalary())
+                .currency(job.getCurrency())
+                .jobType(job.getJobType())
+                .experienceLevel(job.getExperienceLevel())
+                .minExperienceYears(job.getMinExperienceYears())
+                .requirements(job.getRequirements())
+                .benefits(job.getBenefits())
+                .postedAt(job.getPostedAt())
+                .deadline(job.getDeadline())
+                .status(job.getStatus())
+                .postedById(job.getPostedById())
+                .build();
+    }
+
+    public Job toDomain(JobJpaEntity entity) {
+        if (entity == null) return null;
+        return Job.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .companyId(entity.getCompanyId())
+                .location(entity.getLocation())
+                .minSalary(entity.getMinSalary())
+                .maxSalary(entity.getMaxSalary())
+                .currency(entity.getCurrency())
+                .jobType(entity.getJobType())
+                .experienceLevel(entity.getExperienceLevel())
+                .minExperienceYears(entity.getMinExperienceYears())
+                .requirements(entity.getRequirements())
+                .benefits(entity.getBenefits())
+                .postedAt(entity.getPostedAt())
+                .deadline(entity.getDeadline())
+                .status(entity.getStatus())
+                .postedById(entity.getPostedById())
+                .build();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\UserMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.user.model.User;
+import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
+import org.springframework.stereotype.Component;
+
+@Component("jpaUserMapper")
+public class UserMapper {
+
+    /**
+     * Chuyá»ƒn tá»« Domain Model â†’ JPA Entity (trÆ°á»›c khi lÆ°u DB)
+     */
+    public UserJpaEntity toEntity(User user) {
+        if (user == null) return null;
+
+        return UserJpaEntity.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .phone(user.getPhone())
+                .role(user.getRole())
+                .enabled(user.isEnabled())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+    }
+
+    /**
+     * Chuyá»ƒn tá»« JPA Entity â†’ Domain Model (sau khi láº¥y tá»« DB)
+     */
+    public User toDomain(UserJpaEntity entity) {
+        if (entity == null) return null;
+
+        return User.builder()
+                .id(entity.getId())
+                .email(entity.getEmail())
+                .password(entity.getPassword())
+                .phone(entity.getPhone())
+                .role(entity.getRole())
+                .enabled(entity.isEnabled())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\CompanyJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.CompanyJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface CompanyJpaRepository extends JpaRepository<CompanyJpaEntity, Long> {
+    Optional<CompanyJpaEntity> findByOwnerId(Long ownerId);
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\CompanyRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.company.model.Company;
+import com.smartmatch.domain.company.repository.CompanyRepository;
+import com.smartmatch.infrastructure.persistence.jpa.CompanyJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.CompanyMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class CompanyRepositoryImpl implements CompanyRepository {
+
+    private final CompanyJpaRepository jpaRepository;
+    private final CompanyMapper mapper;
+
+    @Override
+    public Company save(Company company) {
+        CompanyJpaEntity entity = mapper.toEntity(company);
+        if (entity.getCreatedAt() == null) {
+            entity.setCreatedAt(LocalDateTime.now());
+        }
+        CompanyJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<Company> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Company> findByOwnerId(Long ownerId) {
+        return jpaRepository.findByOwnerId(ownerId).map(mapper::toDomain);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\JobApplicationJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.JobApplicationJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface JobApplicationJpaRepository extends JpaRepository<JobApplicationJpaEntity, Long> {
+    boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId);
+    List<JobApplicationJpaEntity> findByJobId(Long jobId);
+    List<JobApplicationJpaEntity> findByCandidateId(Long candidateId);
+    Optional<JobApplicationJpaEntity> findByJobIdAndCandidateId(Long jobId, Long candidateId);
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\JobApplicationRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.application.model.JobApplication;
+import com.smartmatch.domain.application.repository.JobApplicationRepository;
+import com.smartmatch.infrastructure.persistence.jpa.JobApplicationJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.JobApplicationMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class JobApplicationRepositoryImpl implements JobApplicationRepository {
+
+    private final JobApplicationJpaRepository jpaRepository;
+    private final JobApplicationMapper mapper;
+
+    @Override
+    public JobApplication save(JobApplication application) {
+        JobApplicationJpaEntity entity = mapper.toEntity(application);
+        JobApplicationJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<JobApplication> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId) {
+        return jpaRepository.existsByJobIdAndCandidateId(jobId, candidateId);
+    }
+
+    @Override
+    public List<JobApplication> findByJobId(Long jobId) {
+        return jpaRepository.findByJobId(jobId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<JobApplication> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\JobJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface JobJpaRepository extends JpaRepository<JobJpaEntity, Long> {
+    List<JobJpaEntity> findByCompanyId(Long companyId);
+    List<JobJpaEntity> findByPostedById(Long postedById);                    // â† Má»šI
+    List<JobJpaEntity> findByStatus(String status);
+    Optional<JobJpaEntity> findByIdAndPostedById(Long id, Long postedById); // â† Má»šI
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\JobRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.domain.job.repository.JobRepository;
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.JobMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class JobRepositoryImpl implements JobRepository {
+
+    private final JobJpaRepository jpaRepository;
+    private final JobMapper mapper;
+
+    @Override
+    public Job save(Job job) {
+        JobJpaEntity entity = mapper.toEntity(job);
+        JobJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<Job> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Job> findByCompanyId(Long companyId) {
+        return jpaRepository.findByCompanyId(companyId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Job> findAllPublished() {
+        return jpaRepository.findByStatus("PUBLISHED").stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+    @Override
+    public List<Job> findByPostedById(Long postedById) {
+        return jpaRepository.findByPostedById(postedById).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Job> findByIdAndPostedById(Long id, Long postedById) {
+        return jpaRepository.findByIdAndPostedById(id, postedById)
+                .map(mapper::toDomain);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\UserJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
+
+    Optional<UserJpaEntity> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
+
+    // CÃ³ thá»ƒ thÃªm sau:
+    // Optional<UserJpaEntity> findByPhone(String phone);
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\UserRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.user.model.User;
+import com.smartmatch.domain.user.repository.UserRepository;
+import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.UserMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class UserRepositoryImpl implements UserRepository {
+
+    private final UserJpaRepository jpaRepository;
+    private final UserMapper userMapper;
+
+    @Override
+    public User save(User user) {
+        UserJpaEntity entity = userMapper.toEntity(user);
+        UserJpaEntity savedEntity = jpaRepository.save(entity);
+        return userMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return jpaRepository.findByEmail(email)
+                .map(userMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return jpaRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByPhone(String phone) {
+        return jpaRepository.existsByPhone(phone);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\security\CustomUserDetailsService.java ---
+
+package com.smartmatch.infrastructure.security;
+
+import com.smartmatch.domain.user.model.User;
+import com.smartmatch.domain.user.repository.UserRepository;   // â† Sá»¬A IMPORT NÃ€Y
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collection;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;   // DÃ¹ng Port tá»« domain
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                getAuthorities(user)
+        );
+    }
+
+    private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\security\JwtAuthenticationFilter.java ---
+
+package com.smartmatch.infrastructure.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader("Authorization");
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        final String jwt = authHeader.substring(7);
+        final String userEmail = jwtService.extractUsername(jwt);
+
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+        filterChain.doFilter(request, response);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\security\JwtService.java ---
+
+package com.smartmatch.infrastructure.security;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+@Service
+public class JwtService {
+
+    @Value("${spring.security.jwt.secret}")
+    private String secretKey;
+
+    @Value("${spring.security.jwt.expiration}")
+    private long jwtExpiration;
+
+    @Value("${spring.security.jwt.refresh-expiration}")
+    private long refreshExpiration;
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(secretKey.getBytes());
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSigningKey())           // Thay vÃ¬ setSigningKey
+                .build()
+                .parseSignedClaims(token)              // Thay vÃ¬ parseClaimsJws
+                .getPayload();                         // Thay vÃ¬ getBody()
+    }
+
+    public String generateToken(UserDetails userDetails) {
+        return generateToken(new HashMap<>(), userDetails);
+    }
+
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSigningKey())             // signWith vá»›i SecretKey
+                .compact();
+    }
+
+    public String generateRefreshToken(UserDetails userDetails) {
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + refreshExpiration))
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\security\SecurityConfig.java ---
+
+package com.smartmatch.infrastructure.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true) // Cho phÃ©p @PreAuthorize
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Public APIs
+                        .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // Admin only
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // Employer
+                        .requestMatchers(HttpMethod.POST, "/api/employer/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.GET, "/api/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
+
+                        // Candidate
+                        .requestMatchers(HttpMethod.POST, "/api/candidate/**").hasRole("CANDIDATE")
+                        .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("CANDIDATE", "EMPLOYER", "ADMIN")
+
+                        .anyRequest().authenticated())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\auth\AuthServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.auth;
+
+import com.smartmatch.application.dto.auth.AuthResponse;
+import com.smartmatch.application.dto.auth.LoginRequest;
+import com.smartmatch.application.dto.auth.RegisterRequest;
+import com.smartmatch.application.service.auth.AuthService;
+import com.smartmatch.domain.user.model.Role;
+import com.smartmatch.domain.user.model.User;
+import com.smartmatch.domain.user.repository.UserRepository;
+import com.smartmatch.infrastructure.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthServiceImpl implements AuthService {
+
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public AuthResponse register(RegisterRequest request) {
+        String email = request.getEmail().toLowerCase().trim();
+        String phone = request.getPhone().trim();
+
+        // Kiá»ƒm tra tá»“n táº¡i
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email Ä‘Ã£ tá»“n táº¡i");
+        }
+        if (userRepository.existsByPhone(phone)) {
+            throw new RuntimeException("Sá»‘ Ä‘iá»‡n thoáº¡i Ä‘Ã£ tá»“n táº¡i");
+        }
+
+        // Validate role
+        Role role;
+        try {
+            role = Role.valueOf(request.getRole().toUpperCase());
+            if (role == Role.ADMIN) {
+                throw new RuntimeException("KhÃ´ng Ä‘Æ°á»£c tá»± Ä‘Äƒng kÃ½ tÃ i khoáº£n ADMIN");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Role khÃ´ng há»£p lá»‡. Chá»‰ cháº¥p nháº­n EMPLOYER hoáº·c CANDIDATE");
+        }
+
+        // MÃ£ hÃ³a máº­t kháº©u vÃ  táº¡o User domain
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        User user = User.createNewUser(email, hashedPassword, phone, role);
+
+        // LÆ°u user (sáº½ cáº§n mapper á»Ÿ infrastructure)
+        User savedUser = userRepository.save(user);
+
+        // Táº¡o JWT
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(savedUser.getEmail())
+                .password(savedUser.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .build();
+
+        String token = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        return new AuthResponse(token, refreshToken, savedUser.getRole().name(), savedUser.getEmail());
+    }
+
+    @Override
+    public AuthResponse login(LoginRequest request) {
+        String email = request.getEmail().toLowerCase().trim();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Email hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng"));
+
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Email hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng");
+        }
+
+        if (!user.isEnabled()) {
+            throw new RuntimeException("TÃ i khoáº£n Ä‘Ã£ bá»‹ khÃ³a");
+        }
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                .build();
+
+        String token = jwtService.generateToken(userDetails);
+        String refreshToken = jwtService.generateRefreshToken(userDetails);
+
+        return new AuthResponse(token, refreshToken, user.getRole().name(), user.getEmail());
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\candidate\ApplicationServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.candidate;
+
+import com.smartmatch.application.dto.application.ApplyJobRequest;
+import com.smartmatch.application.dto.application.JobApplicationResponse;
+import com.smartmatch.application.mapper.JobApplicationMapper;
+import com.smartmatch.application.service.candidate.ApplicationService;
+import com.smartmatch.domain.application.model.JobApplication;
+import com.smartmatch.domain.application.repository.JobApplicationRepository;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.domain.job.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class ApplicationServiceImpl implements ApplicationService {
+
+    private final JobApplicationRepository applicationRepository;
+    private final JobRepository jobRepository;
+    private final JobApplicationMapper applicationMapper;
+
+    @Override
+    public JobApplicationResponse applyJob(ApplyJobRequest request, Long candidateId) {
+        Long jobId = request.getJobId();
+
+        // 1. Kiá»ƒm tra Job tá»“n táº¡i vÃ  Ä‘ang má»Ÿ
+        Optional<Job> jobOpt = jobRepository.findById(jobId);
+        if (jobOpt.isEmpty()) {
+            throw new IllegalArgumentException("Tin tuyá»ƒn dá»¥ng khÃ´ng tá»“n táº¡i!");
+        }
+        if (jobOpt.get().getStatus() != JobStatus.PUBLISHED) {
+            throw new IllegalArgumentException("Tin tuyá»ƒn dá»¥ng nÃ y Ä‘Ã£ Ä‘Ã³ng hoáº·c chÆ°a Ä‘Æ°á»£c cÃ´ng bá»‘!");
+        }
+
+        // 2. Kiá»ƒm tra candidate Ä‘Ã£ ná»™p Ä‘Æ¡n chÆ°a (chá»‘ng ná»™p trÃ¹ng)
+        if (applicationRepository.existsByJobIdAndCandidateId(jobId, candidateId)) {
+            throw new IllegalArgumentException("Báº¡n Ä‘Ã£ ná»™p Ä‘Æ¡n á»©ng tuyá»ƒn cho vá»‹ trÃ­ nÃ y rá»“i!");
+        }
+
+        // 3. Convert DTO â†’ Domain
+        JobApplication application = applicationMapper.toDomain(request, candidateId);
+
+        // 4. LÆ°u vÃ o DB
+        JobApplication savedApplication = applicationRepository.save(application);
+
+        // 5. Tráº£ vá» response
+        return applicationMapper.toResponse(savedApplication);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\employer\CompanyServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.employer;
+
+import com.smartmatch.application.dto.company.CompanyResponse;
+import com.smartmatch.application.dto.company.CreateCompanyRequest;
+import com.smartmatch.application.mapper.CompanyMapper;
+import com.smartmatch.application.service.employer.CompanyService;
+import com.smartmatch.domain.company.model.Company;
+import com.smartmatch.domain.company.repository.CompanyRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class CompanyServiceImpl implements CompanyService {
+
+    private final CompanyRepository companyRepository;
+    private final CompanyMapper companyMapper;
+
+    @Override
+    public CompanyResponse createOrUpdateCompany(CreateCompanyRequest request, Long ownerId) {
+        // Kiá»ƒm tra cÃ´ng ty Ä‘Ã£ tá»“n táº¡i chÆ°a
+        Optional<Company> existingOpt = companyRepository.findByOwnerId(ownerId);
+
+        Company company;
+        if (existingOpt.isPresent()) {
+            // Update
+            company = existingOpt.get();
+            // Cáº­p nháº­t cÃ¡c field tá»« request
+            company.setName(request.getName());
+            company.setDescription(request.getDescription());
+            company.setAddress(request.getAddress());
+            company.setLocation(request.getLocation());
+            company.setWebsite(request.getWebsite());
+            company.setLogoUrl(request.getLogoUrl());
+            company.setIndustry(request.getIndustry());
+            company.setCompanySize(request.getCompanySize());
+            // createdAt giá»¯ nguyÃªn
+        } else {
+            // Create má»›i
+            company = companyMapper.toDomain(request, ownerId);
+        }
+
+        // LÆ°u vÃ o DB
+        Company savedCompany = companyRepository.save(company);
+
+        return companyMapper.toResponse(savedCompany);
+    }
+
+    @Override
+    public CompanyResponse getCompanyByOwnerId(Long ownerId) {
+        Optional<Company> companyOpt = companyRepository.findByOwnerId(ownerId);
+        if (companyOpt.isEmpty()) {
+            throw new IllegalArgumentException("Báº¡n chÆ°a táº¡o thÃ´ng tin cÃ´ng ty. Vui lÃ²ng táº¡o Company trÆ°á»›c!");
+        }
+        return companyMapper.toResponse(companyOpt.get());
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\employer\JobServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.employer;
+
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.mapper.JobMapper;
+import com.smartmatch.application.service.employer.JobService;
+import com.smartmatch.domain.company.model.Company;
+import com.smartmatch.domain.company.repository.CompanyRepository;
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.domain.job.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class JobServiceImpl implements JobService {
+
+    private final JobRepository jobRepository;
+    private final CompanyRepository companyRepository;
+    private final JobMapper jobMapper;
+
+    @Override
+    public JobResponse createJob(CreateJobRequest request, Long employerId) {
+        // 1. Láº¥y company cá»§a employer hiá»‡n táº¡i
+        Optional<Company> companyOpt = companyRepository.findByOwnerId(employerId);
+        if (companyOpt.isEmpty()) {
+            throw new IllegalArgumentException("Báº¡n chÆ°a táº¡o thÃ´ng tin cÃ´ng ty. Vui lÃ²ng táº¡o Company trÆ°á»›c khi Ä‘Äƒng tin tuyá»ƒn dá»¥ng!");
+        }
+
+        Long companyId = companyOpt.get().getId();
+
+        // 2. Convert DTO â†’ Domain (tá»± Ä‘á»™ng gÃ¡n companyId + postedById)
+        Job job = jobMapper.toDomain(request, companyId, employerId);
+
+        // 3. LÆ°u vÃ o DB
+        Job savedJob = jobRepository.save(job);
+
+        // 4. Tráº£ vá» response
+        return jobMapper.toResponse(savedJob);
+    }
+
+    @Override
+    public List<JobResponse> getMyJobs(Long employerId) {
+        List<Job> jobs = jobRepository.findByPostedById(employerId);
+        return jobMapper.toResponseList(jobs);
+    }
+
+    @Override
+    public JobResponse getJobById(Long jobId, Long employerId) {
+        Optional<Job> jobOpt = jobRepository.findByIdAndPostedById(jobId, employerId);
+        if (jobOpt.isEmpty()) {
+            throw new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y tin tuyá»ƒn dá»¥ng hoáº·c báº¡n khÃ´ng cÃ³ quyá»n xem!");
+        }
+        return jobMapper.toResponse(jobOpt.get());
+    }
+}
+
+
+
+--- FILE: infrastructure\pom.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.smartmatch</groupId>
+        <artifactId>backend-core</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>infrastructure</artifactId>
+    <packaging>jar</packaging>
+
+    <name>SmartMatch Infrastructure</name>
+    <description>Persistence, Security, Config, External Services</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.smartmatch</groupId>
+            <artifactId>domain</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.smartmatch</groupId>
+            <artifactId>application</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release> <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>1.18.30</version>
+                    </path>
+                    <path>
+                        <groupId>org.mapstruct</groupId>
+                        <artifactId>mapstruct-processor</artifactId>
+                        <version>1.6.0</version>
+                    </path>
+                </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+
+
+--- FILE: docker-compose.yml ---
+
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: smartmatch-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: smartmatch_db
+      MYSQL_USER: smartmatch
+      MYSQL_PASSWORD: smartmatch123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - smartmatch-network
+
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: smartmatch-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
+    ports:
+      - "8081:80"
+    networks:
+      - smartmatch-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartmatch-api
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      # Ghi Ä‘Ã¨ URL káº¿t ná»‘i DB Ä‘á»ƒ API gá»i tháº³ng sang container mysql á»Ÿ cá»•ng 3306
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    networks:
+      - smartmatch-network
+
+volumes:
+  mysql_data:
+
+networks:
+  smartmatch-network:
+    driver: bridge
+
+
+
+--- FILE: Dockerfile ---
+
+# Stage 1: Build
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /app
+
+# Copy Maven files trÆ°á»›c Ä‘á»ƒ cache dependency
+COPY .mvn/ .mvn
+COPY mvnw mvnw
+COPY pom.xml .
+COPY domain/pom.xml domain/
+COPY application/pom.xml application/
+COPY infrastructure/pom.xml infrastructure/
+COPY api/pom.xml api/
+
+# Download dependencies (cache layer)
+RUN ./mvnw dependency:go-offline -B
+
+# Copy source code
+COPY domain/src domain/src
+COPY application/src application/src
+COPY infrastructure/src infrastructure/src
+COPY api/src api/src
+
+# Build toÃ n bá»™ project
+RUN ./mvnw clean package -DskipTests
+
+### Stage 2: Runtime
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+### Táº¡o user khÃ´ng root VÃ€ cáº¥p quyá»n sá»Ÿ há»¯u thÆ° má»¥c /app cho user spring
+RUN addgroup -S spring && adduser -S spring -G spring && chown -R spring:spring /app
+
+### Chuyá»ƒn sang user spring SAU KHI Ä‘Ã£ cáº¥p quyá»n
+USER spring
+
+### Copy jar tá»« module api, thÃªm cá» --chown=spring:spring Ä‘á»ƒ user cÃ³ quyá»n vá»›i file jar
+COPY --chown=spring:spring --from=builder /app/api/target/api-*.jar app.jar
+
+### Run - Cháº¡y trá»±c tiáº¿p file jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
+
+
+
+--- FILE: init.sql ---
+
+-- Tá»± Ä‘á»™ng táº¡o database vÃ  user khi container MySQL start láº§n Ä‘áº§u
+CREATE DATABASE IF NOT EXISTS smartmatch_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE smartmatch_db;
+
+-- Grant quyá»n cho user application
+GRANT ALL PRIVILEGES ON smartmatch_db.* TO 'smartmatch'@'%';
+FLUSH PRIVILEGES;
+
+
+
+--- FILE: pom.xml ---
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.smartmatch</groupId>
+    <artifactId>backend-core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>SmartMatch Backend Core</name>
+    <description>Job Matching Platform - Multi Module Spring Boot</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.boot.version>3.3.4</spring.boot.version>
+        <lombok.version>1.18.34</lombok.version> <mapstruct.version>1.6.0</mapstruct.version> </properties>
+
+    <modules>
+        <module>domain</module>
+        <module>application</module>
+        <module>infrastructure</module>
+        <module>api</module>
+    </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>${java.version}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+
+

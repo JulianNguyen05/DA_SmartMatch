@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  * SmartMatch Backend Main Application
  */
 @SpringBootApplication
-@EntityScan(basePackages = "com.smartmatch.domain")
+@EntityScan(basePackages = "com.smartmatch.infrastructure.persistence.jpa")
 @EnableJpaRepositories(basePackages = "com.smartmatch.infrastructure.persistence.repository")
 @ComponentScan(basePackages = {
         "com.smartmatch.api",

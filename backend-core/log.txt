@@ -1,0 +1,163 @@
+PS D:\2025_2026_(II)\DuAn\da_SmartMatch\backend-core> docker logs smartmatch-api -f
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.3.4)
+
+2026-04-04T03:41:03.520Z  INFO 1 --- [smartmatch-api] [           main] c.smartmatch.api.SmartMatchApplication   : Starting SmartMatchApplication using Java 21.0.10 with PID 1 (/app/app.jar started by spring in /app)
+2026-04-04T03:41:03.522Z DEBUG 1 --- [smartmatch-api] [           main] c.smartmatch.api.SmartMatchApplication   : Running with Spring Boot v3.3.4, Spring v6.1.13
+2026-04-04T03:41:03.523Z  INFO 1 --- [smartmatch-api] [           main] c.smartmatch.api.SmartMatchApplication   : The following 1 profile is active: "dev"
+2026-04-04T03:41:04.311Z  INFO 1 --- [smartmatch-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-04-04T03:41:04.354Z  INFO 1 --- [smartmatch-api] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 36 ms. Found 4 JPA repository interfaces.
+2026-04-04T03:41:05.338Z  INFO 1 --- [smartmatch-api] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-04-04T03:41:05.352Z  INFO 1 --- [smartmatch-api] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-04-04T03:41:05.352Z  INFO 1 --- [smartmatch-api] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.30]
+2026-04-04T03:41:05.386Z  INFO 1 --- [smartmatch-api] [           main] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-04-04T03:41:05.387Z  INFO 1 --- [smartmatch-api] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1811 ms
+2026-04-04T03:41:05.666Z  INFO 1 --- [smartmatch-api] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-04-04T03:41:05.807Z  INFO 1 --- [smartmatch-api] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.5.3.Final
+2026-04-04T03:41:05.840Z  INFO 1 --- [smartmatch-api] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-04-04T03:41:06.128Z  INFO 1 --- [smartmatch-api] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-04-04T03:41:06.153Z  INFO 1 --- [smartmatch-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-04-04T03:41:06.270Z  INFO 1 --- [smartmatch-api] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4387d2f4
+2026-04-04T03:41:06.272Z  INFO 1 --- [smartmatch-api] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-04-04T03:41:06.327Z  WARN 1 --- [smartmatch-api] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-04-04T03:41:07.432Z  INFO 1 --- [smartmatch-api] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-04-04T03:41:07.476Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    create table companies (
+        id bigint not null auto_increment,
+        address varchar(255),
+        company_size varchar(255),
+        created_at datetime(6),
+        description TEXT,
+        industry varchar(255),
+        location varchar(255),
+        logo_url varchar(255),
+        name varchar(255) not null,
+        owner_id bigint,
+        website varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table companies (
+        id bigint not null auto_increment,
+        address varchar(255),
+        company_size varchar(255),
+        created_at datetime(6),
+        description TEXT,
+        industry varchar(255),
+        location varchar(255),
+        logo_url varchar(255),
+        name varchar(255) not null,
+        owner_id bigint,
+        website varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+2026-04-04T03:41:07.501Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    create table job_applications (
+        id bigint not null auto_increment,
+        applied_at datetime(6),
+        candidate_id bigint,
+        cover_letter TEXT,
+        job_id bigint,
+        status enum ('ACCEPTED','PENDING','REJECTED','REVIEWING'),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table job_applications (
+        id bigint not null auto_increment,
+        applied_at datetime(6),
+        candidate_id bigint,
+        cover_letter TEXT,
+        job_id bigint,
+        status enum ('ACCEPTED','PENDING','REJECTED','REVIEWING'),
+        primary key (id)
+    ) engine=InnoDB
+2026-04-04T03:41:07.518Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    create table job_benefits (
+        job_id bigint not null,
+        benefit varchar(255)
+    ) engine=InnoDB
+Hibernate: 
+    create table job_benefits (
+        job_id bigint not null,
+        benefit varchar(255)
+    ) engine=InnoDB
+2026-04-04T03:41:07.534Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    create table job_requirements (
+        job_id bigint not null,
+        requirement varchar(255)
+    ) engine=InnoDB
+Hibernate: 
+    create table job_requirements (
+        job_id bigint not null,
+        requirement varchar(255)
+    ) engine=InnoDB
+2026-04-04T03:41:07.559Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    create table jobs (
+        id bigint not null auto_increment,
+        company_id bigint,
+        currency varchar(255),
+        deadline date,
+        description TEXT,
+        experience_level enum ('ENTRY','LEAD','MANAGER','MID','SENIOR'),
+        job_type enum ('CONTRACT','FREELANCE','FULL_TIME','INTERNSHIP','PART_TIME','REMOTE'),
+        location varchar(255),
+        max_salary decimal(38,2),
+        min_experience_years integer,
+        min_salary decimal(38,2),
+        posted_at datetime(6),
+        posted_by_id bigint,
+        status enum ('CLOSED','DRAFT','EXPIRED','PUBLISHED'),
+        title varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+Hibernate: 
+    create table jobs (
+        id bigint not null auto_increment,
+        company_id bigint,
+        currency varchar(255),
+        deadline date,
+        description TEXT,
+        experience_level enum ('ENTRY','LEAD','MANAGER','MID','SENIOR'),
+        job_type enum ('CONTRACT','FREELANCE','FULL_TIME','INTERNSHIP','PART_TIME','REMOTE'),
+        location varchar(255),
+        max_salary decimal(38,2),
+        min_experience_years integer,
+        min_salary decimal(38,2),
+        posted_at datetime(6),
+        posted_by_id bigint,
+        status enum ('CLOSED','DRAFT','EXPIRED','PUBLISHED'),
+        title varchar(255),
+        primary key (id)
+    ) engine=InnoDB
+2026-04-04T03:41:07.596Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    alter table job_benefits 
+       add constraint FKdqntmlq6o4himh9uva0u3fcl9 
+       foreign key (job_id) 
+       references jobs (id)
+Hibernate: 
+    alter table job_benefits 
+       add constraint FKdqntmlq6o4himh9uva0u3fcl9 
+       foreign key (job_id) 
+       references jobs (id)
+2026-04-04T03:41:07.662Z DEBUG 1 --- [smartmatch-api] [           main] org.hibernate.SQL                        : 
+    alter table job_requirements 
+       add constraint FKew6dgeddyo1d7ril9allqfafr 
+       foreign key (job_id) 
+       references jobs (id)
+Hibernate: 
+    alter table job_requirements 
+       add constraint FKew6dgeddyo1d7ril9allqfafr 
+       foreign key (job_id) 
+       references jobs (id)
+2026-04-04T03:41:07.728Z  INFO 1 --- [smartmatch-api] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-04-04T03:41:08.043Z DEBUG 1 --- [smartmatch-api] [           main] c.s.i.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-04-04T03:41:08.308Z  INFO 1 --- [smartmatch-api] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name customUserDetailsService
+2026-04-04T03:41:08.863Z  INFO 1 --- [smartmatch-api] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-04-04T03:41:08.877Z  INFO 1 --- [smartmatch-api] [           main] c.smartmatch.api.SmartMatchApplication   : Started SmartMatchApplication in 5.79 seconds (process running for 6.324)

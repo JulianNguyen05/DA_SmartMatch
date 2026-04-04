@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
-@Component
+@Component("jpaJobMapper")
 public class JobMapper {
 
     public JobJpaEntity toEntity(Job job) {
