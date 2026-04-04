@@ -42,4 +42,16 @@ public class JobRepositoryImpl implements JobRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+    @Override
+    public List<Job> findByPostedById(Long postedById) {
+        return jpaRepository.findByPostedById(postedById).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Job> findByIdAndPostedById(Long id, Long postedById) {
+        return jpaRepository.findByIdAndPostedById(id, postedById)
+                .map(mapper::toDomain);
+    }
 }

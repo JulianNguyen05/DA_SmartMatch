@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/employer/jobs")
 @RequiredArgsConstructor
@@ -20,10 +22,25 @@ public class JobController {
             @RequestBody CreateJobRequest request,
             Authentication authentication) {
 
-        // Lấy employerId từ JWT (sẽ hoàn thiện sau khi Auth ổn)
-        Long employerId = Long.parseLong(authentication.getName()); // tạm dùng username = id, bạn có thể thay bằng CustomUserDetails
-
+        Long employerId = Long.parseLong(authentication.getName());
         JobResponse response = jobService.createJob(request, employerId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<JobResponse>> getMyJobs(Authentication authentication) {
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobResponse> jobs = jobService.getMyJobs(employerId);
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getJobById(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse job = jobService.getJobById(id, employerId);
+        return ResponseEntity.ok(job);
     }
 }

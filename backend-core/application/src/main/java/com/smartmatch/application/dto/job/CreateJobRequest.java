@@ -16,7 +16,6 @@ import java.util.List;
 public class CreateJobRequest {
     private String title;
     private String description;
-    private Long companyId;
     private String location;
     private BigDecimal minSalary;
     private BigDecimal maxSalary;
