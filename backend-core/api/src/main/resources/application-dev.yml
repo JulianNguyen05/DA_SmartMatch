@@ -1,14 +1,20 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/smartmatch_db_dev?createDatabaseIfNotExist=true
+    # Kết nối qua cổng 3307 của Docker, tự tạo DB nếu chưa có
+    url: jdbc:mysql://localhost:3307/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: root
-    password: 123456
+    password: root123
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 logging:
   level:
     com.smartmatch: DEBUG
+    org.hibernate.SQL: DEBUG

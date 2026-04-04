@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: smartmatch-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: smartmatch_db
+      MYSQL_USER: smartmatch
+      MYSQL_PASSWORD: smartmatch123
+    ports:
+      - "3307:3306"                    # Tránh conflict với MySQL local (nếu có)
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql   # Tự động tạo bảng khi start lần đầu
+    networks:
+      - smartmatch-network
+
+  # (Tùy chọn) phpMyAdmin để quản lý DB dễ dàng
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: smartmatch-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
+    ports:
+      - "8081:80"
+    networks:
+      - smartmatch-network
+
+volumes:
+  mysql_data:
+
+networks:
+  smartmatch-network:
+    driver: bridge

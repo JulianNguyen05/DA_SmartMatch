@@ -1,11 +1,9 @@
 package com.smartmatch.domain.user.model;
 
-import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -13,36 +11,33 @@ import java.time.LocalDateTime;
 @Builder
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(unique = true, nullable = false)
     private String email;
-
-    @Column(nullable = false)
     private String password;
-
-    @Column(unique = true, nullable = false)
     private String phone;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;                    // ADMIN, EMPLOYER, CANDIDATE
-
+    private Role role;
     private boolean enabled = true;
-
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+    public static User createNewUser(String email, String hashedPassword, String phone, Role role) {
+        User user = User.builder()
+                .email(email.toLowerCase().trim())
+                .password(hashedPassword)
+                .phone(phone.trim())
+                .role(role)
+                .enabled(true)
+                .build();
+        user.onCreate();
+        return user;
     }
 
-    @PreUpdate
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 }

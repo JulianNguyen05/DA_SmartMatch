@@ -10,10 +10,10 @@ import com.smartmatch.domain.user.repository.UserRepository;
 import com.smartmatch.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,19 +25,41 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String email = request.getEmail().toLowerCase().trim();
+        String phone = request.getPhone().trim();
+
+        // Kiểm tra tồn tại
+        if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email đã tồn tại");
         }
+        if (userRepository.existsByPhone(phone)) {
+            throw new RuntimeException("Số điện thoại đã tồn tại");
+        }
 
-        // Chỉ cho phép EMPLOYER hoặc CANDIDATE tự đăng ký (ADMIN do admin tạo)
-        Role role = Role.valueOf(request.getRole().toUpperCase());
+        // Validate role
+        Role role;
+        try {
+            role = Role.valueOf(request.getRole().toUpperCase());
+            if (role == Role.ADMIN) {
+                throw new RuntimeException("Không được tự đăng ký tài khoản ADMIN");
+            }
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Role không hợp lệ. Chỉ chấp nhận EMPLOYER hoặc CANDIDATE");
+        }
 
-        User user = User.builder().email(request.getEmail()).password(passwordEncoder.encode(request.getPassword())).phone(request.getPhone()).role(role).enabled(true).build();
+        // Mã hóa mật khẩu và tạo User domain
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        User user = User.createNewUser(email, hashedPassword, phone, role);
 
+        // Lưu user (sẽ cần mapper ở infrastructure)
         User savedUser = userRepository.save(user);
 
-        // Tạo token
-        var userDetails = new org.springframework.security.core.userdetails.User(savedUser.getEmail(), savedUser.getPassword(), List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name())));
+        // Tạo JWT
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(savedUser.getEmail())
+                .password(savedUser.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + savedUser.getRole().name()))
+                .build();
 
         String token = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
@@ -47,13 +69,24 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));
+        String email = request.getEmail().toLowerCase().trim();
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new BadCredentialsException("Email hoặc mật khẩu không đúng");
         }
 
-        var userDetails = new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+        if (!user.isEnabled()) {
+            throw new RuntimeException("Tài khoản đã bị khóa");
+        }
+
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                .build();
 
         String token = jwtService.generateToken(userDetails);
         String refreshToken = jwtService.generateRefreshToken(userDetails);
