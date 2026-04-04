@@ -1,11 +1,20 @@
 package com.smartmatch.infrastructure.persistence.repository;
 
-import com.smartmatch.domain.user.model.User;
-import com.smartmatch.domain.user.repository.UserRepository;
+import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
-public interface UserJpaRepository extends JpaRepository<User, Long>, UserRepository {
-    // Spring Data JPA tự implement các method: findByEmail, existsByEmail, save
+public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
+
+    Optional<UserJpaEntity> findByEmail(String email);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByPhone(String phone);
+
+    // Có thể thêm sau:
+    // Optional<UserJpaEntity> findByPhone(String phone);
 }
