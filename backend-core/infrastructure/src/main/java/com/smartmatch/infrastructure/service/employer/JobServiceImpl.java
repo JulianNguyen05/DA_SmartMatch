@@ -56,4 +56,20 @@ public class JobServiceImpl implements JobService {
         }
         return jobMapper.toResponse(jobOpt.get());
     }
+
+    @Override
+    public List<JobResponse> getAllPublishedJobs() {
+        List<Job> jobs = jobRepository.findAllPublished();
+        // Sắp xếp tin mới nhất trước
+        return jobMapper.toResponseList(jobs);
+    }
+
+    @Override
+    public JobResponse getPublicJobById(Long id) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty() || jobOpt.get().getStatus() != com.smartmatch.domain.common.enums.JobStatus.PUBLISHED) {
+            throw new IllegalArgumentException("Tin tuyển dụng không tồn tại hoặc đã đóng!");
+        }
+        return jobMapper.toResponse(jobOpt.get());
+    }
 }

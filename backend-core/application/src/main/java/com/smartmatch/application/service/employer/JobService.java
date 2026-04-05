@@ -9,4 +9,6 @@ public interface JobService {
     JobResponse createJob(CreateJobRequest request, Long employerId);
     List<JobResponse> getMyJobs(Long employerId);
     JobResponse getJobById(Long jobId, Long employerId);
+    List<JobResponse> getAllPublishedJobs();
+    JobResponse getPublicJobById(Long id);
 }
