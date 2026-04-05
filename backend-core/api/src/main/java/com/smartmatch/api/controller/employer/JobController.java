@@ -1,7 +1,9 @@
 package com.smartmatch.api.controller.employer;
 
+import com.smartmatch.application.dto.application.JobApplicationResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.service.candidate.ApplicationService;
 import com.smartmatch.application.service.employer.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import java.util.List;
 public class JobController {
 
     private final JobService jobService;
+    private final ApplicationService applicationService;
 
     @PostMapping
     public ResponseEntity<JobResponse> createJob(
@@ -42,5 +45,15 @@ public class JobController {
         Long employerId = Long.parseLong(authentication.getName());
         JobResponse job = jobService.getJobById(id, employerId);
         return ResponseEntity.ok(job);
+    }
+
+    @GetMapping("/{jobId}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getJobApplications(
+            @PathVariable Long jobId,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobApplicationResponse> applications = applicationService.getApplicationsByJobId(jobId, employerId);
+        return ResponseEntity.ok(applications);
     }
 }

@@ -12,6 +12,7 @@ import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -48,5 +49,25 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 5. Trả về response
         return applicationMapper.toResponse(savedApplication);
+    }
+
+    @Override
+    public List<JobApplicationResponse> getMyApplications(Long candidateId) {
+        List<JobApplication> applications = applicationRepository.findByCandidateId(candidateId);
+        return applications.stream()
+                .map(applicationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<JobApplicationResponse> getApplicationsByJobId(Long jobId, Long employerId) {
+        // Kiểm tra employer có quyền xem job này không
+        jobRepository.findByIdAndPostedById(jobId, employerId)
+                .orElseThrow(() -> new IllegalArgumentException("Bạn không có quyền xem đơn ứng tuyển của tin này!"));
+
+        List<JobApplication> applications = applicationRepository.findByJobId(jobId);
+        return applications.stream()
+                .map(applicationMapper::toResponse)
+                .toList();
     }
 }
