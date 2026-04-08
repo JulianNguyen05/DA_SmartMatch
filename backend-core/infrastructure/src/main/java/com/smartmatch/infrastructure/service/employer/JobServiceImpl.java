@@ -2,6 +2,7 @@ package com.smartmatch.infrastructure.service.employer;
 
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
 import com.smartmatch.application.mapper.JobMapper;
 import com.smartmatch.application.service.employer.JobService;
 import com.smartmatch.domain.company.model.Company;
@@ -11,8 +12,10 @@ import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,5 +74,64 @@ public class JobServiceImpl implements JobService {
             throw new IllegalArgumentException("Tin tuyển dụng không tồn tại hoặc đã đóng!");
         }
         return jobMapper.toResponse(jobOpt.get());
+    }
+    @Override
+    public List<JobResponse> searchPublishedJobs(JobSearchRequest request) {
+        // Lấy tất cả tin đang PUBLISHED (đã có sẵn)
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Lọc theo các điều kiện (memory filter - phù hợp MVP, sau có thể nâng Specification)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt())) // mới nhất trước
+                .collect(Collectors.toList());
+
+        // Phân trang đơn giản
+        int page = Math.max(0, request.getPage());
+        int size = Math.max(1, request.getSize());
+        int from = page * size;
+        int to = Math.min(from + size, filtered.size());
+
+        if (from >= filtered.size()) {
+            return List.of();
+        }
+
+        return jobMapper.toResponseList(filtered.subList(from, to));
+    }
+
+    private boolean matchesKeyword(Job job, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return true;
+        String k = keyword.toLowerCase().trim();
+        return job.getTitle().toLowerCase().contains(k) ||
+                (job.getDescription() != null && job.getDescription().toLowerCase().contains(k));
+    }
+
+    private boolean matchesLocation(Job job, String location) {
+        if (location == null || location.trim().isEmpty()) return true;
+        return job.getLocation() != null && job.getLocation().equalsIgnoreCase(location.trim());
+    }
+
+    private boolean matchesJobType(Job job, com.smartmatch.domain.common.enums.JobType jobType) {
+        if (jobType == null) return true;
+        return job.getJobType() == jobType;
+    }
+
+    private boolean matchesExperienceLevel(Job job, com.smartmatch.domain.common.enums.ExperienceLevel level) {
+        if (level == null) return true;
+        return job.getExperienceLevel() == level;
+    }
+
+    private boolean matchesSalary(Job job, BigDecimal minSalary, BigDecimal maxSalary) {
+        if (minSalary == null && maxSalary == null) return true;
+        BigDecimal salary = job.getMaxSalary() != null ? job.getMaxSalary() : job.getMinSalary();
+        if (salary == null) return true;
+
+        if (minSalary != null && salary.compareTo(minSalary) < 0) return false;
+        if (maxSalary != null && salary.compareTo(maxSalary) > 0) return false;
+        return true;
     }
 }

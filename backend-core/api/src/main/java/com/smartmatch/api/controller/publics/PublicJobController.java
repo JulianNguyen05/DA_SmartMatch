@@ -1,6 +1,7 @@
 package com.smartmatch.api.controller.publics;
 
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
 import com.smartmatch.application.service.employer.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,5 +32,15 @@ public class PublicJobController {
     public ResponseEntity<JobResponse> getPublicJobById(@PathVariable Long id) {
         JobResponse job = jobService.getPublicJobById(id);
         return ResponseEntity.ok(job);
+    }
+
+    /**
+     * TÌM KIẾM & LỌC tin tuyển dụng (tính năng cốt lõi)
+     * Ví dụ: GET /api/public/jobs/search?keyword=java&location=TP.HCM&jobType=FULL_TIME&minSalary=15000000
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<JobResponse>> searchJobs(@ModelAttribute JobSearchRequest request) {
+        List<JobResponse> jobs = jobService.searchPublishedJobs(request);
+        return ResponseEntity.ok(jobs);
     }
 }
