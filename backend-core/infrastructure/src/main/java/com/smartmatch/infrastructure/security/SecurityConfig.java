@@ -12,7 +12,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // Cho phép @PreAuthorize
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -26,22 +26,25 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
                         // Public APIs
                         .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Admin only
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // Employer
-                        .requestMatchers(HttpMethod.POST, "/api/employer/**").hasRole("EMPLOYER")
-                        .requestMatchers(HttpMethod.GET, "/api/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
-
-                        // Candidate
+                        // Candidate APIs
                         .requestMatchers(HttpMethod.POST, "/api/candidate/**").hasRole("CANDIDATE")
                         .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("CANDIDATE", "EMPLOYER", "ADMIN")
 
-                        .anyRequest().authenticated())
+                        // Employer APIs
+                        .requestMatchers(HttpMethod.POST, "/api/employer/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.GET, "/api/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
+
+                        // Admin (nếu có sau)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -49,6 +52,6 @@ public class SecurityConfig {
 
     @Bean
     public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12);
     }
 }

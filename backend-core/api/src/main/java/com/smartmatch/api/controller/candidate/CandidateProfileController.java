@@ -3,6 +3,7 @@ package com.smartmatch.api.controller.candidate;
 import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
 import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
 import com.smartmatch.application.service.candidate.CandidateProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,7 @@ public class CandidateProfileController {
 
     @PostMapping
     public ResponseEntity<CandidateProfileResponse> saveProfile(
-            @RequestBody CandidateProfileRequest request,
+            @Valid @RequestBody CandidateProfileRequest request,
             Authentication authentication) {
 
         Long candidateId = Long.parseLong(authentication.getName());

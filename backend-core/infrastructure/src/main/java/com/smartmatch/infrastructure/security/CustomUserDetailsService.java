@@ -1,7 +1,7 @@
 package com.smartmatch.infrastructure.security;
 
 import com.smartmatch.domain.user.model.User;
-import com.smartmatch.domain.user.repository.UserRepository;   // ← SỬA IMPORT NÀY
+import com.smartmatch.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,18 +17,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;   // Dùng Port từ domain
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                getAuthorities(user)
-        );
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities(getAuthorities(user))
+                .accountExpired(false)
+                .accountLocked(!user.isEnabled())
+                .credentialsExpired(false)
+                .disabled(!user.isEnabled())
+                .build();
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {

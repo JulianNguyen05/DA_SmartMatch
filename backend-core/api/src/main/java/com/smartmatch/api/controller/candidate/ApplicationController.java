@@ -3,6 +3,7 @@ package com.smartmatch.api.controller.candidate;
 import com.smartmatch.application.dto.application.ApplyJobRequest;
 import com.smartmatch.application.dto.application.JobApplicationResponse;
 import com.smartmatch.application.service.candidate.ApplicationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<JobApplicationResponse> applyJob(
-            @RequestBody ApplyJobRequest request,
+            @Valid @RequestBody ApplyJobRequest request,
             Authentication authentication) {
 
         Long candidateId = Long.parseLong(authentication.getName());

@@ -3,6 +3,7 @@ package com.smartmatch.api.controller.employer;
 import com.smartmatch.application.dto.company.CompanyResponse;
 import com.smartmatch.application.dto.company.CreateCompanyRequest;
 import com.smartmatch.application.service.employer.CompanyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,7 +18,7 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<CompanyResponse> createOrUpdateCompany(
-            @RequestBody CreateCompanyRequest request,
+            @Valid @RequestBody CreateCompanyRequest request,
             Authentication authentication) {
 
         Long ownerId = Long.parseLong(authentication.getName()); // tạm thời, sau sẽ lấy từ CustomUserDetails
