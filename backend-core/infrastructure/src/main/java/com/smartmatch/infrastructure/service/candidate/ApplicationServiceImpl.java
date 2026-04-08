@@ -6,6 +6,7 @@ import com.smartmatch.application.mapper.JobApplicationMapper;
 import com.smartmatch.application.service.candidate.ApplicationService;
 import com.smartmatch.domain.application.model.JobApplication;
 import com.smartmatch.domain.application.repository.JobApplicationRepository;
+import com.smartmatch.domain.common.enums.ApplicationStatus;
 import com.smartmatch.domain.common.enums.JobStatus;
 import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.domain.job.repository.JobRepository;
@@ -69,5 +70,21 @@ public class ApplicationServiceImpl implements ApplicationService {
         return applications.stream()
                 .map(applicationMapper::toResponse)
                 .toList();
+    }
+    @Override
+    public void withdrawApplication(Long applicationId, Long candidateId) {
+        JobApplication application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy đơn ứng tuyển!"));
+
+        if (!application.getCandidateId().equals(candidateId)) {
+            throw new IllegalArgumentException("Bạn không có quyền rút đơn này!");
+        }
+
+        if (application.getStatus() != ApplicationStatus.PENDING) {
+            throw new IllegalArgumentException("Chỉ có thể rút đơn khi đang ở trạng thái Chờ xử lý (PENDING)!");
+        }
+
+        // Cần thêm hàm delete vào JobApplicationRepository
+        applicationRepository.delete(application);
     }
 }

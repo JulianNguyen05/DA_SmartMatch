@@ -34,4 +34,10 @@ public class ResumeController {
         List<ResumeResponse> responses = resumeService.getMyResumes(candidateId);
         return ResponseEntity.ok(responses);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteResume(@PathVariable Long id, Authentication authentication) throws IOException {
+        Long candidateId = Long.parseLong(authentication.getName());
+        resumeService.deleteResume(id, candidateId);
+        return ResponseEntity.ok().build();
+    }
 }

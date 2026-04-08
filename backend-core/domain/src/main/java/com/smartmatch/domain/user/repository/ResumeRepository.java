@@ -9,4 +9,6 @@ public interface ResumeRepository {
     Resume save(Resume resume);
     Optional<Resume> findByCandidateId(Long candidateId);
     List<Resume> findAllByCandidateId(Long candidateId);
+    Optional<Resume> findById(Long id);
+    void deleteById(Long id);
 }

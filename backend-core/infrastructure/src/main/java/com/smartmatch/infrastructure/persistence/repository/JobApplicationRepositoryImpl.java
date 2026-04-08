@@ -47,4 +47,9 @@ public class JobApplicationRepositoryImpl implements JobApplicationRepository {
                 .map(mapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public void delete(JobApplication application) {
+        jpaRepository.delete(mapper.toEntity(application));
+    }
 }

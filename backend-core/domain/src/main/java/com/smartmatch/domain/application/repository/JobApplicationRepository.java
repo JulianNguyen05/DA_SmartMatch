@@ -11,4 +11,5 @@ public interface JobApplicationRepository {
     boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId); // chống nộp trùng
     List<JobApplication> findByJobId(Long jobId);                     // employer xem ai nộp
     List<JobApplication> findByCandidateId(Long candidateId);         // candidate xem đơn của mình
+    void delete(JobApplication application);
 }

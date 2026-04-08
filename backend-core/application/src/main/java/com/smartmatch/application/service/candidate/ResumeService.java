@@ -9,4 +9,5 @@ import java.util.List;
 public interface ResumeService {
     ResumeResponse uploadResume(MultipartFile file, Long candidateId) throws IOException;
     List<ResumeResponse> getMyResumes(Long candidateId);
+    void deleteResume(Long resumeId, Long candidateId) throws IOException;
 }

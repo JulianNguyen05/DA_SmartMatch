@@ -34,4 +34,10 @@ public class ApplicationController {
         List<JobApplicationResponse> applications = applicationService.getMyApplications(candidateId);
         return ResponseEntity.ok(applications);
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> withdrawApplication(@PathVariable Long id, Authentication authentication) {
+        Long candidateId = Long.parseLong(authentication.getName());
+        applicationService.withdrawApplication(id, candidateId);
+        return ResponseEntity.ok().build();
+    }
 }

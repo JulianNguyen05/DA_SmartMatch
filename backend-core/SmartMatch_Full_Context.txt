@@ -285,6 +285,7 @@ import com.smartmatch.application.dto.auth.AuthResponse;
 import com.smartmatch.application.dto.auth.RegisterRequest;
 import com.smartmatch.application.dto.auth.LoginRequest;
 import com.smartmatch.application.service.auth.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -297,12 +298,12 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }
@@ -316,6 +317,7 @@ package com.smartmatch.api.controller.candidate;
 import com.smartmatch.application.dto.application.ApplyJobRequest;
 import com.smartmatch.application.dto.application.JobApplicationResponse;
 import com.smartmatch.application.service.candidate.ApplicationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -332,7 +334,7 @@ public class ApplicationController {
 
     @PostMapping
     public ResponseEntity<JobApplicationResponse> applyJob(
-            @RequestBody ApplyJobRequest request,
+            @Valid @RequestBody ApplyJobRequest request,
             Authentication authentication) {
 
         Long candidateId = Long.parseLong(authentication.getName());
@@ -357,6 +359,7 @@ package com.smartmatch.api.controller.candidate;
 import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
 import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
 import com.smartmatch.application.service.candidate.CandidateProfileService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -371,7 +374,7 @@ public class CandidateProfileController {
 
     @PostMapping
     public ResponseEntity<CandidateProfileResponse> saveProfile(
-            @RequestBody CandidateProfileRequest request,
+            @Valid @RequestBody CandidateProfileRequest request,
             Authentication authentication) {
 
         Long candidateId = Long.parseLong(authentication.getName());
@@ -438,6 +441,7 @@ package com.smartmatch.api.controller.employer;
 import com.smartmatch.application.dto.company.CompanyResponse;
 import com.smartmatch.application.dto.company.CreateCompanyRequest;
 import com.smartmatch.application.service.employer.CompanyService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -452,7 +456,7 @@ public class CompanyController {
 
     @PostMapping
     public ResponseEntity<CompanyResponse> createOrUpdateCompany(
-            @RequestBody CreateCompanyRequest request,
+            @Valid @RequestBody CreateCompanyRequest request,
             Authentication authentication) {
 
         Long ownerId = Long.parseLong(authentication.getName()); // táº¡m thá»i, sau sáº½ láº¥y tá»« CustomUserDetails
@@ -479,6 +483,7 @@ import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
 import com.smartmatch.application.service.candidate.ApplicationService;
 import com.smartmatch.application.service.employer.JobService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -496,7 +501,7 @@ public class JobController {
 
     @PostMapping
     public ResponseEntity<JobResponse> createJob(
-            @RequestBody CreateJobRequest request,
+            @Valid @RequestBody CreateJobRequest request,
             Authentication authentication) {
 
         Long employerId = Long.parseLong(authentication.getName());
@@ -975,6 +980,8 @@ server:
 
 package com.smartmatch.application.dto.application;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -983,8 +990,12 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ApplyJobRequest {
+
+    @NotNull(message = "Job ID khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private Long jobId;
-    private String coverLetter;   // optional
+
+    @Size(max = 2000, message = "ThÆ° xin viá»‡c tá»‘i Ä‘a 2000 kÃ½ tá»±")
+    private String coverLetter;
 }
 
 
@@ -1042,9 +1053,12 @@ import lombok.Data;
 
 @Data
 public class LoginRequest {
-    @NotBlank @Email
+
+    @NotBlank(message = "Email khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Email(message = "Email khÃ´ng há»£p lá»‡")
     private String email;
-    @NotBlank
+
+    @NotBlank(message = "Máº­t kháº©u khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String password;
 }
 
@@ -1056,20 +1070,28 @@ package com.smartmatch.application.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
 public class RegisterRequest {
-    @NotBlank @Email
+
+    @NotBlank(message = "Email khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Email(message = "Email khÃ´ng há»£p lá»‡")
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Máº­t kháº©u khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Size(min = 8, max = 100, message = "Máº­t kháº©u pháº£i tá»« 8-100 kÃ½ tá»±")
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Pattern(regexp = "^(0[3|5|7|8|9])+([0-9]{8})$", message = "Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡")
     private String phone;
 
-    private String role; // "EMPLOYER" hoáº·c "CANDIDATE" (Admin sáº½ táº¡o riÃªng)
+    @NotBlank(message = "Vai trÃ² khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Pattern(regexp = "EMPLOYER|CANDIDATE", message = "Role chá»‰ Ä‘Æ°á»£c lÃ  EMPLOYER hoáº·c CANDIDATE")
+    private String role;
 }
 
 
@@ -1078,15 +1100,34 @@ public class RegisterRequest {
 
 package com.smartmatch.application.dto.candidate;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CandidateProfileRequest {
+
+    @NotBlank(message = "Há» vÃ  tÃªn khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Size(max = 100, message = "Há» tÃªn tá»‘i Ä‘a 100 kÃ½ tá»±")
     private String fullName;
+
+    @Size(max = 200, message = "Headline tá»‘i Ä‘a 200 kÃ½ tá»±")
     private String headline;
+
+    @Size(max = 2000, message = "Giá»›i thiá»‡u tá»‘i Ä‘a 2000 kÃ½ tá»±")
     private String summary;
+
+    @Size(max = 1000, message = "Ká»¹ nÄƒng tá»‘i Ä‘a 1000 kÃ½ tá»±")
     private String skills;
+
+    @Size(max = 1000, message = "Há»c váº¥n tá»‘i Ä‘a 1000 kÃ½ tá»±")
     private String education;
+
+    @Size(max = 2000, message = "Kinh nghiá»‡m tá»‘i Ä‘a 2000 kÃ½ tá»±")
     private String experience;
 }
 
@@ -1164,6 +1205,8 @@ public class CompanyResponse {
 
 package com.smartmatch.application.dto.company;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 @Getter
@@ -1172,13 +1215,29 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CreateCompanyRequest {
+
+    @NotBlank(message = "TÃªn cÃ´ng ty khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Size(max = 150, message = "TÃªn cÃ´ng ty tá»‘i Ä‘a 150 kÃ½ tá»±")
     private String name;
+
+    @Size(max = 3000, message = "MÃ´ táº£ tá»‘i Ä‘a 3000 kÃ½ tá»±")
     private String description;
+
+    @Size(max = 255, message = "Äá»‹a chá»‰ tá»‘i Ä‘a 255 kÃ½ tá»±")
     private String address;
+
+    @Size(max = 100, message = "Vá»‹ trÃ­ tá»‘i Ä‘a 100 kÃ½ tá»±")
     private String location;
+
+    @Size(max = 150, message = "Website tá»‘i Ä‘a 150 kÃ½ tá»±")
     private String website;
+
     private String logoUrl;
+
+    @Size(max = 100, message = "NgÃ nh nghá» tá»‘i Ä‘a 100 kÃ½ tá»±")
     private String industry;
+
+    @Size(max = 50, message = "Quy mÃ´ tá»‘i Ä‘a 50 kÃ½ tá»±")
     private String companySize;
 }
 
@@ -1190,6 +1249,7 @@ package com.smartmatch.application.dto.job;
 
 import com.smartmatch.domain.common.enums.ExperienceLevel;
 import com.smartmatch.domain.common.enums.JobType;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -1202,17 +1262,40 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CreateJobRequest {
+
+    @NotBlank(message = "TiÃªu Ä‘á» khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Size(max = 200, message = "TiÃªu Ä‘á» tá»‘i Ä‘a 200 kÃ½ tá»±")
     private String title;
+
+    @NotBlank(message = "MÃ´ táº£ khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
+    @Size(max = 5000, message = "MÃ´ táº£ tá»‘i Ä‘a 5000 kÃ½ tá»±")
     private String description;
+
+    @NotBlank(message = "Äá»‹a Ä‘iá»ƒm khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private String location;
+
+    @PositiveOrZero(message = "LÆ°Æ¡ng tá»‘i thiá»ƒu pháº£i â‰¥ 0")
     private BigDecimal minSalary;
+
+    @PositiveOrZero(message = "LÆ°Æ¡ng tá»‘i Ä‘a pháº£i â‰¥ 0")
     private BigDecimal maxSalary;
-    private String currency;
+
+    private String currency = "VND";
+
+    @NotNull(message = "Loáº¡i hÃ¬nh lÃ m viá»‡c khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private JobType jobType;
+
+    @NotNull(message = "Má»©c kinh nghiá»‡m khÃ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng")
     private ExperienceLevel experienceLevel;
+
+    @Min(value = 0, message = "Sá»‘ nÄƒm kinh nghiá»‡m khÃ´ng Ä‘Æ°á»£c Ã¢m")
     private Integer minExperienceYears;
+
     private List<String> requirements;
+
     private List<String> benefits;
+
+    @FutureOrPresent(message = "Háº¡n ná»™p pháº£i lÃ  ngÃ y hiá»‡n táº¡i hoáº·c tÆ°Æ¡ng lai")
     private LocalDate deadline;
 }
 
@@ -1265,6 +1348,7 @@ package com.smartmatch.application.dto.job;
 import com.smartmatch.domain.common.enums.ExperienceLevel;
 import com.smartmatch.domain.common.enums.JobType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -1274,31 +1358,21 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Schema(description = "YÃªu cáº§u tÃ¬m kiáº¿m & lá»c tin tuyá»ƒn dá»¥ng cÃ´ng khai")
+@Schema(description = "YÃªu cáº§u tÃ¬m kiáº¿m tin tuyá»ƒn dá»¥ng")
 public class JobSearchRequest {
 
-    @Schema(description = "Tá»« khÃ³a tÃ¬m kiáº¿m (title hoáº·c description)", example = "Java Spring Boot")
     private String keyword;
-
-    @Schema(description = "Äá»‹a Ä‘iá»ƒm lÃ m viá»‡c", example = "TP.HCM")
     private String location;
-
-    @Schema(description = "HÃ¬nh thá»©c lÃ m viá»‡c", example = "FULL_TIME")
     private JobType jobType;
-
-    @Schema(description = "Má»©c kinh nghiá»‡m", example = "MID")
     private ExperienceLevel experienceLevel;
 
-    @Schema(description = "Má»©c lÆ°Æ¡ng tá»‘i thiá»ƒu (VND)", example = "15000000")
+    @PositiveOrZero
     private BigDecimal minSalary;
 
-    @Schema(description = "Má»©c lÆ°Æ¡ng tá»‘i Ä‘a (VND)", example = "30000000")
+    @PositiveOrZero
     private BigDecimal maxSalary;
 
-    @Schema(description = "Trang hiá»‡n táº¡i (báº¯t Ä‘áº§u tá»« 0)", example = "0", defaultValue = "0")
     private Integer page = 0;
-
-    @Schema(description = "Sá»‘ tin má»—i trang", example = "20", defaultValue = "20")
     private Integer size = 20;
 }
 
@@ -3217,7 +3291,7 @@ public class UserRepositoryImpl implements UserRepository {
 package com.smartmatch.infrastructure.security;
 
 import com.smartmatch.domain.user.model.User;
-import com.smartmatch.domain.user.repository.UserRepository;   // â† Sá»¬A IMPORT NÃ€Y
+import com.smartmatch.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -3233,18 +3307,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;   // DÃ¹ng Port tá»« domain
+    private final UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPassword(),
-                getAuthorities(user)
-        );
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getEmail())
+                .password(user.getPassword())
+                .authorities(getAuthorities(user))
+                .accountExpired(false)
+                .accountLocked(!user.isEnabled())
+                .credentialsExpired(false)
+                .disabled(!user.isEnabled())
+                .build();
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
@@ -3298,8 +3376,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
             if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
@@ -3413,7 +3492,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true) // Cho phÃ©p @PreAuthorize
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -3427,22 +3506,25 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
                         // Public APIs
                         .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Admin only
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-                        // Employer
-                        .requestMatchers(HttpMethod.POST, "/api/employer/**").hasRole("EMPLOYER")
-                        .requestMatchers(HttpMethod.GET, "/api/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
-
-                        // Candidate
+                        // Candidate APIs
                         .requestMatchers(HttpMethod.POST, "/api/candidate/**").hasRole("CANDIDATE")
                         .requestMatchers(HttpMethod.GET, "/api/candidate/**").hasAnyRole("CANDIDATE", "EMPLOYER", "ADMIN")
 
-                        .anyRequest().authenticated())
+                        // Employer APIs
+                        .requestMatchers(HttpMethod.POST, "/api/employer/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.GET, "/api/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
+
+                        // Admin (náº¿u cÃ³ sau)
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -3450,7 +3532,7 @@ public class SecurityConfig {
 
     @Bean
     public org.springframework.security.crypto.password.PasswordEncoder passwordEncoder() {
-        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+        return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder(12);
     }
 }
 

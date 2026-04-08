@@ -59,4 +59,21 @@ public class ResumeServiceImpl implements ResumeService {
         List<Resume> resumes = resumeRepository.findAllByCandidateId(candidateId);
         return resumes.stream().map(appMapper::toResponse).toList();
     }
+
+    @Override
+    public void deleteResume(Long resumeId, Long candidateId) throws IOException {
+        Resume resume = resumeRepository.findById(resumeId) // Bạn cần thêm findById vào ResumeRepository
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy CV!"));
+
+        if (!resume.getCandidateId().equals(candidateId)) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa CV này!");
+        }
+
+        // Xóa file vật lý
+        Path filePath = uploadDir.resolve(resume.getFileUrl().substring(resume.getFileUrl().lastIndexOf("/") + 1));
+        Files.deleteIfExists(filePath);
+
+        // Xóa record trong DB (Cần thêm hàm deleteById vào ResumeRepository và ResumeJpaRepository)
+        resumeRepository.deleteById(resumeId);
+    }
 }

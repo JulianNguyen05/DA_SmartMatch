@@ -56,4 +56,10 @@ public class CompanyServiceImpl implements CompanyService {
         }
         return companyMapper.toResponse(companyOpt.get());
     }
+    @Override
+    public CompanyResponse getCompanyById(Long id) {
+        Company company = companyRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy công ty!"));
+        return companyMapper.toResponse(company);
+    }
 }
