@@ -205,28 +205,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/candidate/ApplicationController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/application/ApplyJobRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/application/JobApplicationResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobApplicationMapper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/service/candidate/ApplicationService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/application/model/JobApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/application/repository/JobApplicationRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/common/enums/ApplicationStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/JobApplicationJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobApplicationMapper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobApplicationJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobApplicationRepositoryImpl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/candidate/ApplicationServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/api/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/SmartMatchApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/SmartMatchApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CompanyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CompanyMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/JobMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CompanyMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CompanyMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/UserMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/UserMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SmartMatch_Full_Context.txt" beforeDir="false" afterPath="$PROJECT_DIR$/SmartMatch_Full_Context.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -252,20 +231,20 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.SmartMatchApplication.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/2025_2026_(II)/DuAn/da_SmartMatch/backend-core",
-    "settings.editor.selected.configurable": "MavenSettings"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.SmartMatchApplication.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/2025_2026_(II)/DuAn/da_SmartMatch/backend-core&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="SmartMatchApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.smartmatch.api.SmartMatchApplication" />
@@ -344,6 +323,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/candidate/applications")
 @RequiredArgsConstructor
@@ -359,6 +340,94 @@ public class ApplicationController {
         Long candidateId = Long.parseLong(authentication.getName());
         JobApplicationResponse response = applicationService.applyJob(request, candidateId);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<JobApplicationResponse>> getMyApplications(Authentication authentication) {
+        Long candidateId = Long.parseLong(authentication.getName());
+        List<JobApplicationResponse> applications = applicationService.getMyApplications(candidateId);
+        return ResponseEntity.ok(applications);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\candidate\CandidateProfileController.java ---
+
+package com.smartmatch.api.controller.candidate;
+
+import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
+import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
+import com.smartmatch.application.service.candidate.CandidateProfileService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/candidate/profile")
+@RequiredArgsConstructor
+public class CandidateProfileController {
+
+    private final CandidateProfileService profileService;
+
+    @PostMapping
+    public ResponseEntity<CandidateProfileResponse> saveProfile(
+            @RequestBody CandidateProfileRequest request,
+            Authentication authentication) {
+
+        Long candidateId = Long.parseLong(authentication.getName());
+        CandidateProfileResponse response = profileService.saveOrUpdate(request, candidateId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping
+    public ResponseEntity<CandidateProfileResponse> getMyProfile(Authentication authentication) {
+        Long candidateId = Long.parseLong(authentication.getName());
+        CandidateProfileResponse response = profileService.getMyProfile(candidateId);
+        return ResponseEntity.ok(response);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\candidate\ResumeController.java ---
+
+package com.smartmatch.api.controller.candidate;
+
+import com.smartmatch.application.dto.candidate.ResumeResponse;
+import com.smartmatch.application.service.candidate.ResumeService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/candidate/resumes")
+@RequiredArgsConstructor
+public class ResumeController {
+
+    private final ResumeService resumeService;
+
+    @PostMapping("/upload")
+    public ResponseEntity<ResumeResponse> uploadResume(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
+
+        Long candidateId = Long.parseLong(authentication.getName());
+        ResumeResponse response = resumeService.uploadResume(file, candidateId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<ResumeResponse>> getMyResumes(Authentication authentication) {
+        Long candidateId = Long.parseLong(authentication.getName());
+        List<ResumeResponse> responses = resumeService.getMyResumes(candidateId);
+        return ResponseEntity.ok(responses);
     }
 }
 
@@ -407,8 +476,10 @@ public class CompanyController {
 
 package com.smartmatch.api.controller.employer;
 
+import com.smartmatch.application.dto.application.JobApplicationResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.service.candidate.ApplicationService;
 import com.smartmatch.application.service.employer.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -423,6 +494,7 @@ import java.util.List;
 public class JobController {
 
     private final JobService jobService;
+    private final ApplicationService applicationService;
 
     @PostMapping
     public ResponseEntity<JobResponse> createJob(
@@ -448,6 +520,56 @@ public class JobController {
 
         Long employerId = Long.parseLong(authentication.getName());
         JobResponse job = jobService.getJobById(id, employerId);
+        return ResponseEntity.ok(job);
+    }
+
+    @GetMapping("/{jobId}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getJobApplications(
+            @PathVariable Long jobId,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobApplicationResponse> applications = applicationService.getApplicationsByJobId(jobId, employerId);
+        return ResponseEntity.ok(applications);
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\controller\publics\PublicJobController.java ---
+
+package com.smartmatch.api.controller.publics;
+
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.service.employer.JobService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/public/jobs")
+@RequiredArgsConstructor
+public class PublicJobController {
+
+    private final JobService jobService;
+
+    /**
+     * Xem táº¥t cáº£ tin tuyá»ƒn dá»¥ng Ä‘ang cÃ´ng khai (Published)
+     */
+    @GetMapping
+    public ResponseEntity<List<JobResponse>> getAllPublishedJobs() {
+        List<JobResponse> jobs = jobService.getAllPublishedJobs();
+        return ResponseEntity.ok(jobs);
+    }
+
+    /**
+     * Xem chi tiáº¿t má»™t tin tuyá»ƒn dá»¥ng cÃ´ng khai
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getPublicJobById(@PathVariable Long id) {
+        JobResponse job = jobService.getPublicJobById(id);
         return ResponseEntity.ok(job);
     }
 }
@@ -786,6 +908,64 @@ public class RegisterRequest {
 
 
 
+--- FILE: application\src\main\java\com\smartmatch\application\dto\candidate\CandidateProfileRequest.java ---
+
+package com.smartmatch.application.dto.candidate;
+
+import lombok.*;
+
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class CandidateProfileRequest {
+    private String fullName;
+    private String headline;
+    private String summary;
+    private String skills;
+    private String education;
+    private String experience;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\candidate\CandidateProfileResponse.java ---
+
+package com.smartmatch.application.dto.candidate;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class CandidateProfileResponse {
+    private Long id;
+    private String fullName;
+    private String headline;
+    private String summary;
+    private String skills;
+    private String education;
+    private String experience;
+    private LocalDateTime updatedAt;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\candidate\ResumeResponse.java ---
+
+package com.smartmatch.application.dto.candidate;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class ResumeResponse {
+    private Long id;
+    private String fileName;
+    private String fileUrl;
+    private String fileType;
+    private Long fileSize;
+    private LocalDateTime uploadedAt;
+}
+
+
+
 --- FILE: application\src\main\java\com\smartmatch\application\dto\company\CompanyResponse.java ---
 
 package com.smartmatch.application.dto.company;
@@ -908,6 +1088,52 @@ public class JobResponse {
     private LocalDateTime postedAt;
     private LocalDate deadline;
     private JobStatus status;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\mapper\CandidateProfileMapper.java ---
+
+package com.smartmatch.application.mapper;
+
+import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
+import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
+import com.smartmatch.domain.user.model.CandidateProfile;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+
+@Component
+public class CandidateProfileMapper {
+
+    public CandidateProfile toDomain(CandidateProfileRequest request, Long candidateId) {
+        if (request == null) return null;
+        return CandidateProfile.builder()
+                .candidateId(candidateId)
+                .fullName(request.getFullName())
+                .headline(request.getHeadline())
+                .summary(request.getSummary())
+                .skills(request.getSkills())
+                .education(request.getEducation())
+                .experience(request.getExperience())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    public CandidateProfileResponse toResponse(CandidateProfile profile) {
+        if (profile == null) return null;
+        return CandidateProfileResponse.builder()
+                .id(profile.getId())
+                .fullName(profile.getFullName())
+                .headline(profile.getHeadline())
+                .summary(profile.getSummary())
+                .skills(profile.getSkills())
+                .education(profile.getEducation())
+                .experience(profile.getExperience())
+                .updatedAt(profile.getUpdatedAt())
+                .build();
+    }
 }
 
 
@@ -1069,6 +1295,32 @@ public class JobMapper {
 
 
 
+--- FILE: application\src\main\java\com\smartmatch\application\mapper\ResumeMapper.java ---
+
+package com.smartmatch.application.mapper;
+
+import com.smartmatch.application.dto.candidate.ResumeResponse;
+import com.smartmatch.domain.user.model.Resume;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ResumeMapper {
+
+    public ResumeResponse toResponse(Resume resume) {
+        if (resume == null) return null;
+        return ResumeResponse.builder()
+                .id(resume.getId())
+                .fileName(resume.getFileName())
+                .fileUrl(resume.getFileUrl())
+                .fileType(resume.getFileType())
+                .fileSize(resume.getFileSize())
+                .uploadedAt(resume.getUploadedAt())
+                .build();
+    }
+}
+
+
+
 --- FILE: application\src\main\java\com\smartmatch\application\service\auth\AuthService.java ---
 
 package com.smartmatch.application.service.auth;
@@ -1091,8 +1343,43 @@ package com.smartmatch.application.service.candidate;
 import com.smartmatch.application.dto.application.ApplyJobRequest;
 import com.smartmatch.application.dto.application.JobApplicationResponse;
 
+import java.util.List;
+
 public interface ApplicationService {
     JobApplicationResponse applyJob(ApplyJobRequest request, Long candidateId);
+    List<JobApplicationResponse> getMyApplications(Long candidateId);
+    List<JobApplicationResponse> getApplicationsByJobId(Long jobId, Long employerId);
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\candidate\CandidateProfileService.java ---
+
+package com.smartmatch.application.service.candidate;
+
+import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
+import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
+
+public interface CandidateProfileService {
+    CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId);
+    CandidateProfileResponse getMyProfile(Long candidateId);
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\service\candidate\ResumeService.java ---
+
+package com.smartmatch.application.service.candidate;
+
+import com.smartmatch.application.dto.candidate.ResumeResponse;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+
+public interface ResumeService {
+    ResumeResponse uploadResume(MultipartFile file, Long candidateId) throws IOException;
+    List<ResumeResponse> getMyResumes(Long candidateId);
 }
 
 
@@ -1124,6 +1411,8 @@ public interface JobService {
     JobResponse createJob(CreateJobRequest request, Long employerId);
     List<JobResponse> getMyJobs(Long employerId);
     JobResponse getJobById(Long jobId, Long employerId);
+    List<JobResponse> getAllPublishedJobs();
+    JobResponse getPublicJobById(Long id);
 }
 
 
@@ -1174,6 +1463,10 @@ public interface JobService {
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
         </dependency>
     </dependencies>
 
@@ -1374,12 +1667,65 @@ public interface JobRepository {
 
 
 
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\model\CandidateProfile.java ---
+
+package com.smartmatch.domain.user.model;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CandidateProfile {
+    private Long id;
+    private Long candidateId;           // userId
+    private String fullName;
+    private String headline;            // vÃ­ dá»¥: "Senior Java Developer"
+    private String summary;             // giá»›i thiá»‡u báº£n thÃ¢n
+    private String skills;              // "Java, Spring Boot, MySQL" (cÃ³ thá»ƒ dÃ¹ng List<String> sau)
+    private String education;
+    private String experience;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
+
+
+
 --- FILE: domain\src\main\java\com\smartmatch\domain\user\model\Profile.java ---
 
 package com.smartmatch.domain.user.model;
 
 public class Profile {
   
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\model\Resume.java ---
+
+package com.smartmatch.domain.user.model;
+
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Resume {
+    private Long id;
+    private Long candidateId;
+    private String fileName;
+    private String fileUrl;             // Ä‘Æ°á»ng dáº«n file (local hoáº·c S3)
+    private String fileType;
+    private Long fileSize;
+    private LocalDateTime uploadedAt;
 }
 
 
@@ -1440,6 +1786,38 @@ public class User {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\repository\CandidateProfileRepository.java ---
+
+package com.smartmatch.domain.user.repository;
+
+import com.smartmatch.domain.user.model.CandidateProfile;
+
+import java.util.Optional;
+
+public interface CandidateProfileRepository {
+    CandidateProfile save(CandidateProfile profile);
+    Optional<CandidateProfile> findByCandidateId(Long candidateId);
+}
+
+
+
+--- FILE: domain\src\main\java\com\smartmatch\domain\user\repository\ResumeRepository.java ---
+
+package com.smartmatch.domain.user.repository;
+
+import com.smartmatch.domain.user.model.Resume;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ResumeRepository {
+    Resume save(Resume resume);
+    Optional<Resume> findByCandidateId(Long candidateId);
+    List<Resume> findAllByCandidateId(Long candidateId);
 }
 
 
@@ -1532,6 +1910,46 @@ public interface UserRepository {
     </build>
 
 </project>
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\CandidateProfileJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "candidate_profiles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CandidateProfileJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long candidateId;
+
+    private String fullName;
+    private String headline;
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+    @Column(columnDefinition = "TEXT")
+    private String skills;
+    @Column(columnDefinition = "TEXT")
+    private String education;
+    @Column(columnDefinition = "TEXT")
+    private String experience;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+}
 
 
 
@@ -1679,6 +2097,39 @@ public class JobJpaEntity {
 
 
 
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\ResumeJpaEntity.java ---
+
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "resumes")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ResumeJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Long candidateId;
+
+    private String fileName;
+    private String fileUrl;
+    private String fileType;
+    private Long fileSize;
+
+    private LocalDateTime uploadedAt;
+}
+
+
+
 --- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\jpa\UserJpaEntity.java ---
 
 package com.smartmatch.infrastructure.persistence.jpa;
@@ -1729,6 +2180,51 @@ public class UserJpaEntity {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\CandidateProfileMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.user.model.CandidateProfile;
+import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
+import org.springframework.stereotype.Component;
+
+@Component
+public class CandidateProfileMapper {
+    public CandidateProfileJpaEntity toEntity(CandidateProfile profile) {
+        if (profile == null) return null;
+        return CandidateProfileJpaEntity.builder()
+                .id(profile.getId())
+                .candidateId(profile.getCandidateId())
+                .fullName(profile.getFullName())
+                .headline(profile.getHeadline())
+                .summary(profile.getSummary())
+                .skills(profile.getSkills())
+                .education(profile.getEducation())
+                .experience(profile.getExperience())
+                .createdAt(profile.getCreatedAt())
+                .updatedAt(profile.getUpdatedAt())
+                .build();
+    }
+
+    public CandidateProfile toDomain(CandidateProfileJpaEntity entity) {
+        if (entity == null) return null;
+        return CandidateProfile.builder()
+                .id(entity.getId())
+                .candidateId(entity.getCandidateId())
+                .fullName(entity.getFullName())
+                .headline(entity.getHeadline())
+                .summary(entity.getSummary())
+                .skills(entity.getSkills())
+                .education(entity.getEducation())
+                .experience(entity.getExperience())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
     }
 }
 
@@ -1882,6 +2378,45 @@ public class JobMapper {
 
 
 
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\ResumeMapper.java ---
+
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.user.model.Resume;
+import com.smartmatch.infrastructure.persistence.jpa.ResumeJpaEntity;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ResumeMapper {
+    public ResumeJpaEntity toEntity(Resume resume) {
+        if (resume == null) return null;
+        return ResumeJpaEntity.builder()
+                .id(resume.getId())
+                .candidateId(resume.getCandidateId())
+                .fileName(resume.getFileName())
+                .fileUrl(resume.getFileUrl())
+                .fileType(resume.getFileType())
+                .fileSize(resume.getFileSize())
+                .uploadedAt(resume.getUploadedAt())
+                .build();
+    }
+
+    public Resume toDomain(ResumeJpaEntity entity) {
+        if (entity == null) return null;
+        return Resume.builder()
+                .id(entity.getId())
+                .candidateId(entity.getCandidateId())
+                .fileName(entity.getFileName())
+                .fileUrl(entity.getFileUrl())
+                .fileType(entity.getFileType())
+                .fileSize(entity.getFileSize())
+                .uploadedAt(entity.getUploadedAt())
+                .build();
+    }
+}
+
+
+
 --- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\mapper\UserMapper.java ---
 
 package com.smartmatch.infrastructure.persistence.mapper;
@@ -1927,6 +2462,67 @@ public class UserMapper {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\CandidateProfileJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface CandidateProfileJpaRepository extends JpaRepository<CandidateProfileJpaEntity, Long> {
+
+    Optional<CandidateProfileJpaEntity> findByCandidateId(Long candidateId);
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\CandidateProfileRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.user.model.CandidateProfile;
+import com.smartmatch.domain.user.repository.CandidateProfileRepository;
+import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.CandidateProfileMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class CandidateProfileRepositoryImpl implements CandidateProfileRepository {
+
+    private final CandidateProfileJpaRepository jpaRepository;
+    private final CandidateProfileMapper mapper;
+
+    @Override
+    public CandidateProfile save(CandidateProfile profile) {
+        CandidateProfileJpaEntity entity = mapper.toEntity(profile);
+
+        if (entity.getCreatedAt() == null) {
+            entity.setCreatedAt(LocalDateTime.now());
+        }
+        entity.setUpdatedAt(LocalDateTime.now());
+
+        CandidateProfileJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<CandidateProfile> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId)
+                .map(mapper::toDomain);
     }
 }
 
@@ -2147,6 +2743,70 @@ public class JobRepositoryImpl implements JobRepository {
     public Optional<Job> findByIdAndPostedById(Long id, Long postedById) {
         return jpaRepository.findByIdAndPostedById(id, postedById)
                 .map(mapper::toDomain);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\ResumeJpaRepository.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.ResumeJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ResumeJpaRepository extends JpaRepository<ResumeJpaEntity, Long> {
+
+    Optional<ResumeJpaEntity> findByCandidateId(Long candidateId);
+    List<ResumeJpaEntity> findAllByCandidateId(Long candidateId);
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\persistence\repository\ResumeRepositoryImpl.java ---
+
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.user.model.Resume;
+import com.smartmatch.domain.user.repository.ResumeRepository;
+import com.smartmatch.infrastructure.persistence.jpa.ResumeJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.ResumeMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class ResumeRepositoryImpl implements ResumeRepository {
+
+    private final ResumeJpaRepository jpaRepository;
+    private final ResumeMapper mapper;
+
+    @Override
+    public Resume save(Resume resume) {
+        ResumeJpaEntity entity = mapper.toEntity(resume);
+        ResumeJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<Resume> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Resume> findAllByCandidateId(Long candidateId) {
+        return jpaRepository.findAllByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }
 
@@ -2584,6 +3244,7 @@ import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -2620,6 +3281,142 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         // 5. Tráº£ vá» response
         return applicationMapper.toResponse(savedApplication);
+    }
+
+    @Override
+    public List<JobApplicationResponse> getMyApplications(Long candidateId) {
+        List<JobApplication> applications = applicationRepository.findByCandidateId(candidateId);
+        return applications.stream()
+                .map(applicationMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public List<JobApplicationResponse> getApplicationsByJobId(Long jobId, Long employerId) {
+        // Kiá»ƒm tra employer cÃ³ quyá»n xem job nÃ y khÃ´ng
+        jobRepository.findByIdAndPostedById(jobId, employerId)
+                .orElseThrow(() -> new IllegalArgumentException("Báº¡n khÃ´ng cÃ³ quyá»n xem Ä‘Æ¡n á»©ng tuyá»ƒn cá»§a tin nÃ y!"));
+
+        List<JobApplication> applications = applicationRepository.findByJobId(jobId);
+        return applications.stream()
+                .map(applicationMapper::toResponse)
+                .toList();
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\candidate\CandidateProfileServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.candidate;
+
+import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
+import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
+import com.smartmatch.application.mapper.CandidateProfileMapper;
+import com.smartmatch.application.service.candidate.CandidateProfileService;
+import com.smartmatch.domain.user.model.CandidateProfile;
+import com.smartmatch.domain.user.repository.CandidateProfileRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
+@Service
+@RequiredArgsConstructor
+public class CandidateProfileServiceImpl implements CandidateProfileService {
+
+    private final CandidateProfileRepository profileRepository;
+    private final com.smartmatch.application.mapper.CandidateProfileMapper appMapper; // app layer mapper
+
+    @Override
+    public CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId) {
+        CandidateProfile profile = profileRepository.findByCandidateId(candidateId)
+                .orElse(CandidateProfile.builder().candidateId(candidateId).build());
+
+        profile.setFullName(request.getFullName());
+        profile.setHeadline(request.getHeadline());
+        profile.setSummary(request.getSummary());
+        profile.setSkills(request.getSkills());
+        profile.setEducation(request.getEducation());
+        profile.setExperience(request.getExperience());
+        profile.setUpdatedAt(LocalDateTime.now());
+
+        CandidateProfile saved = profileRepository.save(profile);
+        return appMapper.toResponse(saved); // báº¡n cáº§n táº¡o app mapper
+    }
+
+    @Override
+    public CandidateProfileResponse getMyProfile(Long candidateId) {
+        CandidateProfile profile = profileRepository.findByCandidateId(candidateId)
+                .orElseThrow(() -> new IllegalArgumentException("ChÆ°a cÃ³ profile. Vui lÃ²ng táº¡o trÆ°á»›c!"));
+        return appMapper.toResponse(profile);
+    }
+}
+
+
+
+--- FILE: infrastructure\src\main\java\com\smartmatch\infrastructure\service\candidate\ResumeServiceImpl.java ---
+
+package com.smartmatch.infrastructure.service.candidate;
+
+import com.smartmatch.application.dto.candidate.ResumeResponse;
+import com.smartmatch.application.service.candidate.ResumeService;
+import com.smartmatch.domain.user.model.Resume;
+import com.smartmatch.domain.user.repository.ResumeRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class ResumeServiceImpl implements ResumeService {
+
+    private final ResumeRepository resumeRepository;
+    private final com.smartmatch.application.mapper.ResumeMapper appMapper;
+
+    private final Path uploadDir = Paths.get("uploads/resumes");
+
+    @Override
+    public ResumeResponse uploadResume(MultipartFile file, Long candidateId) throws IOException {
+        if (file.isEmpty()) throw new IllegalArgumentException("File rá»—ng!");
+
+        // Táº¡o thÆ° má»¥c náº¿u chÆ°a cÃ³
+        if (!Files.exists(uploadDir)) Files.createDirectories(uploadDir);
+
+        String originalName = file.getOriginalFilename();
+        String extension = originalName.substring(originalName.lastIndexOf("."));
+        String newFileName = UUID.randomUUID() + extension;
+
+        Path filePath = uploadDir.resolve(newFileName);
+        Files.copy(file.getInputStream(), filePath);
+
+        String fileUrl = "/uploads/resumes/" + newFileName;
+
+        Resume resume = Resume.builder()
+                .candidateId(candidateId)
+                .fileName(originalName)
+                .fileUrl(fileUrl)
+                .fileType(file.getContentType())
+                .fileSize(file.getSize())
+                .uploadedAt(LocalDateTime.now())
+                .build();
+
+        Resume saved = resumeRepository.save(resume);
+        return appMapper.toResponse(saved);
+    }
+
+    @Override
+    public List<ResumeResponse> getMyResumes(Long candidateId) {
+        List<Resume> resumes = resumeRepository.findAllByCandidateId(candidateId);
+        return resumes.stream().map(appMapper::toResponse).toList();
     }
 }
 
@@ -2746,6 +3543,22 @@ public class JobServiceImpl implements JobService {
         Optional<Job> jobOpt = jobRepository.findByIdAndPostedById(jobId, employerId);
         if (jobOpt.isEmpty()) {
             throw new IllegalArgumentException("KhÃ´ng tÃ¬m tháº¥y tin tuyá»ƒn dá»¥ng hoáº·c báº¡n khÃ´ng cÃ³ quyá»n xem!");
+        }
+        return jobMapper.toResponse(jobOpt.get());
+    }
+
+    @Override
+    public List<JobResponse> getAllPublishedJobs() {
+        List<Job> jobs = jobRepository.findAllPublished();
+        // Sáº¯p xáº¿p tin má»›i nháº¥t trÆ°á»›c
+        return jobMapper.toResponseList(jobs);
+    }
+
+    @Override
+    public JobResponse getPublicJobById(Long id) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty() || jobOpt.get().getStatus() != com.smartmatch.domain.common.enums.JobStatus.PUBLISHED) {
+            throw new IllegalArgumentException("Tin tuyá»ƒn dá»¥ng khÃ´ng tá»“n táº¡i hoáº·c Ä‘Ã£ Ä‘Ã³ng!");
         }
         return jobMapper.toResponse(jobOpt.get());
     }
