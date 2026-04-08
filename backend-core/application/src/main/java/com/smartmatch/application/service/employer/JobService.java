@@ -1,8 +1,10 @@
 package com.smartmatch.application.service.employer;
 
+import com.smartmatch.application.dto.PageResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
 import com.smartmatch.application.dto.job.JobSearchRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -13,4 +15,5 @@ public interface JobService {
     List<JobResponse> getAllPublishedJobs();
     JobResponse getPublicJobById(Long id);
     List<JobResponse> searchPublishedJobs(JobSearchRequest request);
+    PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable);
 }

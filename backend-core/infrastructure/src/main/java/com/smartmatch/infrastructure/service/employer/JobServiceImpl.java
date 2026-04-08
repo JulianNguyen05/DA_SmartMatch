@@ -1,5 +1,6 @@
 package com.smartmatch.infrastructure.service.employer;
 
+import com.smartmatch.application.dto.PageResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
 import com.smartmatch.application.dto.job.JobSearchRequest;
@@ -10,6 +11,7 @@ import com.smartmatch.domain.company.repository.CompanyRepository;
 import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -133,5 +135,41 @@ public class JobServiceImpl implements JobService {
         if (minSalary != null && salary.compareTo(minSalary) < 0) return false;
         if (maxSalary != null && salary.compareTo(maxSalary) > 0) return false;
         return true;
+    }
+
+    @Override
+    public PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable) {
+        // Lấy tất cả tin PUBLISHED
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Áp dụng filter (giữ nguyên logic cũ)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .collect(Collectors.toList());
+
+        // Sort mặc định: mới nhất trước
+        List<Job> sorted = filtered.stream()
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt()))
+                .toList();
+
+        // Tạo Pageable nếu chưa có (trường hợp gọi từ getAllPublishedJobs)
+        Pageable effectivePageable = (pageable != null)
+                ? pageable
+                : PageRequest.of(request.getPage(), request.getSize(), Sort.by("postedAt").descending());
+
+        // Tạo Page từ List đã lọc
+        int start = (int) effectivePageable.getOffset();
+        int end = Math.min(start + effectivePageable.getPageSize(), sorted.size());
+        List<Job> pageContent = (start > sorted.size()) ? List.of() : sorted.subList(start, end);
+
+        Page<Job> jobPage = new PageImpl<>(pageContent, effectivePageable, sorted.size());
+
+        // Convert sang DTO và trả PageResponse
+        Page<JobResponse> responsePage = jobPage.map(jobMapper::toResponse);
+        return PageResponse.from(responsePage);
     }
 }
