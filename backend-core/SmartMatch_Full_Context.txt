@@ -204,9 +204,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/SmartMatch_Full_Context.txt" beforeDir="false" afterPath="$PROJECT_DIR$/SmartMatch_Full_Context.txt" afterDir="false" />
-    </list>
+    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -540,9 +538,20 @@ public class JobController {
 
 package com.smartmatch.api.controller.publics;
 
+import com.smartmatch.application.dto.PageResponse;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
 import com.smartmatch.application.service.employer.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -551,26 +560,183 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/public/jobs")
 @RequiredArgsConstructor
+@Tag(name = "Public - Jobs", description = "API cÃ´ng khai xem tin tuyá»ƒn dá»¥ng (khÃ´ng cáº§n Ä‘Äƒng nháº­p)")
 public class PublicJobController {
 
     private final JobService jobService;
 
-    /**
-     * Xem táº¥t cáº£ tin tuyá»ƒn dá»¥ng Ä‘ang cÃ´ng khai (Published)
-     */
+    @Operation(
+            summary = "Láº¥y táº¥t cáº£ tin tuyá»ƒn dá»¥ng Ä‘ang cÃ´ng khai",
+            description = "Tráº£ vá» danh sÃ¡ch tin PUBLISHED vá»›i phÃ¢n trang nÃ¢ng cao. Máº·c Ä‘á»‹nh sort theo postedAt DESC (tin má»›i nháº¥t trÆ°á»›c)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ThÃ nh cÃ´ng",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Lá»—i há»‡ thá»‘ng")
+    })
     @GetMapping
-    public ResponseEntity<List<JobResponse>> getAllPublishedJobs() {
-        List<JobResponse> jobs = jobService.getAllPublishedJobs();
-        return ResponseEntity.ok(jobs);
+    public ResponseEntity<PageResponse<JobResponse>> getAllPublishedJobs(
+            @Parameter(hidden = true) // Pageable sáº½ Ä‘Æ°á»£c Swagger tá»± render
+            @PageableDefault(size = 20, sort = "postedAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
+            Pageable pageable) {
+
+        JobSearchRequest emptyRequest = new JobSearchRequest();
+        PageResponse<JobResponse> page = jobService.searchPublishedJobs(emptyRequest, pageable);
+        return ResponseEntity.ok(page);
     }
 
-    /**
-     * Xem chi tiáº¿t má»™t tin tuyá»ƒn dá»¥ng cÃ´ng khai
-     */
+    @Operation(
+            summary = "TÃ¬m kiáº¿m & lá»c tin tuyá»ƒn dá»¥ng nÃ¢ng cao",
+            description = "Há»— trá»£ lá»c theo keyword, location, jobType, experienceLevel, khoáº£ng lÆ°Æ¡ng + phÃ¢n trang."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ThÃ nh cÃ´ng",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Dá»¯ liá»‡u khÃ´ng há»£p lá»‡"),
+            @ApiResponse(responseCode = "500", description = "Lá»—i há»‡ thá»‘ng")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<PageResponse<JobResponse>> searchJobs(
+            @ModelAttribute
+            @Parameter(description = "CÃ¡c tham sá»‘ lá»c & phÃ¢n trang")
+            JobSearchRequest request,
+
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "postedAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
+            Pageable pageable) {
+
+        PageResponse<JobResponse> page = jobService.searchPublishedJobs(request, pageable);
+        return ResponseEntity.ok(page);
+    }
+
+    @Operation(
+            summary = "Xem chi tiáº¿t má»™t tin tuyá»ƒn dá»¥ng cÃ´ng khai",
+            description = "Tráº£ vá» Ä‘áº§y Ä‘á»§ thÃ´ng tin cá»§a 1 Job theo ID (chá»‰ tin PUBLISHED)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "ThÃ nh cÃ´ng",
+                    content = @Content(schema = @Schema(implementation = JobResponse.class))),
+            @ApiResponse(responseCode = "404", description = "KhÃ´ng tÃ¬m tháº¥y tin hoáº·c tin Ä‘Ã£ Ä‘Ã³ng")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<JobResponse> getPublicJobById(@PathVariable Long id) {
-        JobResponse job = jobService.getPublicJobById(id);
-        return ResponseEntity.ok(job);
+    public ResponseEntity<JobResponse> getPublicJobById(
+            @Parameter(description = "ID cá»§a tin tuyá»ƒn dá»¥ng", example = "1", required = true)
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(jobService.getPublicJobById(id));
+    }
+}
+
+
+
+--- FILE: api\src\main\java\com\smartmatch\api\exception\GlobalExceptionHandler.java ---
+
+package com.smartmatch.api.exception;
+
+import com.smartmatch.application.dto.ApiErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Global Exception Handler cho toÃ n bá»™ backend SmartMatch
+ * Xá»­ lÃ½ táº¥t cáº£ exception má»™t cÃ¡ch chuyÃªn nghiá»‡p
+ */
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // ====================== EXCEPTION CÆ  Báº¢N ======================
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+
+        log.warn("IllegalArgumentException: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiErrorResponse> handleRuntimeException(
+            RuntimeException ex, HttpServletRequest request) {
+
+        log.error("RuntimeException: {}", ex.getMessage(), ex);
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Lá»—i há»‡ thá»‘ng: " + ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    // ====================== VALIDATION EXCEPTION ======================
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getAllErrors().forEach(error -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        log.warn("Validation failed: {}", errors);
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Dá»¯ liá»‡u khÃ´ng há»£p lá»‡",
+                request.getRequestURI()
+        );
+        // ThÃªm chi tiáº¿t lá»—i validation vÃ o message
+        errorResponse.setMessage(errors.toString());
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    // ====================== SECURITY EXCEPTION ======================
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+            BadCredentialsException ex, HttpServletRequest request) {
+
+        log.warn("BadCredentialsException: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Email hoáº·c máº­t kháº©u khÃ´ng Ä‘Ãºng",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    // ====================== EXCEPTION KHÃC ======================
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleGenericException(
+            Exception ex, HttpServletRequest request) {
+
+        log.error("Unexpected exception: ", ex);
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "ÄÃ£ xáº£y ra lá»—i khÃ´ng mong muá»‘n. Vui lÃ²ng thá»­ láº¡i sau.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
 
@@ -1092,6 +1258,154 @@ public class JobResponse {
 
 
 
+--- FILE: application\src\main\java\com\smartmatch\application\dto\job\JobSearchRequest.java ---
+
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Schema(description = "YÃªu cáº§u tÃ¬m kiáº¿m & lá»c tin tuyá»ƒn dá»¥ng cÃ´ng khai")
+public class JobSearchRequest {
+
+    @Schema(description = "Tá»« khÃ³a tÃ¬m kiáº¿m (title hoáº·c description)", example = "Java Spring Boot")
+    private String keyword;
+
+    @Schema(description = "Äá»‹a Ä‘iá»ƒm lÃ m viá»‡c", example = "TP.HCM")
+    private String location;
+
+    @Schema(description = "HÃ¬nh thá»©c lÃ m viá»‡c", example = "FULL_TIME")
+    private JobType jobType;
+
+    @Schema(description = "Má»©c kinh nghiá»‡m", example = "MID")
+    private ExperienceLevel experienceLevel;
+
+    @Schema(description = "Má»©c lÆ°Æ¡ng tá»‘i thiá»ƒu (VND)", example = "15000000")
+    private BigDecimal minSalary;
+
+    @Schema(description = "Má»©c lÆ°Æ¡ng tá»‘i Ä‘a (VND)", example = "30000000")
+    private BigDecimal maxSalary;
+
+    @Schema(description = "Trang hiá»‡n táº¡i (báº¯t Ä‘áº§u tá»« 0)", example = "0", defaultValue = "0")
+    private Integer page = 0;
+
+    @Schema(description = "Sá»‘ tin má»—i trang", example = "20", defaultValue = "20")
+    private Integer size = 20;
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\ApiErrorResponse.java ---
+
+package com.smartmatch.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * DTO chuáº©n tráº£ vá» lá»—i cho táº¥t cáº£ API
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ApiErrorResponse {
+
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;           // Ä‘Æ°á»ng dáº«n API gÃ¢y lá»—i
+
+    public ApiErrorResponse(int status, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.error = org.springframework.http.HttpStatus.valueOf(status).getReasonPhrase();
+        this.message = message;
+        this.path = path;
+    }
+
+    // Constructor Ä‘Æ¡n giáº£n cho cÃ¡c lá»—i cÆ¡ báº£n
+    public static ApiErrorResponse of(int status, String message) {
+        return new ApiErrorResponse(status, message, null);
+    }
+}
+
+
+
+--- FILE: application\src\main\java\com\smartmatch\application\dto\PageResponse.java ---
+
+package com.smartmatch.application.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Äá»‘i tÆ°á»£ng phÃ¢n trang chuáº©n cho toÃ n bá»™ API SmartMatch")
+public class PageResponse<T> {
+
+    @Schema(description = "Danh sÃ¡ch dá»¯ liá»‡u trÃªn trang hiá»‡n táº¡i", example = "[{...}]")
+    private List<T> content;
+
+    @Schema(description = "Trang hiá»‡n táº¡i (báº¯t Ä‘áº§u tá»« 0)", example = "0", defaultValue = "0")
+    private int page;
+
+    @Schema(description = "Sá»‘ lÆ°á»£ng pháº§n tá»­ má»—i trang", example = "20", defaultValue = "20")
+    private int size;
+
+    @Schema(description = "Tá»•ng sá»‘ pháº§n tá»­", example = "145")
+    private long totalElements;
+
+    @Schema(description = "Tá»•ng sá»‘ trang", example = "8")
+    private int totalPages;
+
+    @Schema(description = "CÃ³ trang káº¿ tiáº¿p khÃ´ng?", example = "true")
+    private boolean hasNext;
+
+    @Schema(description = "CÃ³ trang trÆ°á»›c khÃ´ng?", example = "false")
+    private boolean hasPrevious;
+
+    @Schema(description = "LÃ  trang Ä‘áº§u tiÃªn?", example = "true")
+    private boolean isFirst;
+
+    @Schema(description = "LÃ  trang cuá»‘i cÃ¹ng?", example = "false")
+    private boolean isLast;
+
+    public static <T> PageResponse<T> from(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+}
+
+
+
 --- FILE: application\src\main\java\com\smartmatch\application\mapper\CandidateProfileMapper.java ---
 
 package com.smartmatch.application.mapper;
@@ -1402,8 +1716,11 @@ public interface CompanyService {
 
 package com.smartmatch.application.service.employer;
 
+import com.smartmatch.application.dto.PageResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -1413,6 +1730,8 @@ public interface JobService {
     JobResponse getJobById(Long jobId, Long employerId);
     List<JobResponse> getAllPublishedJobs();
     JobResponse getPublicJobById(Long id);
+    List<JobResponse> searchPublishedJobs(JobSearchRequest request);
+    PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable);
 }
 
 
@@ -1467,6 +1786,16 @@ public interface JobService {
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <version>2.2.22</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
@@ -3490,8 +3819,10 @@ public class CompanyServiceImpl implements CompanyService {
 
 package com.smartmatch.infrastructure.service.employer;
 
+import com.smartmatch.application.dto.PageResponse;
 import com.smartmatch.application.dto.job.CreateJobRequest;
 import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
 import com.smartmatch.application.mapper.JobMapper;
 import com.smartmatch.application.service.employer.JobService;
 import com.smartmatch.domain.company.model.Company;
@@ -3499,10 +3830,13 @@ import com.smartmatch.domain.company.repository.CompanyRepository;
 import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -3561,6 +3895,101 @@ public class JobServiceImpl implements JobService {
             throw new IllegalArgumentException("Tin tuyá»ƒn dá»¥ng khÃ´ng tá»“n táº¡i hoáº·c Ä‘Ã£ Ä‘Ã³ng!");
         }
         return jobMapper.toResponse(jobOpt.get());
+    }
+    @Override
+    public List<JobResponse> searchPublishedJobs(JobSearchRequest request) {
+        // Láº¥y táº¥t cáº£ tin Ä‘ang PUBLISHED (Ä‘Ã£ cÃ³ sáºµn)
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Lá»c theo cÃ¡c Ä‘iá»u kiá»‡n (memory filter - phÃ¹ há»£p MVP, sau cÃ³ thá»ƒ nÃ¢ng Specification)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt())) // má»›i nháº¥t trÆ°á»›c
+                .collect(Collectors.toList());
+
+        // PhÃ¢n trang Ä‘Æ¡n giáº£n
+        int page = Math.max(0, request.getPage());
+        int size = Math.max(1, request.getSize());
+        int from = page * size;
+        int to = Math.min(from + size, filtered.size());
+
+        if (from >= filtered.size()) {
+            return List.of();
+        }
+
+        return jobMapper.toResponseList(filtered.subList(from, to));
+    }
+
+    private boolean matchesKeyword(Job job, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return true;
+        String k = keyword.toLowerCase().trim();
+        return job.getTitle().toLowerCase().contains(k) ||
+                (job.getDescription() != null && job.getDescription().toLowerCase().contains(k));
+    }
+
+    private boolean matchesLocation(Job job, String location) {
+        if (location == null || location.trim().isEmpty()) return true;
+        return job.getLocation() != null && job.getLocation().equalsIgnoreCase(location.trim());
+    }
+
+    private boolean matchesJobType(Job job, com.smartmatch.domain.common.enums.JobType jobType) {
+        if (jobType == null) return true;
+        return job.getJobType() == jobType;
+    }
+
+    private boolean matchesExperienceLevel(Job job, com.smartmatch.domain.common.enums.ExperienceLevel level) {
+        if (level == null) return true;
+        return job.getExperienceLevel() == level;
+    }
+
+    private boolean matchesSalary(Job job, BigDecimal minSalary, BigDecimal maxSalary) {
+        if (minSalary == null && maxSalary == null) return true;
+        BigDecimal salary = job.getMaxSalary() != null ? job.getMaxSalary() : job.getMinSalary();
+        if (salary == null) return true;
+
+        if (minSalary != null && salary.compareTo(minSalary) < 0) return false;
+        if (maxSalary != null && salary.compareTo(maxSalary) > 0) return false;
+        return true;
+    }
+
+    @Override
+    public PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable) {
+        // Láº¥y táº¥t cáº£ tin PUBLISHED
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Ãp dá»¥ng filter (giá»¯ nguyÃªn logic cÅ©)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .collect(Collectors.toList());
+
+        // Sort máº·c Ä‘á»‹nh: má»›i nháº¥t trÆ°á»›c
+        List<Job> sorted = filtered.stream()
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt()))
+                .toList();
+
+        // Táº¡o Pageable náº¿u chÆ°a cÃ³ (trÆ°á»ng há»£p gá»i tá»« getAllPublishedJobs)
+        Pageable effectivePageable = (pageable != null)
+                ? pageable
+                : PageRequest.of(request.getPage(), request.getSize(), Sort.by("postedAt").descending());
+
+        // Táº¡o Page tá»« List Ä‘Ã£ lá»c
+        int start = (int) effectivePageable.getOffset();
+        int end = Math.min(start + effectivePageable.getPageSize(), sorted.size());
+        List<Job> pageContent = (start > sorted.size()) ? List.of() : sorted.subList(start, end);
+
+        Page<Job> jobPage = new PageImpl<>(pageContent, effectivePageable, sorted.size());
+
+        // Convert sang DTO vÃ  tráº£ PageResponse
+        Page<JobResponse> responsePage = jobPage.map(jobMapper::toResponse);
+        return PageResponse.from(responsePage);
     }
 }
 
