@@ -4,7 +4,7 @@ import com.smartmatch.domain.user.model.CandidateProfile;
 import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("jpaCandidateProfileMapper")
 public class CandidateProfileMapper {
     public CandidateProfileJpaEntity toEntity(CandidateProfile profile) {
         if (profile == null) return null;

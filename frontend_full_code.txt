@@ -1,0 +1,1866 @@
+
+/* ============================================================ */
+/* File: frontend-app/.gitignore */
+/* ============================================================ */
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+/* ============================================================ */
+/* File: frontend-app/Dockerfile */
+/* ============================================================ */
+
+# Sử dụng phiên bản Node 22 khớp với máy local của bạn
+FROM node:22-alpine
+
+# Thiết lập thư mục làm việc
+WORKDIR /app
+
+# Chỉ copy file package trước để tận dụng Docker Cache cho node_modules
+COPY package*.json ./
+
+# Cài đặt dependencies
+RUN npm install
+
+# Copy toàn bộ mã nguồn
+COPY . .
+
+# Mở cổng 5173 cho Vite
+EXPOSE 5173
+
+# Chạy lệnh dev với flag --host để truy cập được từ bên ngoài container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
+/* ============================================================ */
+/* File: frontend-app/eslint.config.js */
+/* ============================================================ */
+
+import js from '@eslint/js'
+import globals from 'globals'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import { defineConfig, globalIgnores } from 'eslint/config'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{js,jsx}'],
+    extends: [
+      js.configs.recommended,
+      reactHooks.configs.flat.recommended,
+      reactRefresh.configs.vite,
+    ],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: globals.browser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        ecmaFeatures: { jsx: true },
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+    },
+  },
+])
+
+
+/* ============================================================ */
+/* File: frontend-app/package.json */
+/* ============================================================ */
+
+{
+  "name": "frontend-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "init-tailwind": "tailwindcss init -p"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "axios": "^1.14.0",
+    "lucide-react": "^1.7.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.2",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "autoprefixer": "^10.4.27",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.2",
+    "vite": "^8.0.1"
+  }
+}
+
+
+/* ============================================================ */
+/* File: frontend-app/README.md */
+/* ============================================================ */
+
+# React + Vite
+
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+
+Currently, two official plugins are available:
+
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+
+## React Compiler
+
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+/* ============================================================ */
+/* File: frontend-app/src/App.jsx */
+/* ============================================================ */
+
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        {/* Nếu gõ đường dẫn linh tinh, tự động văng về trang Đăng nhập */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+
+/* ============================================================ */
+/* File: frontend-app/src/layouts/AdminLayout.jsx */
+/* ============================================================ */
+
+// frontend/src/layouts/AdminLayout.jsx
+import React from "react";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  User,
+  Home,
+  Briefcase,
+  LogOut,
+  Sparkles,
+  ShieldCheck,
+} from "lucide-react";
+import { useUserStore } from "../store/userStore";
+
+const AdminLayout = () => {
+  const { user, logout } = useUserStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { icon: Home, label: "Dashboard", path: "/admin/dashboard" },
+    { icon: User, label: "Quản lý người dùng", path: "/admin/users" },
+    { icon: Briefcase, label: "Quản lý việc làm", path: "/admin/jobs" },
+    { icon: Sparkles, label: "AI Logs", path: "/admin/ai-logs" },
+  ];
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-72 bg-white border-r border-gray-100 flex flex-col">
+        <div className="p-6 border-b">
+          <Link
+            to="/admin/dashboard"
+            className="flex items-center gap-3 text-2xl font-black text-[var(--color-blue-pure)]"
+          >
+            <Sparkles /> SmartMatch
+          </Link>
+        </div>
+
+        <div className="flex-1 px-3 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const isActive = location.pathname.includes(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors font-medium ${
+                  isActive
+                    ? "bg-[var(--color-blue-pure)] text-white shadow-md shadow-blue-500/20"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <item.icon size={22} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t">
+          <button
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 py-3 rounded-2xl font-medium transition-colors"
+          >
+            <LogOut size={20} /> Đăng xuất
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center px-8 justify-between">
+          <h1 className="text-xl font-semibold text-gray-800">
+            Xin chào, {user?.name || "Admin"} 👋
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-purple-600 flex items-center justify-end gap-1">
+                <ShieldCheck size={14} /> Quản trị viên
+              </p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
+            </div>
+            <div className="w-9 h-9 bg-purple-100 rounded-2xl flex items-center justify-center text-xl">
+              ⚙️
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;
+
+
+/* ============================================================ */
+/* File: frontend-app/src/layouts/AuthLayout.jsx */
+/* ============================================================ */
+
+// frontend/src/layouts/AuthLayout.jsx
+import React from "react";
+import { Link } from "react-router-dom";
+import { Sparkles, Brain } from "lucide-react";
+
+const AuthLayout = ({ children }) => {
+  return (
+    <div className="min-h-screen flex w-full font-sans bg-white overflow-hidden">
+      {/* CỘT TRÁI - BRANDING */}
+      <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-[var(--color-navy-light)] via-[var(--color-blue-electric)] to-[var(--color-navy-dark)] p-12 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] rounded-full bg-[var(--color-purple-mid)] opacity-30 blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-15%] right-[-15%] w-[500px] h-[500px] rounded-full bg-[var(--color-pink-light)] opacity-20 blur-[100px]"></div>
+
+        <div className="relative z-10 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/20">
+            <Sparkles className="w-6 h-6 text-[var(--color-pink-light)]" />
+          </div>
+          <Link
+            to="/"
+            className="text-4xl font-black text-white tracking-tighter hover:scale-105 transition-transform"
+          >
+            SmartMatch
+          </Link>
+        </div>
+
+        <div className="relative z-10 max-w-lg">
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-3xl text-white text-sm mb-6">
+            <Brain className="w-4 h-4" />
+            <span className="font-medium">AI-Powered Matching</span>
+          </div>
+          <h1 className="text-5xl font-bold leading-none text-white mb-4">
+            Kết nối cơ hội bằng trí tuệ nhân tạo
+          </h1>
+          <p className="text-[var(--color-lavender-light)] text-xl opacity-95">
+            Hàng ngàn CV và JD được match thông minh chỉ trong vài giây.
+          </p>
+        </div>
+
+        <div className="relative z-10 text-white/60 text-sm">
+          © 2026 SmartMatch • Secured by AI
+        </div>
+      </div>
+
+      {/* CỘT PHẢI - FORM */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-gray-50 lg:bg-white">
+        <div className="w-full max-w-md">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLayout;
+
+/* ============================================================ */
+/* File: frontend-app/src/layouts/CandidateLayout.jsx */
+/* ============================================================ */
+
+// frontend/src/layouts/CandidateLayout.jsx
+import React from "react";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  User,
+  Home,
+  Briefcase,
+  FileText,
+  LogOut,
+  Sparkles,
+} from "lucide-react";
+import { useUserStore } from "../store/userStore";
+
+const CandidateLayout = () => {
+  const { user, logout } = useUserStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { icon: Home, label: "Trang chủ", path: "/candidate/dashboard" },
+    { icon: Briefcase, label: "Việc làm", path: "/candidate/jobs" },
+    { icon: Sparkles, label: "AI Gợi ý", path: "/candidate/ai-match" },
+    { icon: FileText, label: "Đơn ứng tuyển", path: "/candidate/applications" },
+    { icon: User, label: "Hồ sơ", path: "/candidate/profile" },
+  ];
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <div className="w-72 bg-white border-r border-gray-100 flex flex-col">
+        <div className="p-6 border-b">
+          <Link
+            to="/candidate/dashboard"
+            className="flex items-center gap-3 text-2xl font-black text-[var(--color-blue-pure)]"
+          >
+            <Sparkles /> SmartMatch
+          </Link>
+        </div>
+
+        <div className="flex-1 px-3 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const isActive = location.pathname.includes(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors font-medium ${
+                  isActive
+                    ? "bg-[var(--color-blue-pure)] text-white shadow-md shadow-blue-500/20"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <item.icon size={22} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t">
+          <button
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 py-3 rounded-2xl font-medium transition-colors"
+          >
+            <LogOut size={20} /> Đăng xuất
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center px-8 justify-between">
+          <h1 className="text-xl font-semibold text-gray-800">
+            Xin chào, {user?.name || "Ứng viên"} 👋
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-[var(--color-blue-pure)] flex items-center justify-end gap-1">
+                <User size={14} /> Ứng viên
+              </p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
+            </div>
+            <div className="w-9 h-9 bg-blue-100 rounded-2xl flex items-center justify-center text-xl">
+              👤
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default CandidateLayout;
+
+/* ============================================================ */
+/* File: frontend-app/src/layouts/EmployerLayout.jsx */
+/* ============================================================ */
+
+// frontend/src/layouts/EmployerLayout.jsx
+import React from "react";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
+import {
+  Home,
+  Briefcase,
+  FileText,
+  LogOut,
+  Sparkles,
+  Building,
+} from "lucide-react";
+import { useUserStore } from "../store/userStore";
+
+const EmployerLayout = () => {
+  const { user, logout } = useUserStore();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const menuItems = [
+    { icon: Home, label: "Dashboard", path: "/employer/dashboard" },
+    {
+      icon: Briefcase,
+      label: "Quản lý tin tuyển dụng",
+      path: "/employer/jobs",
+    },
+    { icon: FileText, label: "Resume Scanner", path: "/employer/scan" },
+    { icon: Sparkles, label: "AI Matches", path: "/employer/matches" },
+  ];
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <div className="w-72 bg-white border-r border-gray-100 flex flex-col">
+        <div className="p-6 border-b">
+          <Link
+            to="/employer/dashboard"
+            className="flex items-center gap-3 text-2xl font-black text-[var(--color-blue-pure)]"
+          >
+            <Sparkles /> SmartMatch
+          </Link>
+        </div>
+
+        <div className="flex-1 px-3 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const isActive = location.pathname.includes(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors font-medium ${
+                  isActive
+                    ? "bg-[var(--color-blue-pure)] text-white shadow-md shadow-blue-500/20"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <item.icon size={22} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="p-4 border-t">
+          <button
+            onClick={() => {
+              logout();
+              navigate("/login");
+            }}
+            className="w-full flex items-center justify-center gap-2 text-red-600 hover:bg-red-50 py-3 rounded-2xl font-medium transition-colors"
+          >
+            <LogOut size={20} /> Đăng xuất
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="h-16 bg-white border-b flex items-center px-8 justify-between">
+          <h1 className="text-xl font-semibold text-gray-800">
+            Xin chào, {user?.name || "HR"} 👋
+          </h1>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium text-emerald-600 flex items-center justify-end gap-1">
+                <Building size={14} /> Nhà tuyển dụng
+              </p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
+            </div>
+            <div className="w-9 h-9 bg-emerald-100 rounded-2xl flex items-center justify-center text-xl">
+              🏢
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-8">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default EmployerLayout;
+
+
+/* ============================================================ */
+/* File: frontend-app/src/main.jsx */
+/* ============================================================ */
+
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.jsx'
+
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/admin/AdminDashboard.jsx */
+/* ============================================================ */
+
+import React from "react";
+import {
+  Users,
+  Building2,
+  Briefcase,
+  ShieldAlert,
+  TrendingUp,
+  BarChart3,
+  Settings,
+} from "lucide-react";
+
+const AdminDashboard = () => {
+  const stats = [
+    {
+      title: "Tổng Người dùng",
+      count: "12,450",
+      icon: Users,
+      color: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    {
+      title: "Công ty đối tác",
+      count: "432",
+      icon: Building2,
+      color: "text-purple-600",
+      bg: "bg-purple-100",
+    },
+    {
+      title: "Job đang mở",
+      count: "1,890",
+      icon: Briefcase,
+      color: "text-emerald-600",
+      bg: "bg-emerald-100",
+    },
+    {
+      title: "Báo cáo vi phạm",
+      count: "5",
+      icon: ShieldAlert,
+      color: "text-red-600",
+      bg: "bg-red-100",
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Tổng quan Hệ thống ⚙️
+        </h1>
+        <p className="text-gray-500 mt-1">
+          Báo cáo real-time về hoạt động của nền tảng SmartMatch.
+        </p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${stat.bg} ${stat.color}`}
+              >
+                <stat.icon size={24} />
+              </div>
+              <span className="flex items-center text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
+                <TrendingUp size={12} className="mr-1" /> +12%
+              </span>
+            </div>
+            <div>
+              <p className="text-3xl font-bold text-gray-900">{stat.count}</p>
+              <p className="text-sm font-medium text-gray-500 mt-1">
+                {stat.title}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* System Logs / Quick Actions */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+            <Settings className="text-gray-400" size={20} /> Tác vụ nhanh
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-2xl hover:border-[var(--color-blue-pure)] hover:bg-blue-50 group transition-all">
+              <div className="w-12 h-12 bg-gray-100 group-hover:bg-[var(--color-blue-pure)] group-hover:text-white text-gray-600 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <Building2 size={24} />
+              </div>
+              <span className="font-semibold text-gray-700 group-hover:text-[var(--color-blue-pure)] text-sm">
+                Duyệt Doanh nghiệp
+              </span>
+            </button>
+
+            <button className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-200 rounded-2xl hover:border-purple-500 hover:bg-purple-50 group transition-all">
+              <div className="w-12 h-12 bg-gray-100 group-hover:bg-purple-500 group-hover:text-white text-gray-600 rounded-full flex items-center justify-center mb-3 transition-colors">
+                <BarChart3 size={24} />
+              </div>
+              <span className="font-semibold text-gray-700 group-hover:text-purple-600 text-sm">
+                Cấu hình AI Matching
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Recent Server Activity */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <h2 className="text-lg font-bold text-gray-900 mb-6">
+            Nhật ký hoạt động
+          </h2>
+          <div className="space-y-5 relative before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+            {/* Log Item */}
+            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-emerald-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10"></div>
+              <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-sm text-gray-900">
+                    Người dùng mới đăng ký
+                  </div>
+                  <time className="text-xs font-medium text-gray-500">
+                    2 phút trước
+                  </time>
+                </div>
+                <div className="text-xs text-gray-600">
+                  Candidate: nguyenvan_a@gmail.com
+                </div>
+              </div>
+            </div>
+
+            {/* Log Item */}
+            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10"></div>
+              <div className="w-[calc(100%-2rem)] md:w-[calc(50%-1.5rem)] bg-gray-50 p-3 rounded-lg border border-gray-100">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="font-semibold text-sm text-gray-900">
+                    Job Post Created
+                  </div>
+                  <time className="text-xs font-medium text-gray-500">
+                    15 phút trước
+                  </time>
+                </div>
+                <div className="text-xs text-gray-600">
+                  Công ty FPT Software đã đăng 1 job mới.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/admin/ManageUsersPage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/auth/LoginPage.jsx */
+/* ============================================================ */
+
+// frontend/src/pages/LoginPage.jsx
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Lock, ArrowRight, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { login } from "../../services/authService"; // ✅ Dùng service để clean & consistent
+import { parseToken } from "../../utils/parseToken";
+import { useUserStore } from "../../store/userStore"; // ✅ Tích hợp Zustand store
+import AuthLayout from "../../layouts/AuthLayout"; // ✅ Import AuthLayout
+
+const LoginPage = () => {
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const navigate = useNavigate();
+  const { setUser } = useUserStore();
+
+  // Tự động ẩn message sau 4 giây
+  React.useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const data = await login({ usernameOrEmail, password });
+
+      // Lưu token
+      localStorage.setItem("accessToken", data.token);
+
+      // Parse token để lấy thông tin user + role
+      const userInfo = parseToken(data.token);
+      setUser(userInfo); // ✅ Cập nhật global store
+
+      setMessage({
+        type: "success",
+        text: "Đăng nhập thành công! Đang chuyển hướng...",
+      });
+
+      // Redirect theo role (Candidate / Employer / Admin)
+      setTimeout(() => {
+        if (userInfo.role === "CANDIDATE") navigate("/candidate/dashboard");
+        else if (userInfo.role === "EMPLOYER") navigate("/employer/dashboard");
+        else if (userInfo.role === "ADMIN") navigate("/admin/dashboard");
+        else navigate("/");
+      }, 800);
+    } catch (error) {
+      console.error("Login error:", error);
+      setMessage({
+        type: "error",
+        text: error.message || "Sai thông tin đăng nhập. Vui lòng thử lại!",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthLayout>
+      {/* Card */}
+      <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-gray-100 p-8 sm:p-10">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Đăng nhập
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Truy cập ngay tài khoản SmartMatch của bạn
+          </p>
+        </div>
+
+        {/* Message Toast */}
+        {message && (
+          <div
+            className={`mb-6 px-5 py-4 rounded-2xl text-sm font-medium flex items-start gap-3 transition-all duration-300 ${
+              message.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : "bg-red-50 text-red-700 border border-red-100"
+            }`}
+          >
+            <div
+              className={`w-5 h-5 rounded-xl flex-shrink-0 flex items-center justify-center text-lg ${
+                message.type === "success" ? "bg-emerald-100" : "bg-red-100"
+              }`}
+            >
+              {message.type === "success" ? "✓" : "✕"}
+            </div>
+            <span>{message.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email / Username */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Email hoặc tên đăng nhập
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <User size={20} />
+              </div>
+              <input
+                type="text"
+                value={usernameOrEmail}
+                onChange={(e) => setUsernameOrEmail(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="you@email.com hoặc username"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-baseline">
+              <label className="block text-sm font-semibold text-gray-700">
+                Mật khẩu
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-[var(--color-blue-pure)] hover:underline"
+              >
+                Quên mật khẩu?
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Lock size={20} />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-12 pr-14 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Remember me */}
+          <div className="flex items-center justify-between">
+            <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={() => setRememberMe(!rememberMe)}
+                className="w-4 h-4 accent-[var(--color-blue-pure)]"
+              />
+              Ghi nhớ đăng nhập
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-blue-pure)] to-[var(--color-blue-ultra)] hover:brightness-110 text-white font-semibold py-4 rounded-2xl transition-all active:scale-[0.97] shadow-lg shadow-blue-500/30 disabled:opacity-70"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={22} />
+                <span>Đang đăng nhập...</span>
+              </>
+            ) : (
+              <>
+                <span>Đăng nhập ngay</span>
+                <ArrowRight size={22} />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-8 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+            hoặc
+          </span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        {/* Social Login */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 border border-gray-200 hover:bg-gray-50 py-4 rounded-2xl font-medium text-gray-700 transition-colors"
+        >
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3004/3004003.png"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Tiếp tục với Google
+        </button>
+
+        {/* Register link */}
+        <p className="text-center mt-8 text-gray-600">
+          Chưa có tài khoản?{" "}
+          <Link
+            to="/register"
+            className="font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-blue-ultra)] transition-colors"
+          >
+            Đăng ký miễn phí ngay
+          </Link>
+        </p>
+      </div>
+
+      {/* Footer nhỏ */}
+      <p className="text-center text-gray-400 text-xs mt-6">
+        Bảo mật • GDPR • AI Matching
+      </p>
+    </AuthLayout>
+  );
+};
+
+export default LoginPage;
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/auth/RegisterPage.jsx */
+/* ============================================================ */
+
+// frontend/src/pages/RegisterPage.jsx
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  Mail,
+  Lock,
+  User,
+  Briefcase,
+  ArrowRight,
+  Phone,
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle,
+} from "lucide-react";
+import { register } from "../../services/authService"; // ✅ Dùng service để clean & consistent
+import AuthLayout from "../../layouts/AuthLayout"; // ✅ Import AuthLayout
+
+const RegisterPage = () => {
+  const [role, setRole] = useState("CANDIDATE");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Tự động ẩn message sau 4 giây
+  React.useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => setMessage(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (password !== confirmPassword) {
+      setMessage({ type: "error", text: "Mật khẩu xác nhận không khớp!" });
+      return;
+    }
+    if (!agreeTerms) {
+      setMessage({
+        type: "error",
+        text: "Bạn phải đồng ý với điều khoản dịch vụ.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      await register({
+        username,
+        email,
+        phoneNumber,
+        password,
+        role,
+      });
+
+      setMessage({
+        type: "success",
+        text: "Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...",
+      });
+
+      // Reset form
+      setUsername("");
+      setEmail("");
+      setPhoneNumber("");
+      setPassword("");
+      setConfirmPassword("");
+
+      // Chuyển hướng sau 1.2 giây
+      setTimeout(() => {
+        navigate("/login");
+      }, 1200);
+    } catch (error) {
+      console.error("Register error:", error);
+      setMessage({
+        type: "error",
+        text:
+          error.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin!",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AuthLayout>
+      {/* Card */}
+      <div className="bg-white rounded-3xl shadow-xl shadow-black/5 border border-gray-100 p-8 sm:p-10">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Tạo tài khoản
+          </h2>
+          <p className="text-gray-500 mt-2">
+            Tham gia cộng đồng SmartMatch ngay hôm nay
+          </p>
+        </div>
+
+        {/* Message Toast */}
+        {message && (
+          <div
+            className={`mb-6 px-5 py-4 rounded-2xl text-sm font-medium flex items-start gap-3 transition-all duration-300 ${
+              message.type === "success"
+                ? "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                : "bg-red-50 text-red-700 border border-red-100"
+            }`}
+          >
+            <div
+              className={`w-5 h-5 rounded-xl flex-shrink-0 flex items-center justify-center text-lg ${
+                message.type === "success" ? "bg-emerald-100" : "bg-red-100"
+              }`}
+            >
+              {message.type === "success" ? "✓" : "✕"}
+            </div>
+            <span>{message.text}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Role Selection - Premium toggle */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Bạn là ai?
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setRole("CANDIDATE")}
+                className={`flex flex-col items-center justify-center gap-2 p-5 rounded-3xl border-2 transition-all hover:shadow-md ${
+                  role === "CANDIDATE"
+                    ? "border-[var(--color-blue-pure)] bg-blue-50 text-[var(--color-blue-pure)] shadow-sm"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <User
+                  size={28}
+                  className={
+                    role === "CANDIDATE"
+                      ? "text-[var(--color-blue-pure)]"
+                      : "text-gray-400"
+                  }
+                />
+                <span className="font-semibold">Ứng viên</span>
+                <span className="text-xs text-gray-500">Tìm việc làm</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setRole("EMPLOYER")}
+                className={`flex flex-col items-center justify-center gap-2 p-5 rounded-3xl border-2 transition-all hover:shadow-md ${
+                  role === "EMPLOYER"
+                    ? "border-[var(--color-blue-pure)] bg-blue-50 text-[var(--color-blue-pure)] shadow-sm"
+                    : "border-gray-200 bg-white hover:border-gray-300"
+                }`}
+              >
+                <Briefcase
+                  size={28}
+                  className={
+                    role === "EMPLOYER"
+                      ? "text-[var(--color-blue-pure)]"
+                      : "text-gray-400"
+                  }
+                />
+                <span className="font-semibold">Nhà tuyển dụng</span>
+                <span className="text-xs text-gray-500">
+                  Đăng tin tuyển dụng
+                </span>
+              </button>
+            </div>
+          </div>
+
+          {/* Username */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Tên đăng nhập
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <User size={20} />
+              </div>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="username123"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Email
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Mail size={20} />
+              </div>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="you@email.com"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Phone */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Số điện thoại
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Phone size={20} />
+              </div>
+              <input
+                type="tel"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="0912345678"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Mật khẩu
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <Lock size={20} />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-12 pr-14 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="••••••••"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
+
+          {/* Confirm Password */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Xác nhận mật khẩu
+            </label>
+            <div className="relative">
+              <div className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400">
+                <CheckCircle size={20} />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full pl-12 pr-5 py-4 bg-gray-50 border border-gray-200 focus:border-[var(--color-blue-pure)] focus:ring-4 focus:ring-blue-100 rounded-2xl outline-none transition-all text-gray-900 placeholder:text-gray-400"
+                placeholder="••••••••"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Terms */}
+          <div className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={agreeTerms}
+              onChange={(e) => setAgreeTerms(e.target.checked)}
+              className="w-4 h-4 accent-[var(--color-blue-pure)]"
+              required
+            />
+            <span className="text-gray-600">
+              Tôi đồng ý với{" "}
+              <Link
+                to="#"
+                className="text-[var(--color-blue-pure)] hover:underline"
+              >
+                Điều khoản dịch vụ
+              </Link>{" "}
+              và{" "}
+              <Link
+                to="#"
+                className="text-[var(--color-blue-pure)] hover:underline"
+              >
+                Chính sách bảo mật
+              </Link>
+            </span>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-[var(--color-blue-pure)] to-[var(--color-blue-ultra)] hover:brightness-110 text-white font-semibold py-4 rounded-2xl transition-all active:scale-[0.97] shadow-lg shadow-blue-500/30 disabled:opacity-70"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={22} />
+                <span>Đang tạo tài khoản...</span>
+              </>
+            ) : (
+              <>
+                <span>Hoàn tất đăng ký</span>
+                <ArrowRight size={22} />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-8 flex items-center gap-4">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+            hoặc
+          </span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        {/* Google Register */}
+        <button
+          type="button"
+          className="w-full flex items-center justify-center gap-3 border border-gray-200 hover:bg-gray-50 py-4 rounded-2xl font-medium text-gray-700 transition-colors"
+        >
+          <img
+            src="https://cdn-icons-png.flaticon.com/512/3004/3004003.png"
+            alt="Google"
+            className="w-5 h-5"
+          />
+          Đăng ký bằng Google
+        </button>
+
+        {/* Login link */}
+        <p className="text-center mt-8 text-gray-600">
+          Đã có tài khoản?{" "}
+          <Link
+            to="/login"
+            className="font-semibold text-[var(--color-blue-pure)] hover:text-[var(--color-blue-ultra)] transition-colors"
+          >
+            Đăng nhập ngay
+          </Link>
+        </p>
+      </div>
+
+      {/* Footer nhỏ */}
+      <p className="text-center text-gray-400 text-xs mt-6">
+        Bảo mật • GDPR • AI Matching
+      </p>
+    </AuthLayout>
+  );
+};
+
+export default RegisterPage;
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/candidate/CandidateDashboard.jsx */
+/* ============================================================ */
+
+import React from "react";
+import { Briefcase, Bookmark, Eye, Clock, ChevronRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
+
+const CandidateDashboard = () => {
+  const stats = [
+    { title: "Việc đã ứng tuyển", count: 12, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-100" },
+    { title: "Việc làm đã lưu", count: 8, icon: Bookmark, color: "text-emerald-600", bg: "bg-emerald-100" },
+    { title: "Lượt xem hồ sơ", count: 34, icon: Eye, color: "text-purple-600", bg: "bg-purple-100" },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Tổng quan hoạt động 🚀</h1>
+        <p className="text-gray-500 mt-1">Theo dõi tiến độ tìm việc và các cơ hội mới nhất của bạn.</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-shadow">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}>
+              <stat.icon size={28} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">{stat.title}</p>
+              <p className="text-2xl font-bold text-gray-900 leading-none">{stat.count}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Applications */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-gray-900">Ứng tuyển gần đây</h2>
+            <Link to="/candidate/applications" className="text-sm font-semibold text-[var(--color-blue-pure)] hover:underline flex items-center">
+              Xem tất cả <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="space-y-4 flex-1">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex items-center justify-between p-4 rounded-xl border border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 font-bold">Logo</div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Frontend Developer</h3>
+                    <p className="text-sm text-gray-500">TechCorp Vietnam • Hồ Chí Minh</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg font-medium">
+                  <Clock size={16} /> Chờ duyệt
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Suggested Jobs */}
+        <div className="bg-gradient-to-br from-[#f8f9fa] to-[#eef2f6] rounded-2xl shadow-sm border border-blue-100 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+              <Sparkles className="text-[var(--color-blue-pure)]" size={20} /> Gợi ý từ AI
+            </h2>
+          </div>
+          <div className="space-y-4">
+            <div className="bg-white p-5 rounded-xl border border-blue-50 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-[var(--color-blue-pure)]"></div>
+              <h3 className="font-bold text-gray-900 text-lg">Senior ReactJS Engineer</h3>
+              <p className="text-sm text-gray-500 mb-3">SmartSolutions JSC • Remote</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md">Độ phù hợp: 95%</span>
+                <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md">$1500 - $2500</span>
+              </div>
+            </div>
+            <button className="w-full py-3 border-2 border-dashed border-blue-200 text-[var(--color-blue-pure)] font-semibold rounded-xl hover:bg-blue-50 transition-colors">
+              Khám phá thêm việc làm phù hợp
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CandidateDashboard;
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/candidate/HomePage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/candidate/JobDetailPage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/candidate/ProfilePage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/employer/EmployerDashboard.jsx */
+/* ============================================================ */
+
+import React from "react";
+import {
+  Users,
+  FileText,
+  Activity,
+  PlusCircle,
+  Sparkles,
+  Briefcase,
+  ChevronRight,
+} from "lucide-react";
+import { Link } from "react-router-dom";
+
+const EmployerDashboard = () => {
+  const stats = [
+    {
+      title: "Chiến dịch đang mở",
+      count: 5,
+      icon: Activity,
+      color: "text-blue-600",
+      bg: "bg-blue-100",
+    },
+    {
+      title: "Tổng ứng viên",
+      count: 142,
+      icon: Users,
+      color: "text-emerald-600",
+      bg: "bg-emerald-100",
+    },
+    {
+      title: "CV chờ đánh giá",
+      count: 28,
+      icon: FileText,
+      color: "text-amber-600",
+      bg: "bg-amber-100",
+    },
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header & Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Bảng điều khiển Tuyển dụng 🏢
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Quản lý các chiến dịch và tìm kiếm nhân tài nhanh chóng.
+          </p>
+        </div>
+        <Link
+          to="/employer/jobs/create"
+          className="flex items-center justify-center gap-2 bg-[var(--color-blue-pure)] text-white px-6 py-3 rounded-xl font-semibold hover:brightness-110 transition-all shadow-lg shadow-blue-500/30"
+        >
+          <PlusCircle size={20} /> Tạo chiến dịch mới
+        </Link>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <div
+            key={index}
+            className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-5 hover:shadow-md transition-shadow"
+          >
+            <div
+              className={`w-14 h-14 rounded-2xl flex items-center justify-center ${stat.bg} ${stat.color}`}
+            >
+              <stat.icon size={28} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">
+                {stat.title}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 leading-none">
+                {stat.count}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Active Jobs */}
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-gray-900">
+              Chiến dịch gần đây
+            </h2>
+            <Link
+              to="/employer/jobs"
+              className="text-sm font-semibold text-[var(--color-blue-pure)] hover:underline flex items-center"
+            >
+              Quản lý tin <ChevronRight size={16} />
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {[1, 2].map((item) => (
+              <div
+                key={item}
+                className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors gap-4"
+              >
+                <div className="flex gap-4 items-center">
+                  <div className="w-12 h-12 bg-blue-50 text-[var(--color-blue-pure)] rounded-xl flex items-center justify-center">
+                    <Briefcase size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900">
+                      Backend Node.js Developer
+                    </h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Hết hạn: 30/05/2026
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-center">
+                  <div className="text-center">
+                    <p className="text-xl font-bold text-gray-900">24</p>
+                    <p className="text-xs font-medium text-gray-500">
+                      Ứng viên
+                    </p>
+                  </div>
+                  <button className="px-4 py-2 text-sm font-semibold text-[var(--color-blue-pure)] bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    Xem CV
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* AI Call to Action */}
+        <div className="bg-gradient-to-br from-indigo-900 to-purple-900 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden flex flex-col justify-center">
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-500 rounded-full blur-[60px] opacity-40"></div>
+          <Sparkles className="text-purple-300 mb-4" size={32} />
+          <h2 className="text-xl font-bold mb-3">Phân tích CV bằng AI</h2>
+          <p className="text-indigo-200 mb-6 text-sm leading-relaxed">
+            Hệ thống SmartMatch tự động chấm điểm và trích xuất kỹ năng từ hàng
+            trăm CV chỉ trong vài giây.
+          </p>
+          <Link
+            to="/employer/scan"
+            className="text-center bg-white text-indigo-900 px-5 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg"
+          >
+            Mở Smart Scanner
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EmployerDashboard;
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/employer/ManageJobsPage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/pages/employer/ResumeScannerPage.jsx */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/routes/AppRouter.jsx */
+/* ============================================================ */
+
+//frontend-app/src/routes/AppRouter.jsx
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+// Import Pages (Đường dẫn import có thể thay đổi tùy cấu trúc file thực tế của bạn)
+import LoginPage from '../pages/auth/LoginPage';
+import RegisterPage from '../pages/auth/RegisterPage';
+import HomePage from '../pages/candidate/HomePage';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import EmployerDashboard from '../pages/employer/EmployerDashboard';
+import CandidateDashboard from '../pages/candidate/CandidateDashboard';
+
+// Import Component bảo vệ Route
+import ProtectedRoute from './ProtectedRoute';
+
+const AppRouter = () => {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* ================= PUBLIC ROUTES ================= */}
+        {/* Ai cũng có thể truy cập */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* ================= ADMIN ROUTES ================= */}
+        {/* Chỉ ADMIN mới vào được */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          {/* Thêm các route khác của Admin tại đây */}
+        </Route>
+
+        {/* ================= EMPLOYER ROUTES ================= */}
+        {/* Chỉ EMPLOYER mới vào được */}
+        <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
+          <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+          {/* Thêm các route khác của Employer tại đây */}
+        </Route>
+
+        {/* ================= CANDIDATE ROUTES ================= */}
+        {/* Chỉ CANDIDATE mới vào được */}
+        <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
+          <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+          {/* Thêm các route khác của Candidate tại đây */}
+        </Route>
+
+        {/* Bắt lỗi 404 (Trang không tồn tại) */}
+        <Route path="*" element={<div className="p-10 text-center">404 - Trang không tồn tại</div>} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
+export default AppRouter;
+
+/* ============================================================ */
+/* File: frontend-app/src/routes/ProtectedRoute.jsx */
+/* ============================================================ */
+
+// frontend-app/src/routes/ProtectedRoute.jsx
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import { useUserStore } from '../store/userStore';
+
+const ProtectedRoute = ({ allowedRoles }) => {
+  const { user } = useUserStore();
+  const token = localStorage.getItem('accessToken');
+
+  // 1. Chưa đăng nhập (Không có token hoặc không có user trong store)
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // 2. Đã đăng nhập nhưng Role không nằm trong danh sách được phép
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    // Đẩy về trang chủ hoặc trang báo lỗi 403 (Không có quyền)
+    return <Navigate to="/" replace />; 
+  }
+
+  // 3. Hợp lệ: Trả về Outlet để render các Route con bên trong
+  return <Outlet />;
+};
+
+export default ProtectedRoute;
+
+/* ============================================================ */
+/* File: frontend-app/src/routes/roleRoutes.js */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/services/api.js */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/services/authService.js */
+/* ============================================================ */
+
+// frontend/src/services/authService.js
+
+/**
+ * MOCK API Đăng nhập
+ */
+export const login = async ({ usernameOrEmail, password }) => {
+  // Dòng log này để ESLint ghi nhận biến đã được sử dụng
+  console.log(`[Mock API] Đang xử lý đăng nhập cho: ${usernameOrEmail}`);
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (password === "123") {
+        reject(new Error("Mật khẩu không đúng! (Đây là lỗi giả lập)"));
+      } else {
+        resolve({
+          token: "mock-jwt-token-smartmatch-12345",
+        });
+      }
+    }, 1500); 
+  });
+};
+
+/**
+ * MOCK API Đăng ký
+ */
+export const register = async (userData) => {
+  // Thêm log để ESLint không báo lỗi unused biến userData
+  console.log(`[Mock API] Đang xử lý đăng ký cho email: ${userData.email}`);
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // Giả lập case lỗi: Nếu nhập email là "test@gmail.com" thì báo lỗi
+      if (userData.email === "test@gmail.com") {
+        reject(new Error("Email này đã được sử dụng! (Đây là lỗi giả lập)"));
+      } else {
+        // Giả lập case thành công
+        resolve({
+          message: "Đăng ký thành công",
+          user: userData,
+        });
+      }
+    }, 1500);
+  });
+};
+
+/* ============================================================ */
+/* File: frontend-app/src/services/cvService.js */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/services/jobService.js */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/store/userStore.js */
+/* ============================================================ */
+
+// frontend/src/store/userStore.js
+import { create } from 'zustand';
+
+export const useUserStore = create((set) => ({
+  user: null, // Ban đầu chưa đăng nhập thì user là null
+  
+  // Hàm cập nhật thông tin user (được gọi ở LoginPage)
+  setUser: (userData) => set({ user: userData }),
+  
+  // Hàm đăng xuất (gọi khi click nút Logout)
+  logout: () => {
+    localStorage.removeItem('accessToken');
+    set({ user: null });
+  },
+}));
+
+/* ============================================================ */
+/* File: frontend-app/src/utils/formatDate.js */
+/* ============================================================ */
+
+
+
+/* ============================================================ */
+/* File: frontend-app/src/utils/parseToken.js */
+/* ============================================================ */
+
+// frontend/src/utils/parseToken.js
+
+export const parseToken = (token) => {
+  try {
+    // JWT có 3 phần ngăn cách bởi dấu chấm, phần Payload nằm ở giữa (index 1)
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    
+    // Giải mã chuỗi base64 thành string JSON, sau đó parse thành Object
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Lỗi giải mã token:", error);
+    return null;
+  }
+};
+
+/* ============================================================ */
+/* File: frontend-app/vite.config.js */
+/* ============================================================ */
+
+import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [
+    tailwindcss(),
+  ],
+})

@@ -4,7 +4,7 @@ import com.smartmatch.domain.user.model.Resume;
 import com.smartmatch.infrastructure.persistence.jpa.ResumeJpaEntity;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("jpaResumeMapper")
 public class ResumeMapper {
     public ResumeJpaEntity toEntity(Resume resume) {
         if (resume == null) return null;

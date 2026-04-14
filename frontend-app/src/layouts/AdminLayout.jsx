@@ -1,21 +1,21 @@
-// frontend/src/layouts/CandidateLayout.jsx
+// frontend/src/layouts/AdminLayout.jsx
 import React from "react";
-import { Outlet, Link, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
 import {
   User,
   Home,
   Briefcase,
-  FileText,
   LogOut,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { useUserStore } from "../store/userStore";
 
-const CandidateLayout = () => {
+const AdminLayout = () => {
   const { user, logout } = useUserStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // menuItems cho Employer
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/admin/dashboard" },
     { icon: User, label: "Quản lý người dùng", path: "/admin/users" },
@@ -29,7 +29,7 @@ const CandidateLayout = () => {
       <div className="w-72 bg-white border-r border-gray-100 flex flex-col">
         <div className="p-6 border-b">
           <Link
-            to="/"
+            to="/admin/dashboard"
             className="flex items-center gap-3 text-2xl font-black text-[var(--color-blue-pure)]"
           >
             <Sparkles /> SmartMatch
@@ -37,16 +37,23 @@ const CandidateLayout = () => {
         </div>
 
         <div className="flex-1 px-3 py-6 space-y-1">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex items-center gap-3 px-4 py-3 rounded-2xl text-gray-700 hover:bg-gray-100 transition-colors"
-            >
-              <item.icon size={22} />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = location.pathname.includes(item.path);
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-colors font-medium ${
+                  isActive
+                    ? "bg-[var(--color-blue-pure)] text-white shadow-md shadow-blue-500/20"
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <item.icon size={22} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
 
         <div className="p-4 border-t">
@@ -66,25 +73,27 @@ const CandidateLayout = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="h-16 bg-white border-b flex items-center px-8 justify-between">
           <h1 className="text-xl font-semibold text-gray-800">
-            Xin chào, {user?.username} 👋
+            Xin chào, {user?.name || "Admin"} 👋
           </h1>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm font-medium">Ứng viên</p>
+              <p className="text-sm font-medium text-purple-600 flex items-center justify-end gap-1">
+                <ShieldCheck size={14} /> Quản trị viên
+              </p>
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
-            <div className="w-9 h-9 bg-blue-100 rounded-2xl flex items-center justify-center text-xl">
-              👤
+            <div className="w-9 h-9 bg-purple-100 rounded-2xl flex items-center justify-center text-xl">
+              ⚙️
             </div>
           </div>
         </header>
 
         <main className="flex-1 overflow-auto p-8">
-          <Outlet /> {/* ← Các page con sẽ render ở đây */}
+          <Outlet />
         </main>
       </div>
     </div>
   );
 };
 
-export default CandidateLayout;
+export default AdminLayout;

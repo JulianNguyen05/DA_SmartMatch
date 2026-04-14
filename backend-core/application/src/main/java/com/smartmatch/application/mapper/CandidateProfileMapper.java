@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
-@Component
+@Component("appCandidateProfileMapper")
 public class CandidateProfileMapper {
 
     public CandidateProfile toDomain(CandidateProfileRequest request, Long candidateId) {

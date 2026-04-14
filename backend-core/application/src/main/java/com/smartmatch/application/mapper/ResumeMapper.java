@@ -4,7 +4,7 @@ import com.smartmatch.application.dto.candidate.ResumeResponse;
 import com.smartmatch.domain.user.model.Resume;
 import org.springframework.stereotype.Component;
 
-@Component
+@Component("appResumeMapper")
 public class ResumeMapper {
 
     public ResumeResponse toResponse(Resume resume) {
