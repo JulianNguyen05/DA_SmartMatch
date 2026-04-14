@@ -12,19 +12,23 @@ import java.time.LocalDateTime;
 public class User {
 
     private Long id;
+    private String username;
+
     private String email;
     private String password;
-    private String phone;
+    private String phoneNumber;
     private Role role;
+    @Builder.Default
     private boolean enabled = true;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static User createNewUser(String email, String hashedPassword, String phone, Role role) {
+    public static User createNewUser(String username, String email, String hashedPassword, String phoneNumber, Role role) {
         User user = User.builder()
-                .email(email.toLowerCase().trim())
+                .username(username != null ? username.trim() : null)
+                .email(email != null ? email.toLowerCase().trim() : null)
                 .password(hashedPassword)
-                .phone(phone.trim())
+                .phoneNumber(phoneNumber != null ? phoneNumber.trim() : null)
                 .role(role)
                 .enabled(true)
                 .build();

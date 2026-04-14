@@ -1,72 +1,43 @@
 // frontend-app/src/services/authService.js
+import axios from 'axios';
 
-/**
- * Helper tạo mock JWT hợp lệ (có payload role, name, email)
- */
-const generateMockJWT = (role, name = "Demo User", email = "demo@smartmatch.vn") => {
-  const header = { alg: "HS256", typ: "JWT" };
-  const payload = {
-    role: role.toUpperCase(),
-    name,
-    email,
-    sub: "12345",
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600, // hết hạn sau 1 giờ
-  };
+// Tạo một instance axios với cấu hình chung
+const apiClient = axios.create({
+  baseURL: '/api/auth', // Sẽ được Vite proxy thành http://localhost:8080/api/auth
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-  const encodeBase64Url = (obj) =>
-    btoa(JSON.stringify(obj))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-  return `${encodeBase64Url(header)}.${encodeBase64Url(payload)}.fakesignature`;
-};
-
-/**
- * MOCK API Đăng nhập
- */
 export const login = async ({ usernameOrEmail, password }) => {
-  console.log(`[Mock API] Đang xử lý đăng nhập cho: ${usernameOrEmail}`);
-
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (password === "123") {
-        reject(new Error("Mật khẩu không đúng! (Đây là lỗi giả lập)"));
-        return;
-      }
-
-      // Demo: Dựa vào email/username để quyết định role
-      let role = "CANDIDATE";
-      if (usernameOrEmail.toLowerCase().includes("admin")) role = "ADMIN";
-      else if (
-        usernameOrEmail.toLowerCase().includes("employer") ||
-        usernameOrEmail.toLowerCase().includes("hr") ||
-        usernameOrEmail.toLowerCase().includes("company")
-      ) {
-        role = "EMPLOYER";
-      }
-
-      const token = generateMockJWT(role, "Demo User", usernameOrEmail);
-
-      resolve({ token });
-    }, 1500);
-  });
+  try {
+    // DTO Backend LoginRequest yêu cầu trường 'email'. 
+    // Ta map giá trị usernameOrEmail từ Form vào trường email để gửi đi.
+    const response = await apiClient.post('/login', {
+      email: usernameOrEmail, 
+      password: password
+    });
+    
+    // Spring Boot sẽ trả về: { token, refreshToken, role, email }
+    return response.data; 
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message); // Lấy câu báo lỗi từ Backend
+    }
+    throw new Error("Không thể kết nối đến máy chủ.");
+  }
 };
 
-/**
- * MOCK API Đăng ký (giữ nguyên)
- */
 export const register = async (userData) => {
-  console.log(`[Mock API] Đang xử lý đăng ký cho email: ${userData.email}`);
-
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (userData.email === "test@gmail.com") {
-        reject(new Error("Email này đã được sử dụng! (Đây là lỗi giả lập)"));
-      } else {
-        resolve({ message: "Đăng ký thành công", user: userData });
-      }
-    }, 1500);
-  });
+  try {
+    // userData từ RegisterPage chứa: { username, email, phoneNumber, password, role }
+    // Khớp 100% với RegisterRequest DTO bên Spring Boot
+    const response = await apiClient.post('/register', userData);
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.data && error.response.data.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error("Không thể kết nối đến máy chủ.");
+  }
 };

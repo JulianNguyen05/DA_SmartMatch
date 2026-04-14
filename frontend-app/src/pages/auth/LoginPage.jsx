@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Lock, ArrowRight, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { login } from "../../services/authService"; // ✅ Dùng service để clean & consistent
-import { parseToken } from "../../utils/parseToken";
 import { useUserStore } from "../../store/userStore"; // ✅ Tích hợp Zustand store
 import AuthLayout from "../../layouts/AuthLayout"; // ✅ Import AuthLayout
 
@@ -32,21 +31,31 @@ const LoginPage = () => {
     setMessage(null);
 
     try {
+      // 1. Gọi API login
       const data = await login({ usernameOrEmail, password });
 
-      // Lưu token
+      // 2. Lưu token vào localStorage
       localStorage.setItem("accessToken", data.token);
+      if (data.refreshToken) {
+        localStorage.setItem("refreshToken", data.refreshToken);
+      }
 
-      // Parse token để lấy thông tin user + role
-      const userInfo = parseToken(data.token);
-      setUser(userInfo); // ✅ Cập nhật global store
+      // 3. Backend trả thẳng role và email, không cần parseToken nữa
+      const userInfo = {
+        email: data.email,
+        role: data.role,
+        name: data.email.split("@")[0], // Tạm lấy tên từ email để hiển thị trên header
+      };
+
+      // 4. Lưu vào global store Zustand
+      setUser(userInfo);
 
       setMessage({
         type: "success",
         text: "Đăng nhập thành công! Đang chuyển hướng...",
       });
 
-      // Redirect theo role (Candidate / Employer / Admin)
+      // 5. Chuyển hướng theo Role từ Backend
       setTimeout(() => {
         if (userInfo.role === "CANDIDATE") navigate("/candidate/dashboard");
         else if (userInfo.role === "EMPLOYER") navigate("/employer/dashboard");

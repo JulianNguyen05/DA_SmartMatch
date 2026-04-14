@@ -25,14 +25,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse register(RegisterRequest request) {
-        String email = request.getEmail().toLowerCase().trim();
-        String phone = request.getPhone().trim();
+        // Cập nhật lấy username và phoneNumber từ request
+        String username = request.getUsername() != null ? request.getUsername().trim() : null;
+        String email = request.getEmail() != null ? request.getEmail().toLowerCase().trim() : null;
+        String phoneNumber = request.getPhoneNumber() != null ? request.getPhoneNumber().trim() : null;
 
         // Kiểm tra tồn tại
         if (userRepository.existsByEmail(email)) {
             throw new RuntimeException("Email đã tồn tại");
         }
-        if (userRepository.existsByPhone(phone)) {
+        // Thêm kiểm tra tồn tại cho username nếu ứng dụng yêu cầu username là duy nhất
+        if (userRepository.existsByUsername(username)) {
+            throw new RuntimeException("Tên đăng nhập đã tồn tại");
+        }
+        // Cập nhật tên phương thức tương ứng trong UserRepository (existsByPhone -> existsByPhoneNumber)
+        if (userRepository.existsByPhoneNumber(phoneNumber)) {
             throw new RuntimeException("Số điện thoại đã tồn tại");
         }
 
@@ -43,15 +50,15 @@ public class AuthServiceImpl implements AuthService {
             if (role == Role.ADMIN) {
                 throw new RuntimeException("Không được tự đăng ký tài khoản ADMIN");
             }
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Role không hợp lệ. Chỉ chấp nhận EMPLOYER hoặc CANDIDATE");
         }
 
-        // Mã hóa mật khẩu và tạo User domain
+        // Mã hóa mật khẩu và tạo User domain với các tham số mới
         String hashedPassword = passwordEncoder.encode(request.getPassword());
-        User user = User.createNewUser(email, hashedPassword, phone, role);
+        User user = User.createNewUser(username, email, hashedPassword, phoneNumber, role);
 
-        // Lưu user (sẽ cần mapper ở infrastructure)
+        // Lưu user
         User savedUser = userRepository.save(user);
 
         // Tạo JWT
@@ -69,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        String email = request.getEmail().toLowerCase().trim();
+        String email = request.getEmail() != null ? request.getEmail().toLowerCase().trim() : "";
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));

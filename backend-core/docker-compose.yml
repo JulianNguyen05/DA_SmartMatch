@@ -46,8 +46,7 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=dev
-      # Ghi đè URL kết nối DB để API gọi thẳng sang container mysql ở cổng 3306
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     networks:
       - smartmatch-network
 

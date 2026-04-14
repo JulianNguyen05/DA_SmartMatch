@@ -12,7 +12,9 @@ public interface UserRepository {
 
     boolean existsByEmail(String email);
 
-    boolean existsByPhone(String phone);
+    boolean existsByUsername(String username);
+
+    boolean existsByPhoneNumber(String phoneNumber);
 
     // Có thể thêm sau này:
     // Optional<User> findById(Long id);
