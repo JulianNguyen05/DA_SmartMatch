@@ -6,16 +6,15 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-/**
- * SmartMatch Backend Main Application
- */
 @SpringBootApplication
+// Quét tất cả các thành phần (Controller, Service, Component, Security)
+@ComponentScan(basePackages = "com.smartmatch")
+// Quét các Entity JPA
 @EntityScan(basePackages = "com.smartmatch.infrastructure.persistence.jpa")
-@EnableJpaRepositories(basePackages = "com.smartmatch.infrastructure.persistence.repository")
-@ComponentScan(basePackages = {
-        "com.smartmatch.api",
-        "com.smartmatch.application",
-        "com.smartmatch.infrastructure"
+// QUAN TRỌNG: Quét ĐÚNG nơi chứa các Interface JpaRepository
+@EnableJpaRepositories(basePackages = {
+        "com.smartmatch.infrastructure.persistence.jpa",
+        "com.smartmatch.infrastructure.persistence.repository"
 })
 public class SmartMatchApplication {
 

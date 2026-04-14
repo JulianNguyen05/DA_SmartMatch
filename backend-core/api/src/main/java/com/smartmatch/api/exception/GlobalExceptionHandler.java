@@ -37,43 +37,41 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiErrorResponse> handleRuntimeException(
-            RuntimeException ex, HttpServletRequest request) {
-
-        log.error("RuntimeException: {}", ex.getMessage(), ex);
-        ApiErrorResponse error = new ApiErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Lỗi hệ thống: " + ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
     // ====================== VALIDATION EXCEPTION ======================
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
 
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach(error -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+        // Lấy câu thông báo lỗi đầu tiên để hiển thị cho Frontend sạch sẽ nhất
+        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
 
-        log.warn("Validation failed: {}", errors);
+        log.warn("Validation failed: {}", errorMessage);
 
         ApiErrorResponse errorResponse = new ApiErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
-                "Dữ liệu không hợp lệ",
+                errorMessage, // Sẽ hiển thị gọn gàng: "Số điện thoại không hợp lệ"
                 request.getRequestURI()
         );
-        // Thêm chi tiết lỗi validation vào message
-        errorResponse.setMessage(errors.toString());
 
         return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    // ====================== LỖI LOGIC NGHIỆP VỤ (RUNTIME) ======================
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiErrorResponse> handleRuntimeException(
+            RuntimeException ex, HttpServletRequest request) {
+
+        log.warn("Business Logic Error: {}", ex.getMessage());
+
+        // Trả về 400 Bad Request cho các lỗi như "Email đã tồn tại", "Số ĐT đã tồn tại"
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     // ====================== SECURITY EXCEPTION ======================
