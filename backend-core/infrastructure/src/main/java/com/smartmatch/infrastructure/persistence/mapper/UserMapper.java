@@ -15,9 +15,10 @@ public class UserMapper {
 
         return UserJpaEntity.builder()
                 .id(user.getId())
+                .username(user.getUsername())
                 .email(user.getEmail())
                 .password(user.getPassword())
-                .phone(user.getPhone())
+                .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole())
                 .enabled(user.isEnabled())
                 .createdAt(user.getCreatedAt())
@@ -33,9 +34,10 @@ public class UserMapper {
 
         return User.builder()
                 .id(entity.getId())
+                .username(entity.getUsername())
                 .email(entity.getEmail())
                 .password(entity.getPassword())
-                .phone(entity.getPhone())
+                .phoneNumber(entity.getPhoneNumber())
                 .role(entity.getRole())
                 .enabled(entity.isEnabled())
                 .createdAt(entity.getCreatedAt())

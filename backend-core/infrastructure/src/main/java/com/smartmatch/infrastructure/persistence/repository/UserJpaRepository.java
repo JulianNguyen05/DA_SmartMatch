@@ -13,7 +13,8 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     boolean existsByEmail(String email);
 
-    boolean existsByPhone(String phone);
+    boolean existsByPhoneNumber(String phoneNumber);
+    boolean existsByUsername(String username);
 
     // Có thể thêm sau:
     // Optional<UserJpaEntity> findByPhone(String phone);

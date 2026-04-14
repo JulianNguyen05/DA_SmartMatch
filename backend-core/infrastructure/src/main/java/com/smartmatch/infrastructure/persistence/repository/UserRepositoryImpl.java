@@ -14,7 +14,16 @@ import java.util.Optional;
 public class UserRepositoryImpl implements UserRepository {
 
     private final UserJpaRepository jpaRepository;
+
+    // Nếu UserMapper của bạn dùng @Component thì giữ nguyên dòng này.
+    // (Nếu dùng static methods như code cũ tôi gửi thì có thể xóa biến này và gọi UserMapper.toEntity)
     private final UserMapper userMapper;
+
+    @Override
+    public boolean existsByUsername(String username) {
+        // SỬA: Đổi userJpaRepository thành jpaRepository
+        return jpaRepository.existsByUsername(username);
+    }
 
     @Override
     public User save(User user) {
@@ -35,7 +44,9 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public boolean existsByPhone(String phone) {
-        return jpaRepository.existsByPhone(phone);
+    public boolean existsByPhoneNumber(String phoneNumber) {
+        // SỬA 1: Đổi chữ 'p' thành 'P' viết hoa để khớp với Interface UserRepository
+        // SỬA 2: Đổi existsByPhone thành existsByPhoneNumber vì Entity đã đổi thành biến phoneNumber
+        return jpaRepository.existsByPhoneNumber(phoneNumber);
     }
 }

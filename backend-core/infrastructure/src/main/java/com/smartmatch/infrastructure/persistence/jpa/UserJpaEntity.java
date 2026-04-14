@@ -19,19 +19,27 @@ public class UserJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // 1. Thêm cột username (bắt buộc nhập và không được trùng)
+    @Column(unique = true, nullable = false)
+    private String username;
+
     @Column(unique = true, nullable = false)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Column(unique = true, nullable = false)
-    private String phone;
+    // 2. Đổi tên biến 'phone' thành 'phoneNumber'
+    // Đặt tên cột rõ ràng trong DB là 'phone_number' để chuẩn convention của SQL
+    @Column(name = "phone_number", unique = true, nullable = false)
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
 
+    // Thêm @Builder.Default để giá trị true không bị ghi đè thành false khi dùng Builder
+    @Builder.Default
     private boolean enabled = true;
 
     private LocalDateTime createdAt;
@@ -47,4 +55,7 @@ public class UserJpaEntity {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    // Đã xóa bỏ hàm public String getUsername() {} bị lỗi ở cuối file
+    // Lombok (@Getter) sẽ tự động sinh ra hàm đó cho bạn.
 }
