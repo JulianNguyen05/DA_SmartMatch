@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/service/auth/AuthServiceImpl.java
 package com.smartmatch.infrastructure.service.auth;
 
 import com.smartmatch.application.dto.auth.AuthResponse;
@@ -76,13 +77,21 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        String email = request.getEmail() != null ? request.getEmail().toLowerCase().trim() : "";
+        String usernameOrEmail = request.getUsernameOrEmail() != null ?
+                request.getUsernameOrEmail().trim() : "";
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException("Email hoặc mật khẩu không đúng"));
+        User user;
+
+        if (usernameOrEmail.contains("@")) {
+            user = userRepository.findByEmail(usernameOrEmail.toLowerCase())
+                    .orElseThrow(() -> new BadCredentialsException("Tài khoản hoặc mật khẩu không đúng"));
+        } else {
+            user = userRepository.findByUsername(usernameOrEmail)
+                    .orElseThrow(() -> new BadCredentialsException("Tài khoản hoặc mật khẩu không đúng"));
+        }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadCredentialsException("Email hoặc mật khẩu không đúng");
+            throw new BadCredentialsException("Tài khoản hoặc mật khẩu không đúng");
         }
 
         if (!user.isEnabled()) {

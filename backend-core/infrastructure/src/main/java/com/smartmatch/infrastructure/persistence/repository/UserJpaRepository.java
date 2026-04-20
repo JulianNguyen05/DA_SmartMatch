@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserJpaRepository.java
 package com.smartmatch.infrastructure.persistence.repository;
 
 import com.smartmatch.infrastructure.persistence.jpa.UserJpaEntity;
@@ -10,6 +11,8 @@ import java.util.Optional;
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 
     Optional<UserJpaEntity> findByEmail(String email);
+
+    Optional<UserJpaEntity> findByUsername(String username);
 
     boolean existsByEmail(String email);
 

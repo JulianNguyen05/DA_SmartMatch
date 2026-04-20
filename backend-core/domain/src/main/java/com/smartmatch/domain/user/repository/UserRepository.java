@@ -1,3 +1,4 @@
+// backend-core/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java
 package com.smartmatch.domain.user.repository;
 
 import com.smartmatch.domain.user.model.User;
@@ -9,6 +10,8 @@ public interface UserRepository {
     User save(User user);
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsername(String username);
 
     boolean existsByEmail(String email);
 

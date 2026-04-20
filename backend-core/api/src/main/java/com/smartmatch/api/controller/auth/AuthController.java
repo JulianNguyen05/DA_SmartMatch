@@ -1,3 +1,4 @@
+// backend-core\api\src\main\java\com\smartmatch\api\controller\auth\AuthController.java
 package com.smartmatch.api.controller.auth;
 
 import com.smartmatch.application.dto.auth.AuthResponse;

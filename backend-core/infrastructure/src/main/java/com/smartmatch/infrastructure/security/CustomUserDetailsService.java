@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/security/CustomUserDetailsService.java
 package com.smartmatch.infrastructure.security;
 
 import com.smartmatch.domain.user.model.User;
@@ -20,9 +21,17 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+
+        User user;
+
+        if (usernameOrEmail.contains("@")) {
+            user = userRepository.findByEmail(usernameOrEmail)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + usernameOrEmail));
+        } else {
+            user = userRepository.findByUsername(usernameOrEmail)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + usernameOrEmail));
+        }
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

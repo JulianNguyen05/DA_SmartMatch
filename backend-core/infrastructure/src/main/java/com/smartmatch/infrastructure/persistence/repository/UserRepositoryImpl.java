@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java
 package com.smartmatch.infrastructure.persistence.repository;
 
 import com.smartmatch.domain.user.model.User;
@@ -35,6 +36,12 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return jpaRepository.findByEmail(email)
+                .map(userMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return jpaRepository.findByUsername(username)
                 .map(userMapper::toDomain);
     }
 
