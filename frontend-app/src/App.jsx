@@ -13,8 +13,9 @@ import RegisterPage from './pages/auth/RegisterPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import EmployerDashboard from './pages/employer/EmployerDashboard';
-import ManageJobsPage from './pages/employer/ManageJobsPage';     // ← THÊM
-import CreateJobPage from './pages/employer/CreateJobPage';       // ← THÊM
+import ManageJobsPage from './pages/employer/ManageJobsPage';
+import CreateJobPage from './pages/employer/CreateJobPage';
+import CompanyProfilePage from './pages/employer/CompanyProfilePage'; // ← THÊM IMPORT NÀY
 
 // Protected Route
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -41,6 +42,9 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
           <Route element={<EmployerLayout />}>
             <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+            
+            {/* === QUẢN LÝ CÔNG TY === */}
+            <Route path="/employer/company" element={<CompanyProfilePage />} /> {/* ← THÊM ROUTE NÀY */}
             
             {/* === QUẢN LÝ TIN TUYỂN DỤNG === */}
             <Route path="/employer/jobs" element={<ManageJobsPage />} />
