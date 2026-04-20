@@ -622,6 +622,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/employer/company")
@@ -653,6 +655,16 @@ public class CompanyController {
         Long ownerId = getUserId(authentication); // Sử dụng hàm helper
         CompanyResponse response = companyService.getCompanyByOwnerId(ownerId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/upload-logo")
+    public ResponseEntity<String> uploadLogo(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
+
+        Long ownerId = getUserId(authentication);
+        String logoUrl = companyService.uploadLogo(file, ownerId);
+        return ResponseEntity.ok(logoUrl);
     }
 }
 
@@ -1077,10 +1089,13 @@ spring:
       expiration: 86400000
       refresh-expiration: 604800000
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
 server:
   port: 8080
-  servlet:
-#    context-path: /api
 
 logging:
   level:
@@ -2040,11 +2055,15 @@ package com.smartmatch.application.service.employer;
 
 import com.smartmatch.application.dto.company.CompanyResponse;
 import com.smartmatch.application.dto.company.CreateCompanyRequest;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface CompanyService {
     CompanyResponse createOrUpdateCompany(CreateCompanyRequest request, Long ownerId);
     CompanyResponse getCompanyByOwnerId(Long ownerId);
     CompanyResponse getCompanyById(Long id);
+    String uploadLogo(MultipartFile file, Long ownerId) throws IOException;
 }
 
 
@@ -2129,6 +2148,8 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    volumes:
+      - ./backend-core/uploads:/app/uploads
     networks:
       - smartmatch-network
 
@@ -2735,6 +2756,14 @@ public interface UserRepository {
             <version>0.12.6</version>
             <scope>runtime</scope>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+        </dependency>
 
     </dependencies>
 
@@ -2763,6 +2792,26 @@ public interface UserRepository {
     </build>
 
 </project>
+
+
+// ==========================================================================
+// File: backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/config/WebConfig.java
+// ==========================================================================
+
+package com.smartmatch.infrastructure.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:uploads/");
+    }
+}
 
 
 // ==========================================================================
@@ -4237,7 +4286,7 @@ public class SecurityConfig {
 
                         // 2. Public APIs: BỎ TIỀN TỐ /api
                         // Vì Spring Security khớp dựa trên Path sau Context-Path
-                        .requestMatchers("/api/auth/**", "/public/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/public/**", "/error", "/swagger-ui/**", "/uploads/**", "/v3/api-docs/**").permitAll()
 
                         // 3. Phân quyền các API nghiệp vụ (Cũng bỏ /api)
                         .requestMatchers(HttpMethod.POST, "/candidate/**").hasRole("CANDIDATE")
@@ -4705,6 +4754,12 @@ import com.smartmatch.domain.company.model.Company;
 import com.smartmatch.domain.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 import java.util.Optional;
 
@@ -4758,6 +4813,31 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy công ty!"));
         return companyMapper.toResponse(company);
+    }
+
+    @Override
+    public String uploadLogo(MultipartFile file, Long ownerId) throws IOException {
+        if (file.isEmpty()) throw new IllegalArgumentException("File ảnh rỗng!");
+
+        // 1. Sửa lại đường dẫn khớp với yêu cầu và Docker Volume
+        // Dùng đường dẫn tương đối tính từ gốc /app của container
+        Path uploadDir = Paths.get("uploads/company/logo");
+
+        // Tạo thư mục nếu chưa tồn tại
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        String originalName = file.getOriginalFilename();
+        String extension = originalName != null ? originalName.substring(originalName.lastIndexOf(".")) : ".png";
+        String newFileName = UUID.randomUUID() + extension;
+
+        Path filePath = uploadDir.resolve(newFileName);
+        Files.copy(file.getInputStream(), filePath);
+
+        // 2. Trả về đường dẫn tương đối
+        // Frontend sẽ tự nối http://localhost:8080 thông qua biến môi trường hoặc proxy
+        return "/uploads/company/logo/" + newFileName;
     }
 }
 

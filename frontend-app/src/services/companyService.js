@@ -21,3 +21,18 @@ export const saveCompany = async (companyData) => {
     throw new Error(error.response?.data?.message || 'Lỗi khi lưu thông tin công ty');
   }
 };
+
+export const uploadCompanyLogo = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // axios tự hiểu Content-Type là multipart/form-data khi truyền FormData
+    const response = await api.post('/employer/company/upload-logo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data; // Trả về link URL của ảnh
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Lỗi khi tải ảnh lên');
+  }
+};

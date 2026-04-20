@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/employer/company")
@@ -41,5 +43,15 @@ public class CompanyController {
         Long ownerId = getUserId(authentication); // Sử dụng hàm helper
         CompanyResponse response = companyService.getCompanyByOwnerId(ownerId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/upload-logo")
+    public ResponseEntity<String> uploadLogo(
+            @RequestParam("file") MultipartFile file,
+            Authentication authentication) throws IOException {
+
+        Long ownerId = getUserId(authentication);
+        String logoUrl = companyService.uploadLogo(file, ownerId);
+        return ResponseEntity.ok(logoUrl);
     }
 }

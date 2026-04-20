@@ -8,6 +8,12 @@ import com.smartmatch.domain.company.model.Company;
 import com.smartmatch.domain.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 import java.util.Optional;
 
@@ -61,5 +67,30 @@ public class CompanyServiceImpl implements CompanyService {
         Company company = companyRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy công ty!"));
         return companyMapper.toResponse(company);
+    }
+
+    @Override
+    public String uploadLogo(MultipartFile file, Long ownerId) throws IOException {
+        if (file.isEmpty()) throw new IllegalArgumentException("File ảnh rỗng!");
+
+        // 1. Sửa lại đường dẫn khớp với yêu cầu và Docker Volume
+        // Dùng đường dẫn tương đối tính từ gốc /app của container
+        Path uploadDir = Paths.get("uploads/companies/logos");
+
+        // Tạo thư mục nếu chưa tồn tại
+        if (!Files.exists(uploadDir)) {
+            Files.createDirectories(uploadDir);
+        }
+
+        String originalName = file.getOriginalFilename();
+        String extension = originalName != null ? originalName.substring(originalName.lastIndexOf(".")) : ".png";
+        String newFileName = UUID.randomUUID() + extension;
+
+        Path filePath = uploadDir.resolve(newFileName);
+        Files.copy(file.getInputStream(), filePath);
+
+        // 2. Trả về đường dẫn tương đối
+        // Frontend sẽ tự nối http://localhost:8080 thông qua biến môi trường hoặc proxy
+        return "/uploads/companies/logos/" + newFileName;
     }
 }
