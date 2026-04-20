@@ -15,7 +15,7 @@ import { uploadCompanyLogo } from "../../services/companyService";
 const getFullImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http")) return path;
-  return `http://localhost:8080${path}`;
+  return `http://localhost:8080${path}?t=${new Date().getTime()}`;
 };
 
 const CompanyForm = ({ initialData, onSave, onCancel, loading }) => {
