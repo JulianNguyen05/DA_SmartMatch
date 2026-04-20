@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java
 package com.smartmatch.infrastructure.service.employer;
 
 import com.smartmatch.application.dto.PageResponse;
@@ -171,5 +172,43 @@ public class JobServiceImpl implements JobService {
         // Convert sang DTO và trả PageResponse
         Page<JobResponse> responsePage = jobPage.map(jobMapper::toResponse);
         return PageResponse.from(responsePage);
+    }
+
+    @Override
+    public JobResponse updateJob(CreateJobRequest request, Long jobId, Long employerId) {
+        Optional<Job> jobOpt = jobRepository.findByIdAndPostedById(jobId, employerId);
+        if (jobOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy tin tuyển dụng hoặc bạn không có quyền chỉnh sửa!");
+        }
+
+        Job job = jobOpt.get();
+
+        // Cập nhật các trường
+        job.setTitle(request.getTitle());
+        job.setDescription(request.getDescription());
+        job.setLocation(request.getLocation());
+        job.setMinSalary(request.getMinSalary());
+        job.setMaxSalary(request.getMaxSalary());
+        job.setCurrency(request.getCurrency() != null ? request.getCurrency() : job.getCurrency());
+        job.setJobType(request.getJobType());
+        job.setExperienceLevel(request.getExperienceLevel());
+        job.setMinExperienceYears(request.getMinExperienceYears());
+        job.setRequirements(request.getRequirements());
+        job.setBenefits(request.getBenefits());
+        job.setDeadline(request.getDeadline());
+        // postedAt giữ nguyên hoặc cập nhật nếu muốn
+        // status giữ nguyên (không cho thay đổi status ở đây, có thể thêm sau)
+
+        Job savedJob = jobRepository.save(job);
+        return jobMapper.toResponse(savedJob);
+    }
+
+    @Override
+    public void deleteJob(Long jobId, Long employerId) {
+        Optional<Job> jobOpt = jobRepository.findByIdAndPostedById(jobId, employerId);
+        if (jobOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy tin tuyển dụng hoặc bạn không có quyền xóa!");
+        }
+        jobRepository.delete(jobOpt.get());   // đã implement delete ở RepositoryImpl
     }
 }

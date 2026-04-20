@@ -1,3 +1,4 @@
+// backend-core/domain/src/main/java/com/smartmatch/domain/job/repository/JobRepository.java
 package com.smartmatch.domain.job.repository;
 
 import com.smartmatch.domain.job.model.Job;
@@ -12,4 +13,5 @@ public interface JobRepository {
     List<Job> findByPostedById(Long postedById);   // ← MỚI: GetMyJobs
     List<Job> findAllPublished();                  // giữ lại cho public
     Optional<Job> findByIdAndPostedById(Long id, Long postedById); // ← MỚI: bảo vệ Job của employer
+    void delete(Job job);
 }

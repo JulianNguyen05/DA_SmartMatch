@@ -1,3 +1,4 @@
+// backend-core/application/src/main/java/com/smartmatch/application/dto/PageResponse.java
 package com.smartmatch.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;

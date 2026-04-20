@@ -11,10 +11,10 @@ const apiClient = axios.create({
 
 export const login = async ({ usernameOrEmail, password }) => {
   try {
-    // DTO Backend LoginRequest yêu cầu trường 'email'. 
-    // Ta map giá trị usernameOrEmail từ Form vào trường email để gửi đi.
+    // DTO Backend LoginRequest yêu cầu trường 'usernameOrEmail'. 
+    // Ta map giá trị usernameOrEmail từ Form vào trường usernameOrEmail để gửi đi.
     const response = await apiClient.post('/login', {
-      email: usernameOrEmail, 
+      usernameOrEmail: usernameOrEmail,
       password: password
     });
     

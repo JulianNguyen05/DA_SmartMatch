@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/JobJpaEntity.java
 package com.smartmatch.infrastructure.persistence.jpa;
 
 import com.smartmatch.domain.common.enums.ExperienceLevel;

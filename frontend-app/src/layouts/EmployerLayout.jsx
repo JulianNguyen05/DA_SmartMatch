@@ -1,3 +1,4 @@
+// frontend-app\src\layouts\EmployerLayout.jsx
 import React from "react";
 import { Home, Briefcase, FileText, Sparkles, Building } from "lucide-react";
 import DashboardLayout from "./DashboardLayout";

@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java
 package com.smartmatch.infrastructure.persistence.repository;
 
 import com.smartmatch.domain.job.model.Job;
@@ -53,5 +54,11 @@ public class JobRepositoryImpl implements JobRepository {
     public Optional<Job> findByIdAndPostedById(Long id, Long postedById) {
         return jpaRepository.findByIdAndPostedById(id, postedById)
                 .map(mapper::toDomain);
+    }
+
+    @Override
+    public void delete(Job job) {
+        JobJpaEntity entity = mapper.toEntity(job);
+        jpaRepository.delete(entity);
     }
 }

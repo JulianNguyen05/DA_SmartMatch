@@ -1,3 +1,4 @@
+// backend-core/application/src/main/java/com/smartmatch/application/dto/ApiErrorResponse.java
 package com.smartmatch.application.dto;
 
 import lombok.AllArgsConstructor;

@@ -1,3 +1,4 @@
+// backend-core/api/src/main/java/com/smartmatch/api/exception/GlobalExceptionHandler.java
 package com.smartmatch.api.exception;
 
 import com.smartmatch.application.dto.ApiErrorResponse;

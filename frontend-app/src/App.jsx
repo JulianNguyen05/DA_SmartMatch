@@ -13,6 +13,8 @@ import RegisterPage from './pages/auth/RegisterPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CandidateDashboard from './pages/candidate/CandidateDashboard';
 import EmployerDashboard from './pages/employer/EmployerDashboard';
+import ManageJobsPage from './pages/employer/ManageJobsPage';     // ← THÊM
+import CreateJobPage from './pages/employer/CreateJobPage';       // ← THÊM
 
 // Protected Route
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -32,7 +34,6 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            {/* Thêm các route admin khác ở đây sau này */}
           </Route>
         </Route>
 
@@ -40,7 +41,11 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
           <Route element={<EmployerLayout />}>
             <Route path="/employer/dashboard" element={<EmployerDashboard />} />
-            {/* Thêm các route employer khác ở đây sau này */}
+            
+            {/* === QUẢN LÝ TIN TUYỂN DỤNG === */}
+            <Route path="/employer/jobs" element={<ManageJobsPage />} />
+            <Route path="/employer/jobs/create" element={<CreateJobPage />} />
+            <Route path="/employer/jobs/:id/edit" element={<CreateJobPage />} />
           </Route>
         </Route>
 
@@ -48,7 +53,6 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
           <Route element={<CandidateLayout />}>
             <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
-            {/* Thêm các route candidate khác ở đây sau này */}
           </Route>
         </Route>
 

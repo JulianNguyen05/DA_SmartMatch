@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java
 package com.smartmatch.infrastructure.persistence.mapper;
 
 import com.smartmatch.domain.job.model.Job;

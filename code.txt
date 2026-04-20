@@ -1,0 +1,1125 @@
+// backend-core/api/src/main/java/com/smartmatch/api/controller/employer/JobController.java
+package com.smartmatch.api.controller.employer;
+
+import com.smartmatch.application.dto.application.JobApplicationResponse;
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.service.candidate.ApplicationService;
+import com.smartmatch.application.service.employer.JobService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/employer/jobs")
+@RequiredArgsConstructor
+public class JobController {
+
+    private final JobService jobService;
+    private final ApplicationService applicationService;
+
+    @PostMapping
+    public ResponseEntity<JobResponse> createJob(
+            @Valid @RequestBody CreateJobRequest request,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse response = jobService.createJob(request, employerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<JobResponse>> getMyJobs(Authentication authentication) {
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobResponse> jobs = jobService.getMyJobs(employerId);
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getJobById(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse job = jobService.getJobById(id, employerId);
+        return ResponseEntity.ok(job);
+    }
+
+    @GetMapping("/{jobId}/applications")
+    public ResponseEntity<List<JobApplicationResponse>> getJobApplications(
+            @PathVariable Long jobId,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        List<JobApplicationResponse> applications = applicationService.getApplicationsByJobId(jobId, employerId);
+        return ResponseEntity.ok(applications);
+    }
+}
+// backend-core/api/src/main/java/com/smartmatch/api/controller/publics/PublicJobController.java
+package com.smartmatch.api.controller.publics;
+
+import com.smartmatch.application.dto.PageResponse;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
+import com.smartmatch.application.service.employer.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/public/jobs")
+@RequiredArgsConstructor
+@Tag(name = "Public - Jobs", description = "API công khai xem tin tuyển dụng (không cần đăng nhập)")
+public class PublicJobController {
+
+    private final JobService jobService;
+
+    @Operation(
+            summary = "Lấy tất cả tin tuyển dụng đang công khai",
+            description = "Trả về danh sách tin PUBLISHED với phân trang nâng cao. Mặc định sort theo postedAt DESC (tin mới nhất trước)."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Lỗi hệ thống")
+    })
+    @GetMapping
+    public ResponseEntity<PageResponse<JobResponse>> getAllPublishedJobs(
+            @Parameter(hidden = true) // Pageable sẽ được Swagger tự render
+            @PageableDefault(size = 20, sort = "postedAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
+            Pageable pageable) {
+
+        JobSearchRequest emptyRequest = new JobSearchRequest();
+        PageResponse<JobResponse> page = jobService.searchPublishedJobs(emptyRequest, pageable);
+        return ResponseEntity.ok(page);
+    }
+
+    @Operation(
+            summary = "Tìm kiếm & lọc tin tuyển dụng nâng cao",
+            description = "Hỗ trợ lọc theo keyword, location, jobType, experienceLevel, khoảng lương + phân trang."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = PageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ"),
+            @ApiResponse(responseCode = "500", description = "Lỗi hệ thống")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<PageResponse<JobResponse>> searchJobs(
+            @ModelAttribute
+            @Parameter(description = "Các tham số lọc & phân trang")
+            JobSearchRequest request,
+
+            @Parameter(hidden = true)
+            @PageableDefault(size = 20, sort = "postedAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
+            Pageable pageable) {
+
+        PageResponse<JobResponse> page = jobService.searchPublishedJobs(request, pageable);
+        return ResponseEntity.ok(page);
+    }
+
+    @Operation(
+            summary = "Xem chi tiết một tin tuyển dụng công khai",
+            description = "Trả về đầy đủ thông tin của 1 Job theo ID (chỉ tin PUBLISHED)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Thành công",
+                    content = @Content(schema = @Schema(implementation = JobResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Không tìm thấy tin hoặc tin đã đóng")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<JobResponse> getPublicJobById(
+            @Parameter(description = "ID của tin tuyển dụng", example = "1", required = true)
+            @PathVariable Long id) {
+
+        return ResponseEntity.ok(jobService.getPublicJobById(id));
+    }
+}
+// backend-core/application/src/main/java/com/smartmatch/application/service/employer/JobService.java
+package com.smartmatch.application.service.employer;
+
+import com.smartmatch.application.dto.PageResponse;
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+public interface JobService {
+    JobResponse createJob(CreateJobRequest request, Long employerId);
+    List<JobResponse> getMyJobs(Long employerId);
+    JobResponse getJobById(Long jobId, Long employerId);
+    List<JobResponse> getAllPublishedJobs();
+    JobResponse getPublicJobById(Long id);
+    List<JobResponse> searchPublishedJobs(JobSearchRequest request);
+    PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable);
+}
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java
+package com.smartmatch.infrastructure.service.employer;
+
+import com.smartmatch.application.dto.PageResponse;
+import com.smartmatch.application.dto.job.CreateJobRequest;
+import com.smartmatch.application.dto.job.JobResponse;
+import com.smartmatch.application.dto.job.JobSearchRequest;
+import com.smartmatch.application.mapper.JobMapper;
+import com.smartmatch.application.service.employer.JobService;
+import com.smartmatch.domain.company.model.Company;
+import com.smartmatch.domain.company.repository.CompanyRepository;
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.domain.job.repository.JobRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class JobServiceImpl implements JobService {
+
+    private final JobRepository jobRepository;
+    private final CompanyRepository companyRepository;
+    private final JobMapper jobMapper;
+
+    @Override
+    public JobResponse createJob(CreateJobRequest request, Long employerId) {
+        // 1. Lấy company của employer hiện tại
+        Optional<Company> companyOpt = companyRepository.findByOwnerId(employerId);
+        if (companyOpt.isEmpty()) {
+            throw new IllegalArgumentException("Bạn chưa tạo thông tin công ty. Vui lòng tạo Company trước khi đăng tin tuyển dụng!");
+        }
+
+        Long companyId = companyOpt.get().getId();
+
+        // 2. Convert DTO → Domain (tự động gán companyId + postedById)
+        Job job = jobMapper.toDomain(request, companyId, employerId);
+
+        // 3. Lưu vào DB
+        Job savedJob = jobRepository.save(job);
+
+        // 4. Trả về response
+        return jobMapper.toResponse(savedJob);
+    }
+
+    @Override
+    public List<JobResponse> getMyJobs(Long employerId) {
+        List<Job> jobs = jobRepository.findByPostedById(employerId);
+        return jobMapper.toResponseList(jobs);
+    }
+
+    @Override
+    public JobResponse getJobById(Long jobId, Long employerId) {
+        Optional<Job> jobOpt = jobRepository.findByIdAndPostedById(jobId, employerId);
+        if (jobOpt.isEmpty()) {
+            throw new IllegalArgumentException("Không tìm thấy tin tuyển dụng hoặc bạn không có quyền xem!");
+        }
+        return jobMapper.toResponse(jobOpt.get());
+    }
+
+    @Override
+    public List<JobResponse> getAllPublishedJobs() {
+        List<Job> jobs = jobRepository.findAllPublished();
+        // Sắp xếp tin mới nhất trước
+        return jobMapper.toResponseList(jobs);
+    }
+
+    @Override
+    public JobResponse getPublicJobById(Long id) {
+        Optional<Job> jobOpt = jobRepository.findById(id);
+        if (jobOpt.isEmpty() || jobOpt.get().getStatus() != com.smartmatch.domain.common.enums.JobStatus.PUBLISHED) {
+            throw new IllegalArgumentException("Tin tuyển dụng không tồn tại hoặc đã đóng!");
+        }
+        return jobMapper.toResponse(jobOpt.get());
+    }
+    @Override
+    public List<JobResponse> searchPublishedJobs(JobSearchRequest request) {
+        // Lấy tất cả tin đang PUBLISHED (đã có sẵn)
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Lọc theo các điều kiện (memory filter - phù hợp MVP, sau có thể nâng Specification)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt())) // mới nhất trước
+                .collect(Collectors.toList());
+
+        // Phân trang đơn giản
+        int page = Math.max(0, request.getPage());
+        int size = Math.max(1, request.getSize());
+        int from = page * size;
+        int to = Math.min(from + size, filtered.size());
+
+        if (from >= filtered.size()) {
+            return List.of();
+        }
+
+        return jobMapper.toResponseList(filtered.subList(from, to));
+    }
+
+    private boolean matchesKeyword(Job job, String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) return true;
+        String k = keyword.toLowerCase().trim();
+        return job.getTitle().toLowerCase().contains(k) ||
+                (job.getDescription() != null && job.getDescription().toLowerCase().contains(k));
+    }
+
+    private boolean matchesLocation(Job job, String location) {
+        if (location == null || location.trim().isEmpty()) return true;
+        return job.getLocation() != null && job.getLocation().equalsIgnoreCase(location.trim());
+    }
+
+    private boolean matchesJobType(Job job, com.smartmatch.domain.common.enums.JobType jobType) {
+        if (jobType == null) return true;
+        return job.getJobType() == jobType;
+    }
+
+    private boolean matchesExperienceLevel(Job job, com.smartmatch.domain.common.enums.ExperienceLevel level) {
+        if (level == null) return true;
+        return job.getExperienceLevel() == level;
+    }
+
+    private boolean matchesSalary(Job job, BigDecimal minSalary, BigDecimal maxSalary) {
+        if (minSalary == null && maxSalary == null) return true;
+        BigDecimal salary = job.getMaxSalary() != null ? job.getMaxSalary() : job.getMinSalary();
+        if (salary == null) return true;
+
+        if (minSalary != null && salary.compareTo(minSalary) < 0) return false;
+        if (maxSalary != null && salary.compareTo(maxSalary) > 0) return false;
+        return true;
+    }
+
+    @Override
+    public PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable) {
+        // Lấy tất cả tin PUBLISHED
+        List<Job> allPublished = jobRepository.findAllPublished();
+
+        // Áp dụng filter (giữ nguyên logic cũ)
+        List<Job> filtered = allPublished.stream()
+                .filter(job -> matchesKeyword(job, request.getKeyword()))
+                .filter(job -> matchesLocation(job, request.getLocation()))
+                .filter(job -> matchesJobType(job, request.getJobType()))
+                .filter(job -> matchesExperienceLevel(job, request.getExperienceLevel()))
+                .filter(job -> matchesSalary(job, request.getMinSalary(), request.getMaxSalary()))
+                .collect(Collectors.toList());
+
+        // Sort mặc định: mới nhất trước
+        List<Job> sorted = filtered.stream()
+                .sorted((a, b) -> b.getPostedAt().compareTo(a.getPostedAt()))
+                .toList();
+
+        // Tạo Pageable nếu chưa có (trường hợp gọi từ getAllPublishedJobs)
+        Pageable effectivePageable = (pageable != null)
+                ? pageable
+                : PageRequest.of(request.getPage(), request.getSize(), Sort.by("postedAt").descending());
+
+        // Tạo Page từ List đã lọc
+        int start = (int) effectivePageable.getOffset();
+        int end = Math.min(start + effectivePageable.getPageSize(), sorted.size());
+        List<Job> pageContent = (start > sorted.size()) ? List.of() : sorted.subList(start, end);
+
+        Page<Job> jobPage = new PageImpl<>(pageContent, effectivePageable, sorted.size());
+
+        // Convert sang DTO và trả PageResponse
+        Page<JobResponse> responsePage = jobPage.map(jobMapper::toResponse);
+        return PageResponse.from(responsePage);
+    }
+}
+// backend-core/application/src/main/java/com/smartmatch/application/dto/job/CreateJobRequest.java
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobType;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CreateJobRequest {
+
+    @NotBlank(message = "Tiêu đề không được để trống")
+    @Size(max = 200, message = "Tiêu đề tối đa 200 ký tự")
+    private String title;
+
+    @NotBlank(message = "Mô tả không được để trống")
+    @Size(max = 5000, message = "Mô tả tối đa 5000 ký tự")
+    private String description;
+
+    @NotBlank(message = "Địa điểm không được để trống")
+    private String location;
+
+    @PositiveOrZero(message = "Lương tối thiểu phải ≥ 0")
+    private BigDecimal minSalary;
+
+    @PositiveOrZero(message = "Lương tối đa phải ≥ 0")
+    private BigDecimal maxSalary;
+
+    private String currency = "VND";
+
+    @NotNull(message = "Loại hình làm việc không được để trống")
+    private JobType jobType;
+
+    @NotNull(message = "Mức kinh nghiệm không được để trống")
+    private ExperienceLevel experienceLevel;
+
+    @Min(value = 0, message = "Số năm kinh nghiệm không được âm")
+    private Integer minExperienceYears;
+
+    private List<String> requirements;
+
+    private List<String> benefits;
+
+    @FutureOrPresent(message = "Hạn nộp phải là ngày hiện tại hoặc tương lai")
+    private LocalDate deadline;
+}
+// backend-core/application/src/main/java/com/smartmatch/application/dto/job/JobResponse.java
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobResponse {
+    private Long id;
+    private String title;
+    private String description;
+    private Long companyId;
+    private String location;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+    private Integer minExperienceYears;
+    private List<String> requirements;
+    private List<String> benefits;
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+    private JobStatus status;
+}
+// backend-core/application/src/main/java/com/smartmatch/application/dto/job/JobSearchRequest.java
+package com.smartmatch.application.dto.job;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobType;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.*;
+
+import java.math.BigDecimal;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Schema(description = "Yêu cầu tìm kiếm tin tuyển dụng")
+public class JobSearchRequest {
+
+    private String keyword;
+    private String location;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+
+    @PositiveOrZero
+    private BigDecimal minSalary;
+
+    @PositiveOrZero
+    private BigDecimal maxSalary;
+
+    private Integer page = 0;
+    private Integer size = 20;
+}
+// backend-core/application/src/main/java/com/smartmatch/application/dto/PageResponse.java
+package com.smartmatch.application.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
+
+import java.util.List;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Schema(description = "Đối tượng phân trang chuẩn cho toàn bộ API SmartMatch")
+public class PageResponse<T> {
+
+    @Schema(description = "Danh sách dữ liệu trên trang hiện tại", example = "[{...}]")
+    private List<T> content;
+
+    @Schema(description = "Trang hiện tại (bắt đầu từ 0)", example = "0", defaultValue = "0")
+    private int page;
+
+    @Schema(description = "Số lượng phần tử mỗi trang", example = "20", defaultValue = "20")
+    private int size;
+
+    @Schema(description = "Tổng số phần tử", example = "145")
+    private long totalElements;
+
+    @Schema(description = "Tổng số trang", example = "8")
+    private int totalPages;
+
+    @Schema(description = "Có trang kế tiếp không?", example = "true")
+    private boolean hasNext;
+
+    @Schema(description = "Có trang trước không?", example = "false")
+    private boolean hasPrevious;
+
+    @Schema(description = "Là trang đầu tiên?", example = "true")
+    private boolean isFirst;
+
+    @Schema(description = "Là trang cuối cùng?", example = "false")
+    private boolean isLast;
+
+    public static <T> PageResponse<T> from(Page<T> page) {
+        return new PageResponse<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getSize(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.hasNext(),
+                page.hasPrevious(),
+                page.isFirst(),
+                page.isLast()
+        );
+    }
+}
+// backend-core/domain/src/main/java/com/smartmatch/domain/job/model/Job.java
+package com.smartmatch.domain.job.model;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Job {
+    private Long id;
+    private String title;
+    private String description;
+    private Long companyId;
+    private String location;
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+    private JobType jobType;
+    private ExperienceLevel experienceLevel;
+    private Integer minExperienceYears;
+    private List<String> requirements;
+    private List<String> benefits;
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+    private JobStatus status;
+    private Long postedById;
+}
+// backend-core/domain/src/main/java/com/smartmatch/domain/job/repository/JobRepository.java
+package com.smartmatch.domain.job.repository;
+
+import com.smartmatch.domain.job.model.Job;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface JobRepository {
+    Job save(Job job);
+    Optional<Job> findById(Long id);
+    List<Job> findByCompanyId(Long companyId);     // giữ lại cho sau
+    List<Job> findByPostedById(Long postedById);   // ← MỚI: GetMyJobs
+    List<Job> findAllPublished();                  // giữ lại cho public
+    Optional<Job> findByIdAndPostedById(Long id, Long postedById); // ← MỚI: bảo vệ Job của employer
+}
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/JobJpaEntity.java
+package com.smartmatch.infrastructure.persistence.jpa;
+
+import com.smartmatch.domain.common.enums.ExperienceLevel;
+import com.smartmatch.domain.common.enums.JobStatus;
+import com.smartmatch.domain.common.enums.JobType;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
+@Table(name = "jobs")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String title;
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    private Long companyId;
+    private String location;
+
+    private BigDecimal minSalary;
+    private BigDecimal maxSalary;
+    private String currency;
+
+    @Enumerated(EnumType.STRING)
+    private JobType jobType;
+
+    @Enumerated(EnumType.STRING)
+    private ExperienceLevel experienceLevel;
+
+    private Integer minExperienceYears;
+
+    @ElementCollection
+    @CollectionTable(name = "job_requirements", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "requirement")
+    private List<String> requirements;
+
+    @ElementCollection
+    @CollectionTable(name = "job_benefits", joinColumns = @JoinColumn(name = "job_id"))
+    @Column(name = "benefit")
+    private List<String> benefits;
+
+    private LocalDateTime postedAt;
+    private LocalDate deadline;
+
+    @Enumerated(EnumType.STRING)
+    private JobStatus status;
+
+    private Long postedById;
+}
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/JobMapper.java
+package com.smartmatch.infrastructure.persistence.mapper;
+
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import org.springframework.stereotype.Component;
+
+import java.util.stream.Collectors;
+
+@Component("jpaJobMapper")
+public class JobMapper {
+
+    public JobJpaEntity toEntity(Job job) {
+        if (job == null) return null;
+        return JobJpaEntity.builder()
+                .id(job.getId())
+                .title(job.getTitle())
+                .description(job.getDescription())
+                .companyId(job.getCompanyId())
+                .location(job.getLocation())
+                .minSalary(job.getMinSalary())
+                .maxSalary(job.getMaxSalary())
+                .currency(job.getCurrency())
+                .jobType(job.getJobType())
+                .experienceLevel(job.getExperienceLevel())
+                .minExperienceYears(job.getMinExperienceYears())
+                .requirements(job.getRequirements())
+                .benefits(job.getBenefits())
+                .postedAt(job.getPostedAt())
+                .deadline(job.getDeadline())
+                .status(job.getStatus())
+                .postedById(job.getPostedById())
+                .build();
+    }
+
+    public Job toDomain(JobJpaEntity entity) {
+        if (entity == null) return null;
+        return Job.builder()
+                .id(entity.getId())
+                .title(entity.getTitle())
+                .description(entity.getDescription())
+                .companyId(entity.getCompanyId())
+                .location(entity.getLocation())
+                .minSalary(entity.getMinSalary())
+                .maxSalary(entity.getMaxSalary())
+                .currency(entity.getCurrency())
+                .jobType(entity.getJobType())
+                .experienceLevel(entity.getExperienceLevel())
+                .minExperienceYears(entity.getMinExperienceYears())
+                .requirements(entity.getRequirements())
+                .benefits(entity.getBenefits())
+                .postedAt(entity.getPostedAt())
+                .deadline(entity.getDeadline())
+                .status(entity.getStatus())
+                .postedById(entity.getPostedById())
+                .build();
+    }
+}
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobJpaRepository.java
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface JobJpaRepository extends JpaRepository<JobJpaEntity, Long> {
+    List<JobJpaEntity> findByCompanyId(Long companyId);
+    List<JobJpaEntity> findByPostedById(Long postedById);                    // ← MỚI
+    List<JobJpaEntity> findByStatus(String status);
+    Optional<JobJpaEntity> findByIdAndPostedById(Long id, Long postedById); // ← MỚI
+}
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java
+package com.smartmatch.infrastructure.persistence.repository;
+
+import com.smartmatch.domain.job.model.Job;
+import com.smartmatch.domain.job.repository.JobRepository;
+import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
+import com.smartmatch.infrastructure.persistence.mapper.JobMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+@RequiredArgsConstructor
+public class JobRepositoryImpl implements JobRepository {
+
+    private final JobJpaRepository jpaRepository;
+    private final JobMapper mapper;
+
+    @Override
+    public Job save(Job job) {
+        JobJpaEntity entity = mapper.toEntity(job);
+        JobJpaEntity saved = jpaRepository.save(entity);
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<Job> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Job> findByCompanyId(Long companyId) {
+        return jpaRepository.findByCompanyId(companyId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Job> findAllPublished() {
+        return jpaRepository.findByStatus("PUBLISHED").stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+    @Override
+    public List<Job> findByPostedById(Long postedById) {
+        return jpaRepository.findByPostedById(postedById).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Job> findByIdAndPostedById(Long id, Long postedById) {
+        return jpaRepository.findByIdAndPostedById(id, postedById)
+                .map(mapper::toDomain);
+    }
+}
+// frontend-app\src\pages\employer\ManageJobsPage.jsx
+// frontend-app\src\pages\employer\CreateJobPage.jsx
+// frontend-app\src\pages\employer\JobDetailPage.jsx
+// frontend-app\src\services\jobService.js
+// frontend-app\src\components\employer\JobCard.jsx
+// frontend-app\src\components\employer\JobForm.jsx
+// frontend-app\src\components\common\StatusBadge.jsx
+// frontend-app/src/App.jsx
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+
+// Layouts
+import AdminLayout from './layouts/AdminLayout';
+import CandidateLayout from './layouts/CandidateLayout';
+import EmployerLayout from './layouts/EmployerLayout';
+
+// Pages
+import LoginPage from './pages/auth/LoginPage';
+import RegisterPage from './pages/auth/RegisterPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import CandidateDashboard from './pages/candidate/CandidateDashboard';
+import EmployerDashboard from './pages/employer/EmployerDashboard';
+
+// Protected Route
+import ProtectedRoute from './routes/ProtectedRoute';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* ================= PUBLIC ROUTES ================= */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Trang chủ mặc định chuyển sang login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* ================= ADMIN ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            {/* Thêm các route admin khác ở đây sau này */}
+          </Route>
+        </Route>
+
+        {/* ================= EMPLOYER ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
+          <Route element={<EmployerLayout />}>
+            <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+            {/* Thêm các route employer khác ở đây sau này */}
+          </Route>
+        </Route>
+
+        {/* ================= CANDIDATE ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
+          <Route element={<CandidateLayout />}>
+            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+            {/* Thêm các route candidate khác ở đây sau này */}
+          </Route>
+        </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+// frontend-app\src\layouts\EmployerLayout.jsx
+import React from "react";
+import { Home, Briefcase, FileText, Sparkles, Building } from "lucide-react";
+import DashboardLayout from "./DashboardLayout";
+
+const EmployerLayout = () => {
+  const menuItems = [
+    { icon: Home, label: "Dashboard", path: "/employer/dashboard" },
+    { icon: Briefcase, label: "Quản lý tin tuyển dụng", path: "/employer/jobs" },
+    { icon: FileText, label: "Resume Scanner", path: "/employer/scan" },
+    { icon: Sparkles, label: "AI Matches", path: "/employer/matches" },
+  ];
+
+  const roleConfig = {
+    logoLink: "/employer/dashboard",
+    defaultName: "HR",
+    roleLabel: "Nhà tuyển dụng",
+    RoleIcon: Building,
+    textColor: "text-emerald-600",
+    bgColor: "bg-emerald-100",
+    avatarEmoji: "🏢",
+  };
+
+  return <DashboardLayout menuItems={menuItems} roleConfig={roleConfig} />;
+};
+
+export default EmployerLayout;
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java
+package com.smartmatch.infrastructure.security;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:5173"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    return config;
+                }))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // 1. Cho phép Preflight request (OPTIONS)
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 2. Public APIs: BỎ TIỀN TỐ /api
+                        // Vì Spring Security khớp dựa trên Path sau Context-Path
+                        .requestMatchers("/auth/**", "/public/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                        // 3. Phân quyền các API nghiệp vụ (Cũng bỏ /api)
+                        .requestMatchers(HttpMethod.POST, "/candidate/**").hasRole("CANDIDATE")
+                        .requestMatchers(HttpMethod.GET, "/candidate/**").hasAnyRole("CANDIDATE", "EMPLOYER", "ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/employer/**").hasRole("EMPLOYER")
+                        .requestMatchers(HttpMethod.GET, "/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
+
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+}
+// backend-core/api/src/main/java/com/smartmatch/api/exception/GlobalExceptionHandler.java
+package com.smartmatch.api.exception;
+
+import com.smartmatch.application.dto.ApiErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Global Exception Handler cho toàn bộ backend SmartMatch
+ * Xử lý tất cả exception một cách chuyên nghiệp
+ */
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    // ====================== EXCEPTION CƠ BẢN ======================
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgument(
+            IllegalArgumentException ex, HttpServletRequest request) {
+
+        log.warn("IllegalArgumentException: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    // ====================== VALIDATION EXCEPTION ======================
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiErrorResponse> handleValidationException(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        // Lấy câu thông báo lỗi đầu tiên để hiển thị cho Frontend sạch sẽ nhất
+        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
+        log.warn("Validation failed: {}", errorMessage);
+
+        ApiErrorResponse errorResponse = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                errorMessage, // Sẽ hiển thị gọn gàng: "Số điện thoại không hợp lệ"
+                request.getRequestURI()
+        );
+
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    // ====================== LỖI LOGIC NGHIỆP VỤ (RUNTIME) ======================
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiErrorResponse> handleRuntimeException(
+            RuntimeException ex, HttpServletRequest request) {
+
+        log.warn("Business Logic Error: {}", ex.getMessage());
+
+        // Trả về 400 Bad Request cho các lỗi như "Email đã tồn tại", "Số ĐT đã tồn tại"
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // ====================== SECURITY EXCEPTION ======================
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleBadCredentials(
+            BadCredentialsException ex, HttpServletRequest request) {
+
+        log.warn("BadCredentialsException: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                "Email hoặc mật khẩu không đúng",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    // ====================== EXCEPTION KHÁC ======================
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleGenericException(
+            Exception ex, HttpServletRequest request) {
+
+        log.error("Unexpected exception: ", ex);
+        ApiErrorResponse error = new ApiErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                "Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+}
+// backend-core/application/src/main/java/com/smartmatch/application/dto/ApiErrorResponse.java
+package com.smartmatch.application.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+/**
+ * DTO chuẩn trả về lỗi cho tất cả API
+ */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ApiErrorResponse {
+
+    private LocalDateTime timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;           // đường dẫn API gây lỗi
+
+    public ApiErrorResponse(int status, String message, String path) {
+        this.timestamp = LocalDateTime.now();
+        this.status = status;
+        this.error = org.springframework.http.HttpStatus.valueOf(status).getReasonPhrase();
+        this.message = message;
+        this.path = path;
+    }
+
+    // Constructor đơn giản cho các lỗi cơ bản
+    public static ApiErrorResponse of(int status, String message) {
+        return new ApiErrorResponse(status, message, null);
+    }
+}
+//backend-core/api/src/main/resources/application.yml
+spring:
+  application:
+    name: smartmatch-api
+
+  datasource:
+    url: jdbc:mysql://localhost:3307/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+    username: root
+    password: root123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+    open-in-view: false
+
+  security:
+    jwt:
+      secret: your-very-long-secret-key-at-least-512-bits-smartmatch-2026
+      expiration: 86400000
+      refresh-expiration: 604800000
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+logging:
+  level:
+    com.smartmatch: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

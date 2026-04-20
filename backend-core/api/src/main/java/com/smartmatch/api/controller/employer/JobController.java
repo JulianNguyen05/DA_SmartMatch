@@ -1,3 +1,4 @@
+// backend-core/api/src/main/java/com/smartmatch/api/controller/employer/JobController.java
 package com.smartmatch.api.controller.employer;
 
 import com.smartmatch.application.dto.application.JobApplicationResponse;
@@ -56,5 +57,26 @@ public class JobController {
         Long employerId = Long.parseLong(authentication.getName());
         List<JobApplicationResponse> applications = applicationService.getApplicationsByJobId(jobId, employerId);
         return ResponseEntity.ok(applications);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<JobResponse> updateJob(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateJobRequest request,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        JobResponse response = jobService.updateJob(request, id, employerId);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteJob(
+            @PathVariable Long id,
+            Authentication authentication) {
+
+        Long employerId = Long.parseLong(authentication.getName());
+        jobService.deleteJob(id, employerId);
+        return ResponseEntity.noContent().build();
     }
 }

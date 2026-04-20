@@ -1,3 +1,4 @@
+// backend-core/application/src/main/java/com/smartmatch/application/service/employer/JobService.java
 package com.smartmatch.application.service.employer;
 
 import com.smartmatch.application.dto.PageResponse;
@@ -16,4 +17,6 @@ public interface JobService {
     JobResponse getPublicJobById(Long id);
     List<JobResponse> searchPublishedJobs(JobSearchRequest request);
     PageResponse<JobResponse> searchPublishedJobs(JobSearchRequest request, Pageable pageable);
+    JobResponse updateJob(CreateJobRequest request, Long jobId, Long employerId);
+    void deleteJob(Long jobId, Long employerId);
 }

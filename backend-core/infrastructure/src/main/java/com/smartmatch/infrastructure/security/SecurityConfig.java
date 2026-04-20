@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java
 package com.smartmatch.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;

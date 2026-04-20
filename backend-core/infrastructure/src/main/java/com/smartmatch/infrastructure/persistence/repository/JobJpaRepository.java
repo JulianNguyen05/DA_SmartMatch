@@ -1,3 +1,4 @@
+// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobJpaRepository.java
 package com.smartmatch.infrastructure.persistence.repository;
 
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
