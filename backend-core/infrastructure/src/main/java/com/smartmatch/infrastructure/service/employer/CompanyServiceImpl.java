@@ -9,13 +9,14 @@ import com.smartmatch.domain.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
-
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -24,16 +25,16 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
 
+    // Đường dẫn thư mục lưu trữ (Docker Volume sẽ mount vào đây)
+    private final Path uploadDir = Paths.get("uploads/companies/logos");
+
     @Override
     public CompanyResponse createOrUpdateCompany(CreateCompanyRequest request, Long ownerId) {
-        // Kiểm tra công ty đã tồn tại chưa
         Optional<Company> existingOpt = companyRepository.findByOwnerId(ownerId);
 
         Company company;
         if (existingOpt.isPresent()) {
-            // Update
             company = existingOpt.get();
-            // Cập nhật các field từ request
             company.setName(request.getName());
             company.setDescription(request.getDescription());
             company.setAddress(request.getAddress());
@@ -42,15 +43,11 @@ public class CompanyServiceImpl implements CompanyService {
             company.setLogoUrl(request.getLogoUrl());
             company.setIndustry(request.getIndustry());
             company.setCompanySize(request.getCompanySize());
-            // createdAt giữ nguyên
         } else {
-            // Create mới
             company = companyMapper.toDomain(request, ownerId);
         }
 
-        // Lưu vào DB
         Company savedCompany = companyRepository.save(company);
-
         return companyMapper.toResponse(savedCompany);
     }
 
@@ -62,6 +59,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
         return companyMapper.toResponse(companyOpt.get());
     }
+
     @Override
     public CompanyResponse getCompanyById(Long id) {
         Company company = companyRepository.findById(id)
@@ -73,24 +71,39 @@ public class CompanyServiceImpl implements CompanyService {
     public String uploadLogo(MultipartFile file, Long ownerId) throws IOException {
         if (file.isEmpty()) throw new IllegalArgumentException("File ảnh rỗng!");
 
-        // 1. Sửa lại đường dẫn khớp với yêu cầu và Docker Volume
-        // Dùng đường dẫn tương đối tính từ gốc /app của container
-        Path uploadDir = Paths.get("uploads/companies/logos");
-
-        // Tạo thư mục nếu chưa tồn tại
+        // 1. Đảm bảo thư mục tồn tại
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
         }
 
+        // 2. Định nghĩa tên file cố định: "logo_owner_[ID]"
+        // Việc dùng tên cố định giúp ta dễ dàng ghi đè hoặc tìm kiếm để xóa.
+        String fileNameBase = "logo_owner_" + ownerId;
         String originalName = file.getOriginalFilename();
-        String extension = originalName != null ? originalName.substring(originalName.lastIndexOf(".")) : ".png";
-        String newFileName = UUID.randomUUID() + extension;
+        String extension = originalName != null && originalName.contains(".")
+                ? originalName.substring(originalName.lastIndexOf("."))
+                : ".png";
 
-        Path filePath = uploadDir.resolve(newFileName);
-        Files.copy(file.getInputStream(), filePath);
+        String newFileName = fileNameBase + extension;
+        Path targetPath = uploadDir.resolve(newFileName);
 
-        // 2. Trả về đường dẫn tương đối
-        // Frontend sẽ tự nối http://localhost:8080 thông qua biến môi trường hoặc proxy
+        // 3. Xử lý THAY THẾ (Xóa các file cũ cùng tên nhưng có thể khác đuôi)
+        // Ví dụ: Nếu cũ là logo_owner_1.jpg, mới là logo_owner_1.png -> phải xóa .jpg đi
+        try (Stream<Path> files = Files.list(uploadDir)) {
+            files.filter(path -> path.getFileName().toString().startsWith(fileNameBase))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            // Log lỗi nếu cần thiết
+                        }
+                    });
+        }
+
+        // 4. Lưu file mới (StandardCopyOption.REPLACE_EXISTING để chắc chắn)
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+        // 5. Trả về URL tương đối để lưu vào DB
         return "/uploads/companies/logos/" + newFileName;
     }
 }

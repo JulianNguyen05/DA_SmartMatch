@@ -4,7 +4,7 @@ import { Edit, MapPin, Globe, Users, Building2 } from 'lucide-react';
 const getFullImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `http://localhost:8080${path}`; // Nối thủ công port Backend
+  return `http://localhost:8080${path}?t=${new Date().getTime()}`; // Nối thủ công port Backend
 };
 const CompanyDetail = ({ company, onEdit }) => {
   return (
