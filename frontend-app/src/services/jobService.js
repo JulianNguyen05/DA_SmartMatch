@@ -1,4 +1,5 @@
 // frontend-app\src\services\jobService.js
+import api from './api';
 const API_BASE = "http://localhost:8080/api";
 
 const getToken = () => localStorage.getItem("accessToken");
@@ -59,4 +60,16 @@ export const jobService = {
     if (!res.ok) throw new Error("Không thể xóa tin");
     return res.ok;
   },
+
+  // ================= CỦA ỨNG VIÊN (PUBLIC) =================
+  searchPublicJobs: async (params) => {
+    // Gọi đến API GET /api/public/jobs/search
+    const res = await api.get('/public/jobs/search', { params });
+    return res.data;
+  },
+
+  getPublicJobById: async (id) => {
+    const res = await api.get(`/public/jobs/${id}`);
+    return res.data;
+  }
 };

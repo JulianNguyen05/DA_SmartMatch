@@ -1,6 +1,7 @@
 // backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java
 package com.smartmatch.infrastructure.persistence.repository;
 
+import com.smartmatch.domain.common.enums.JobStatus;
 import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.domain.job.repository.JobRepository;
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
@@ -38,12 +39,6 @@ public class JobRepositoryImpl implements JobRepository {
     }
 
     @Override
-    public List<Job> findAllPublished() {
-        return jpaRepository.findByStatus("PUBLISHED").stream()
-                .map(mapper::toDomain)
-                .toList();
-    }
-    @Override
     public List<Job> findByPostedById(Long postedById) {
         return jpaRepository.findByPostedById(postedById).stream()
                 .map(mapper::toDomain)
@@ -60,5 +55,13 @@ public class JobRepositoryImpl implements JobRepository {
     public void delete(Job job) {
         JobJpaEntity entity = mapper.toEntity(job);
         jpaRepository.delete(entity);
+    }
+
+    @Override
+    public List<Job> findAllPublished() {
+        // <-- 2. Đổi "PUBLISHED" thành JobStatus.PUBLISHED
+        return jpaRepository.findByStatus(JobStatus.PUBLISHED).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }

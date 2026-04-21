@@ -46,7 +46,7 @@ public class SecurityConfig {
 
                         // 2. Public APIs: BỎ TIỀN TỐ /api
                         // Vì Spring Security khớp dựa trên Path sau Context-Path
-                        .requestMatchers("/api/auth/**", "/public/**", "/error", "/swagger-ui/**", "/uploads/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/public/**", "/error", "/swagger-ui/**", "/uploads/**", "/v3/api-docs/**").permitAll()
 
                         // 3. Phân quyền các API nghiệp vụ (Cũng bỏ /api)
                         .requestMatchers(HttpMethod.POST, "/candidate/**").hasRole("CANDIDATE")
