@@ -218,13 +218,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/auth/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/auth/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/auth/LoginRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/auth/LoginRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/CustomUserDetailsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/CustomUserDetailsService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/auth/AuthServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/auth/AuthServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend-core/uploads/companies/logos/logo_owner_4.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/uploads/companies/logos/logo_owner_4.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend_full_code.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -270,6 +267,11 @@
     &quot;settings.editor.selected.configurable&quot;: &quot;MavenSettings&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\2025_2026_(II)\DuAn\da_SmartMatch\backend-core" />
+    </key>
+  </component>
   <component name="RunManager">
     <configuration name="SmartMatchApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.smartmatch.api.SmartMatchApplication" />
@@ -2149,7 +2151,7 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     volumes:
-      - ./backend-core/uploads:/app/uploads
+      - ./uploads:/app/uploads
     networks:
       - smartmatch-network
 
@@ -3284,6 +3286,7 @@ import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Component("jpaJobMapper")
@@ -3326,8 +3329,8 @@ public class JobMapper {
                 .jobType(entity.getJobType())
                 .experienceLevel(entity.getExperienceLevel())
                 .minExperienceYears(entity.getMinExperienceYears())
-                .requirements(entity.getRequirements())
-                .benefits(entity.getBenefits())
+                .requirements(entity.getRequirements() != null ? new ArrayList<>(entity.getRequirements()) : new ArrayList<>())
+                .benefits(entity.getBenefits() != null ? new ArrayList<>(entity.getBenefits()) : new ArrayList<>())
                 .postedAt(entity.getPostedAt())
                 .deadline(entity.getDeadline())
                 .status(entity.getStatus())
@@ -4755,13 +4758,14 @@ import com.smartmatch.domain.company.repository.CompanyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.UUID;
-
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -4770,16 +4774,16 @@ public class CompanyServiceImpl implements CompanyService {
     private final CompanyRepository companyRepository;
     private final CompanyMapper companyMapper;
 
+    // Đường dẫn thư mục lưu trữ (Docker Volume sẽ mount vào đây)
+    private final Path uploadDir = Paths.get("uploads/companies/logos");
+
     @Override
     public CompanyResponse createOrUpdateCompany(CreateCompanyRequest request, Long ownerId) {
-        // Kiểm tra công ty đã tồn tại chưa
         Optional<Company> existingOpt = companyRepository.findByOwnerId(ownerId);
 
         Company company;
         if (existingOpt.isPresent()) {
-            // Update
             company = existingOpt.get();
-            // Cập nhật các field từ request
             company.setName(request.getName());
             company.setDescription(request.getDescription());
             company.setAddress(request.getAddress());
@@ -4788,15 +4792,11 @@ public class CompanyServiceImpl implements CompanyService {
             company.setLogoUrl(request.getLogoUrl());
             company.setIndustry(request.getIndustry());
             company.setCompanySize(request.getCompanySize());
-            // createdAt giữ nguyên
         } else {
-            // Create mới
             company = companyMapper.toDomain(request, ownerId);
         }
 
-        // Lưu vào DB
         Company savedCompany = companyRepository.save(company);
-
         return companyMapper.toResponse(savedCompany);
     }
 
@@ -4808,6 +4808,7 @@ public class CompanyServiceImpl implements CompanyService {
         }
         return companyMapper.toResponse(companyOpt.get());
     }
+
     @Override
     public CompanyResponse getCompanyById(Long id) {
         Company company = companyRepository.findById(id)
@@ -4819,25 +4820,40 @@ public class CompanyServiceImpl implements CompanyService {
     public String uploadLogo(MultipartFile file, Long ownerId) throws IOException {
         if (file.isEmpty()) throw new IllegalArgumentException("File ảnh rỗng!");
 
-        // 1. Sửa lại đường dẫn khớp với yêu cầu và Docker Volume
-        // Dùng đường dẫn tương đối tính từ gốc /app của container
-        Path uploadDir = Paths.get("uploads/company/logo");
-
-        // Tạo thư mục nếu chưa tồn tại
+        // 1. Đảm bảo thư mục tồn tại
         if (!Files.exists(uploadDir)) {
             Files.createDirectories(uploadDir);
         }
 
+        // 2. Định nghĩa tên file cố định: "logo_owner_[ID]"
+        // Việc dùng tên cố định giúp ta dễ dàng ghi đè hoặc tìm kiếm để xóa.
+        String fileNameBase = "logo_owner_" + ownerId;
         String originalName = file.getOriginalFilename();
-        String extension = originalName != null ? originalName.substring(originalName.lastIndexOf(".")) : ".png";
-        String newFileName = UUID.randomUUID() + extension;
+        String extension = originalName != null && originalName.contains(".")
+                ? originalName.substring(originalName.lastIndexOf("."))
+                : ".png";
 
-        Path filePath = uploadDir.resolve(newFileName);
-        Files.copy(file.getInputStream(), filePath);
+        String newFileName = fileNameBase + extension;
+        Path targetPath = uploadDir.resolve(newFileName);
 
-        // 2. Trả về đường dẫn tương đối
-        // Frontend sẽ tự nối http://localhost:8080 thông qua biến môi trường hoặc proxy
-        return "/uploads/company/logo/" + newFileName;
+        // 3. Xử lý THAY THẾ (Xóa các file cũ cùng tên nhưng có thể khác đuôi)
+        // Ví dụ: Nếu cũ là logo_owner_1.jpg, mới là logo_owner_1.png -> phải xóa .jpg đi
+        try (Stream<Path> files = Files.list(uploadDir)) {
+            files.filter(path -> path.getFileName().toString().startsWith(fileNameBase))
+                    .forEach(path -> {
+                        try {
+                            Files.deleteIfExists(path);
+                        } catch (IOException e) {
+                            // Log lỗi nếu cần thiết
+                        }
+                    });
+        }
+
+        // 4. Lưu file mới (StandardCopyOption.REPLACE_EXISTING để chắc chắn)
+        Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+
+        // 5. Trả về URL tương đối để lưu vào DB
+        return "/uploads/companies/logos/" + newFileName;
     }
 }
 
@@ -4862,6 +4878,7 @@ import com.smartmatch.domain.job.repository.JobRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -4870,6 +4887,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class JobServiceImpl implements JobService {
 
     private final JobRepository jobRepository;

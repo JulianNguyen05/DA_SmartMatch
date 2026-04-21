@@ -5,6 +5,7 @@ import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @Component("jpaJobMapper")
@@ -47,8 +48,8 @@ public class JobMapper {
                 .jobType(entity.getJobType())
                 .experienceLevel(entity.getExperienceLevel())
                 .minExperienceYears(entity.getMinExperienceYears())
-                .requirements(entity.getRequirements())
-                .benefits(entity.getBenefits())
+                .requirements(entity.getRequirements() != null ? new ArrayList<>(entity.getRequirements()) : new ArrayList<>())
+                .benefits(entity.getBenefits() != null ? new ArrayList<>(entity.getBenefits()) : new ArrayList<>())
                 .postedAt(entity.getPostedAt())
                 .deadline(entity.getDeadline())
                 .status(entity.getStatus())

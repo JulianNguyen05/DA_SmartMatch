@@ -12,11 +12,11 @@ const JOB_TYPES = [
 ];
 
 const EXPERIENCE_LEVELS = [
-  { value: "ENTRY_LEVEL", label: "Mới ra trường" },
-  { value: "MID_LEVEL", label: "Có kinh nghiệm" },
+  { value: "ENTRY", label: "Mới ra trường" },
+  { value: "MID", label: "Có kinh nghiệm" },
   { value: "SENIOR", label: "Senior" },
   { value: "LEAD", label: "Team Lead" },
-  { value: "EXECUTIVE", label: "Giám đốc" },
+  { value: "MANAGER", label: "Giám đốc" },
 ];
 
 const JobForm = ({ form, setForm, onSubmit, loading, isEdit }) => {
