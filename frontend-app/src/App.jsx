@@ -20,6 +20,7 @@ import JobSearchPage from './pages/candidate/JobSearchPage';
 import ProfilePage from './pages/candidate/ProfilePage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
+import ResumesPage from './pages/candidate/ResumesPage'; // <-- IMPORT TRANG QUẢN LÝ CV
 
 // Protected Route
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -46,12 +47,10 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={["EMPLOYER"]} />}>
           <Route element={<EmployerLayout />}>
             <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+            
             {/* === QUẢN LÝ CÔNG TY === */}
-            <Route
-              path="/employer/company"
-              element={<CompanyProfilePage />}
-            />{" "}
-            {/* ← THÊM ROUTE NÀY */}
+            <Route path="/employer/company" element={<CompanyProfilePage />} />
+            
             {/* === QUẢN LÝ TIN TUYỂN DỤNG === */}
             <Route path="/employer/jobs" element={<ManageJobsPage />} />
             <Route path="/employer/jobs/create" element={<CreateJobPage />} />
@@ -60,28 +59,17 @@ function App() {
         </Route>
 
         {/* ================= CANDIDATE ROUTES ================= */}
+        {/* Đã xóa phần lặp và gộp chung lại */}
         <Route element={<ProtectedRoute allowedRoles={["CANDIDATE"]} />}>
           <Route element={<CandidateLayout />}>
-            <Route
-              path="/candidate/dashboard"
-              element={<CandidateDashboard />}
-            />
-          </Route>
-        </Route>
-
-        {/* ================= CANDIDATE ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={["CANDIDATE"]} />}>
-          <Route element={<CandidateLayout />}>
-            <Route
-              path="/candidate/dashboard"
-              element={<CandidateDashboard />}
-            />
-
-            {/* THÊM ROUTE NÀY VÀO ĐÂY */}
+            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
             <Route path="/candidate/applications" element={<CandidateApplicationsPage />} />
             <Route path="/candidate/jobs" element={<JobSearchPage />} />
             <Route path="/candidate/profile" element={<ProfilePage />} />
             <Route path="/candidate/jobs/:id" element={<JobDetailPage />} />
+            
+            {/* <-- THÊM ROUTE QUẢN LÝ CV VÀO ĐÂY --> */}
+            <Route path="/candidate/resumes" element={<ResumesPage />} />
           </Route>
         </Route>
 

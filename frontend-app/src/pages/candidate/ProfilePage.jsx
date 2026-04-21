@@ -95,9 +95,6 @@ const ProfilePage = () => {
         onClearMessage={() => setMessage("")}
         onEdit={() => setIsEditing(true)}
       />
-      
-      {/* KHU VỰC QUẢN LÝ CV ĐƯỢC THÊM VÀO ĐÂY */}
-      {profile && <ResumeManager />}
     </>
   );
 };

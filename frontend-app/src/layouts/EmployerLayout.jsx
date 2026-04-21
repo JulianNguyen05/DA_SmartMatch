@@ -37,7 +37,7 @@ const EmployerLayout = () => {
   }, [location.pathname, navigate]);
 
   const menuItems = [
-    { icon: Home, label: "Dashboard", path: "/employer/dashboard" },
+    { icon: Home, label: "Trang chủ", path: "/employer/dashboard" },
     { icon: Briefcase, label: "Quản lý tin tuyển dụng", path: "/employer/jobs" },
     { icon: Building2, label: "Hồ sơ công ty", path: "/employer/company" },
     { icon: FileText, label: "Resume Scanner", path: "/employer/scan" },
