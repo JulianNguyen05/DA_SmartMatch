@@ -18,6 +18,8 @@ import CreateJobPage from "./pages/employer/CreateJobPage";
 import CompanyProfilePage from "./pages/employer/CompanyProfilePage";
 import JobSearchPage from './pages/candidate/JobSearchPage';
 import ProfilePage from './pages/candidate/ProfilePage';
+import JobDetailPage from './pages/candidate/JobDetailPage';
+import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
 
 // Protected Route
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -76,8 +78,10 @@ function App() {
             />
 
             {/* THÊM ROUTE NÀY VÀO ĐÂY */}
+            <Route path="/candidate/applications" element={<CandidateApplicationsPage />} />
             <Route path="/candidate/jobs" element={<JobSearchPage />} />
             <Route path="/candidate/profile" element={<ProfilePage />} />
+            <Route path="/candidate/jobs/:id" element={<JobDetailPage />} />
           </Route>
         </Route>
 

@@ -9,7 +9,7 @@ const JobDetailPage = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   
-  // State quản lý Modal và trạng thái ứng tuyển
+  // State quản lý Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
 
@@ -27,26 +27,8 @@ const JobDetailPage = () => {
     fetchJobDetail();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64 text-gray-500">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 font-medium">Đang tải thông tin...</span>
-      </div>
-    );
-  }
-
-  if (!job) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold text-gray-800">Không tìm thấy công việc!</h2>
-        <p className="text-gray-500 mt-2">Tin tuyển dụng này có thể đã bị xóa hoặc hết hạn.</p>
-        <Link to="/candidate/jobs" className="inline-block mt-4 text-blue-600 hover:underline">
-          Quay lại danh sách việc làm
-        </Link>
-      </div>
-    );
-  }
+  if (loading) return <div className="text-center py-20 text-gray-500">Đang tải thông tin...</div>;
+  if (!job) return <div className="text-center py-20 text-red-500 font-bold">Không tìm thấy công việc!</div>;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 relative">
@@ -56,13 +38,13 @@ const JobDetailPage = () => {
 
       {/* Thông báo ứng tuyển thành công */}
       {applySuccess && (
-        <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-200 flex items-center gap-3 mb-6 animate-in fade-in slide-in-from-top-4">
+        <div className="bg-emerald-50 text-emerald-700 p-4 rounded-xl border border-emerald-200 flex items-center gap-3 mb-6">
           <CheckCircle className="text-emerald-500" />
           <span className="font-semibold">Nộp đơn thành công! Nhà tuyển dụng sẽ sớm liên hệ với bạn.</span>
         </div>
       )}
 
-      {/* Header Info (Thông tin cơ bản) */}
+      {/* Header Info */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">{job.title}</h1>
@@ -77,23 +59,23 @@ const JobDetailPage = () => {
         <button 
           onClick={() => setIsModalOpen(true)}
           disabled={applySuccess}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition shadow-lg shadow-blue-200"
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition shadow-lg shadow-blue-200"
         >
           {applySuccess ? 'Đã ứng tuyển' : <><Send size={20} /> Ứng tuyển ngay</>}
         </button>
       </div>
 
-      {/* Main Content (Chi tiết) */}
+      {/* Main Content */}
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 space-y-8">
         <section>
-          <h3 className="text-xl font-bold text-gray-900 mb-4 border-l-4 border-blue-600 pl-3">Mô tả công việc</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Mô tả công việc</h3>
           <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">{job.description}</p>
         </section>
 
         <div className="h-px w-full bg-gray-100"></div>
 
         <section>
-          <h3 className="text-xl font-bold text-gray-900 mb-4 border-l-4 border-blue-600 pl-3">Yêu cầu ứng viên</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Yêu cầu ứng viên</h3>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
             {job.requirements?.length > 0 
               ? job.requirements.map((req, idx) => <li key={idx}>{req}</li>)
@@ -104,7 +86,7 @@ const JobDetailPage = () => {
         <div className="h-px w-full bg-gray-100"></div>
 
         <section>
-          <h3 className="text-xl font-bold text-gray-900 mb-4 border-l-4 border-blue-600 pl-3">Quyền lợi</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Quyền lợi</h3>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
             {job.benefits?.length > 0 
               ? job.benefits.map((ben, idx) => <li key={idx}>{ben}</li>)
@@ -113,7 +95,7 @@ const JobDetailPage = () => {
         </section>
       </div>
 
-      {/* Gọi Component Modal Nộp Đơn (Nó chỉ hiện lên khi isModalOpen = true) */}
+      {/* Render Modal Ứng tuyển */}
       <ApplyModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 

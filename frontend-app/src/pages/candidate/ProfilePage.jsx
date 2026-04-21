@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { candidateService } from "../../services/candidateService";
 import ViewProfile from "../../components/candidate/ViewProfile";
 import EditProfileForm from "../../components/candidate/EditProfileForm";
+import ResumeManager from '../../components/candidate/ResumeManager';
 
 const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
@@ -32,9 +33,10 @@ const ProfilePage = () => {
         setForm(data);
         setIsEditing(false);
       } else {
-        setIsEditing(true); // Chưa có profile
+        setIsEditing(true); // Chưa có profile thì tự động mở Form
       }
-    } catch {
+    } catch (error) {
+      console.error("Lỗi khi tải profile:", error);
       setIsEditing(true);
     } finally {
       setLoading(false);
@@ -54,7 +56,8 @@ const ProfilePage = () => {
       setProfile(updatedData);
       setMessage("Lưu hồ sơ thành công! 🎉");
       setIsEditing(false);
-    } catch {
+    } catch (error) {
+      console.error("Lỗi khi lưu profile:", error);
       setMessage("Lỗi khi lưu hồ sơ. Vui lòng thử lại.");
     } finally {
       setSaving(false);
@@ -70,7 +73,7 @@ const ProfilePage = () => {
     );
   }
 
-  // Tách biệt logic: Đang edit thì gọi Form, không thì gọi View
+  // Tách biệt logic: Đang edit thì gọi Form, không thì gọi View + ResumeManager
   return isEditing ? (
     <EditProfileForm
       form={form}
@@ -81,16 +84,21 @@ const ProfilePage = () => {
       onSubmit={handleSubmit}
       onCancel={() => {
         setIsEditing(false);
-        setForm(profile); // Reset form
+        setForm(profile); // Reset form về dữ liệu gốc nếu bấm Hủy
       }}
     />
   ) : (
-    <ViewProfile
-      profile={profile}
-      message={message}
-      onClearMessage={() => setMessage("")}
-      onEdit={() => setIsEditing(true)}
-    />
+    <>
+      <ViewProfile
+        profile={profile}
+        message={message}
+        onClearMessage={() => setMessage("")}
+        onEdit={() => setIsEditing(true)}
+      />
+      
+      {/* KHU VỰC QUẢN LÝ CV ĐƯỢC THÊM VÀO ĐÂY */}
+      {profile && <ResumeManager />}
+    </>
   );
 };
 
