@@ -17,6 +17,7 @@ import ManageJobsPage from "./pages/employer/ManageJobsPage";
 import CreateJobPage from "./pages/employer/CreateJobPage";
 import CompanyProfilePage from "./pages/employer/CompanyProfilePage";
 import JobSearchPage from './pages/candidate/JobSearchPage';
+import ProfilePage from './pages/candidate/ProfilePage';
 
 // Protected Route
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -76,6 +77,7 @@ function App() {
 
             {/* THÊM ROUTE NÀY VÀO ĐÂY */}
             <Route path="/candidate/jobs" element={<JobSearchPage />} />
+            <Route path="/candidate/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 

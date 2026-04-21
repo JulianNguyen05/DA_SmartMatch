@@ -111,26 +111,28 @@ export default defineConfig([
 // ==========================================================================
 
 // frontend-app/src/App.jsx
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Layouts
-import AdminLayout from './layouts/AdminLayout';
-import CandidateLayout from './layouts/CandidateLayout';
-import EmployerLayout from './layouts/EmployerLayout';
+import AdminLayout from "./layouts/AdminLayout";
+import CandidateLayout from "./layouts/CandidateLayout";
+import EmployerLayout from "./layouts/EmployerLayout";
 
 // Pages
-import LoginPage from './pages/auth/LoginPage';
-import RegisterPage from './pages/auth/RegisterPage';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import CandidateDashboard from './pages/candidate/CandidateDashboard';
-import EmployerDashboard from './pages/employer/EmployerDashboard';
-import ManageJobsPage from './pages/employer/ManageJobsPage';
-import CreateJobPage from './pages/employer/CreateJobPage';
-import CompanyProfilePage from './pages/employer/CompanyProfilePage'; // ← THÊM IMPORT NÀY
+import LoginPage from "./pages/auth/LoginPage";
+import RegisterPage from "./pages/auth/RegisterPage";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import CandidateDashboard from "./pages/candidate/CandidateDashboard";
+import EmployerDashboard from "./pages/employer/EmployerDashboard";
+import ManageJobsPage from "./pages/employer/ManageJobsPage";
+import CreateJobPage from "./pages/employer/CreateJobPage";
+import CompanyProfilePage from "./pages/employer/CompanyProfilePage";
+import JobSearchPage from './pages/candidate/JobSearchPage';
+import ProfilePage from './pages/candidate/ProfilePage';
 
 // Protected Route
-import ProtectedRoute from './routes/ProtectedRoute';
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -144,20 +146,22 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* ================= ADMIN ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={['ADMIN']} />}>
+        <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
           </Route>
         </Route>
 
         {/* ================= EMPLOYER ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
+        <Route element={<ProtectedRoute allowedRoles={["EMPLOYER"]} />}>
           <Route element={<EmployerLayout />}>
             <Route path="/employer/dashboard" element={<EmployerDashboard />} />
-            
             {/* === QUẢN LÝ CÔNG TY === */}
-            <Route path="/employer/company" element={<CompanyProfilePage />} /> {/* ← THÊM ROUTE NÀY */}
-            
+            <Route
+              path="/employer/company"
+              element={<CompanyProfilePage />}
+            />{" "}
+            {/* ← THÊM ROUTE NÀY */}
             {/* === QUẢN LÝ TIN TUYỂN DỤNG === */}
             <Route path="/employer/jobs" element={<ManageJobsPage />} />
             <Route path="/employer/jobs/create" element={<CreateJobPage />} />
@@ -166,9 +170,26 @@ function App() {
         </Route>
 
         {/* ================= CANDIDATE ROUTES ================= */}
-        <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
+        <Route element={<ProtectedRoute allowedRoles={["CANDIDATE"]} />}>
           <Route element={<CandidateLayout />}>
-            <Route path="/candidate/dashboard" element={<CandidateDashboard />} />
+            <Route
+              path="/candidate/dashboard"
+              element={<CandidateDashboard />}
+            />
+          </Route>
+        </Route>
+
+        {/* ================= CANDIDATE ROUTES ================= */}
+        <Route element={<ProtectedRoute allowedRoles={["CANDIDATE"]} />}>
+          <Route element={<CandidateLayout />}>
+            <Route
+              path="/candidate/dashboard"
+              element={<CandidateDashboard />}
+            />
+
+            {/* THÊM ROUTE NÀY VÀO ĐÂY */}
+            <Route path="/candidate/jobs" element={<JobSearchPage />} />
+            <Route path="/candidate/profile" element={<ProfilePage />} />
           </Route>
         </Route>
 
@@ -180,6 +201,59 @@ function App() {
 }
 
 export default App;
+
+
+// ==========================================================================
+// File: frontend-app/src/components/candidate/JobCardPublic.jsx
+// ==========================================================================
+
+import React from 'react';
+import { MapPin, DollarSign, Briefcase, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const JobCardPublic = ({ job }) => {
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group flex flex-col h-full">
+      <div className="flex-1">
+        <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+          {job.title}
+        </h3>
+        
+        <div className="space-y-2 mt-4 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <MapPin size={16} className="text-gray-400" />
+            <span>{job.location}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <DollarSign size={16} className="text-emerald-500" />
+            <span className="font-medium text-gray-900">
+              {job.minSalary} - {job.maxSalary} {job.currency}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Briefcase size={16} className="text-gray-400" />
+            <span>{job.experienceLevel}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-6 flex items-center justify-between pt-4 border-t border-gray-100">
+        <div className="flex items-center gap-1 text-xs text-gray-400">
+          <Clock size={14} />
+          <span>{new Date(job.postedAt).toLocaleDateString('vi-VN')}</span>
+        </div>
+        <Link 
+          to={`/candidate/jobs/${job.id}`}
+          className="text-sm font-semibold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-600 hover:text-white transition-colors"
+        >
+          Xem chi tiết
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default JobCardPublic;
 
 
 // ==========================================================================
@@ -2074,10 +2148,273 @@ export default CandidateDashboard;
 
 
 // ==========================================================================
+// File: frontend-app/src/pages/candidate/JobSearchPage.jsx
+// ==========================================================================
+
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Loader2 } from 'lucide-react';
+import { jobService } from '../../services/jobService';
+import JobCardPublic from '../../components/candidate/JobCardPublic';
+
+const JobSearchPage = () => {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ keyword: '', location: '', page: 0 });
+  const [totalPages, setTotalPages] = useState(0);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [filters.page]); // Gọi lại khi đổi trang
+
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      // API của bạn trả về đối tượng PageResponse chứa mảng content
+      const response = await jobService.searchPublicJobs(filters);
+      setJobs(response.content || []);
+      setTotalPages(response.totalPages || 0);
+    } catch (error) {
+      console.error("Lỗi khi tải danh sách việc làm:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setFilters({ ...filters, page: 0 }); // Reset về trang đầu khi search mới
+    fetchJobs();
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header & Search Bar */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-8 sm:p-12 text-white shadow-lg">
+        <h1 className="text-3xl sm:text-4xl font-bold mb-4">Tìm kiếm việc làm mơ ước 🚀</h1>
+        <p className="text-blue-100 mb-8 text-lg">Hàng ngàn cơ hội đang chờ đón bạn.</p>
+        
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-4 bg-white p-2 rounded-2xl sm:rounded-full shadow-lg">
+          <div className="flex-1 flex items-center px-4">
+            <Search className="text-gray-400" size={20} />
+            <input 
+              type="text" 
+              placeholder="Vị trí, từ khóa, công ty..." 
+              className="w-full bg-transparent border-none outline-none text-gray-800 px-3 py-3"
+              value={filters.keyword}
+              onChange={(e) => setFilters({...filters, keyword: e.target.value})}
+            />
+          </div>
+          <div className="hidden sm:block w-px bg-gray-200 my-2"></div>
+          <div className="flex-1 flex items-center px-4">
+            <MapPin className="text-gray-400" size={20} />
+            <input 
+              type="text" 
+              placeholder="Địa điểm..." 
+              className="w-full bg-transparent border-none outline-none text-gray-800 px-3 py-3"
+              value={filters.location}
+              onChange={(e) => setFilters({...filters, location: e.target.value})}
+            />
+          </div>
+          <button type="submit" className="bg-blue-600 text-white font-semibold rounded-xl sm:rounded-full px-8 py-3 hover:bg-blue-700 transition">
+            Tìm kiếm
+          </button>
+        </form>
+      </div>
+
+      {/* Danh sách việc làm */}
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader2 className="animate-spin text-blue-500" size={40} />
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="text-center py-20 text-gray-500 bg-white rounded-3xl border border-gray-100">
+          <p className="text-xl font-medium">Không tìm thấy việc làm nào phù hợp.</p>
+          <p className="mt-2">Thử thay đổi từ khóa hoặc địa điểm xem sao.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {jobs.map((job) => (
+            <JobCardPublic key={job.id} job={job} />
+          ))}
+        </div>
+      )}
+
+      {/* Pagination (Đơn giản) */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-8">
+          <button 
+            disabled={filters.page === 0}
+            onClick={() => setFilters({...filters, page: Math.max(0, filters.page - 1)})}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg disabled:opacity-50"
+          >
+            Trước
+          </button>
+          <span className="px-4 py-2 bg-blue-50 text-blue-700 font-semibold rounded-lg">
+            Trang {filters.page + 1} / {totalPages}
+          </span>
+          <button 
+            disabled={filters.page >= totalPages - 1}
+            onClick={() => setFilters({...filters, page: filters.page + 1})}
+            className="px-4 py-2 bg-white border border-gray-200 rounded-lg disabled:opacity-50"
+          >
+            Sau
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default JobSearchPage;
+
+
+// ==========================================================================
 // File: frontend-app/src/pages/candidate/ProfilePage.jsx
 // ==========================================================================
 
+import React, { useState, useEffect } from 'react';
+import { Save, User, Briefcase, BookOpen, PenTool } from 'lucide-react';
+import { candidateService } from '../../services/candidateService';
 
+const ProfilePage = () => {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  
+  // State chứa dữ liệu form khớp với CandidateProfileRequest ở Backend
+  const [form, setForm] = useState({
+    fullName: '',
+    headline: '',
+    summary: '',
+    skills: '',
+    education: '',
+    experience: ''
+  });
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    setLoading(true);
+    try {
+      const data = await candidateService.getMyProfile();
+      if (data) {
+        setForm({
+          fullName: data.fullName || '',
+          headline: data.headline || '',
+          summary: data.summary || '',
+          skills: data.skills || '',
+          education: data.education || '',
+          experience: data.experience || ''
+        });
+      }
+    } catch (error) {
+      // Bỏ qua lỗi 400/500 nếu user chưa có profile
+      console.log("Chưa có profile hoặc lỗi:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage('');
+    try {
+      await candidateService.saveProfile(form);
+      setMessage('Lưu hồ sơ thành công! 🎉');
+    } catch (error) {
+      setMessage('Lỗi khi lưu hồ sơ. Vui lòng thử lại.');
+      console.error(error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return <div className="p-8 text-center text-gray-500">Đang tải hồ sơ...</div>;
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <User className="text-blue-600" /> Cập nhật hồ sơ cá nhân
+        </h2>
+
+        {message && (
+          <div className={`p-4 mb-6 rounded-xl ${message.includes('thành công') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Họ và tên *</label>
+              <input type="text" name="fullName" required value={form.fullName} onChange={handleChange}
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="VD: Nguyễn Văn A" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Chức danh (Headline)</label>
+              <input type="text" name="headline" value={form.headline} onChange={handleChange}
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="VD: Senior Java Developer" />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <PenTool size={16} /> Giới thiệu bản thân
+            </label>
+            <textarea name="summary" rows="4" value={form.summary} onChange={handleChange}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Vài nét về bạn, mục tiêu nghề nghiệp..." />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Kỹ năng chuyên môn</label>
+            <input type="text" name="skills" value={form.skills} onChange={handleChange}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="VD: Java, Spring Boot, ReactJS (cách nhau bằng dấu phẩy)" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <Briefcase size={16} /> Kinh nghiệm làm việc
+              </label>
+              <textarea name="experience" rows="5" value={form.experience} onChange={handleChange}
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Liệt kê kinh nghiệm của bạn..." />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <BookOpen size={16} /> Học vấn
+              </label>
+              <textarea name="education" rows="5" value={form.education} onChange={handleChange}
+                className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                placeholder="Trường đại học, chứng chỉ..." />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-2 bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-70 transition-colors">
+              <Save size={20} /> {saving ? 'Đang lưu...' : 'Lưu Hồ Sơ'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;
 
 
 // ==========================================================================
@@ -2689,6 +3026,46 @@ export const register = async (userData) => {
 
 
 // ==========================================================================
+// File: frontend-app/src/services/candidateService.js
+// ==========================================================================
+
+import api from './api';
+
+export const candidateService = {
+  // ================= PROFILE =================
+  getMyProfile: async () => {
+    const res = await api.get('/candidate/profile');
+    return res.data;
+  },
+  
+  saveProfile: async (profileData) => {
+    const res = await api.post('/candidate/profile', profileData);
+    return res.data;
+  },
+
+  // ================= RESUME (CV) =================
+  getMyResumes: async () => {
+    const res = await api.get('/candidate/resumes/my');
+    return res.data;
+  },
+
+  uploadResume: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post('/candidate/resumes/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return res.data;
+  },
+
+  deleteResume: async (id) => {
+    const res = await api.delete(`/candidate/resumes/${id}`);
+    return res.data;
+  }
+};
+
+
+// ==========================================================================
 // File: frontend-app/src/services/companyService.js
 // ==========================================================================
 
@@ -2744,6 +3121,7 @@ export const uploadCompanyLogo = async (file) => {
 // ==========================================================================
 
 // frontend-app\src\services\jobService.js
+import api from './api';
 const API_BASE = "http://localhost:8080/api";
 
 const getToken = () => localStorage.getItem("accessToken");
@@ -2804,6 +3182,18 @@ export const jobService = {
     if (!res.ok) throw new Error("Không thể xóa tin");
     return res.ok;
   },
+
+  // ================= CỦA ỨNG VIÊN (PUBLIC) =================
+  searchPublicJobs: async (params) => {
+    // Gọi đến API GET /api/public/jobs/search
+    const res = await api.get('/public/jobs/search', { params });
+    return res.data;
+  },
+
+  getPublicJobById: async (id) => {
+    const res = await api.get(`/public/jobs/${id}`);
+    return res.data;
+  }
 };
 
 

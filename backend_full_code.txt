@@ -218,10 +218,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/backend-core/uploads/companies/logos/logo_owner_4.jpg" beforeDir="false" afterPath="$PROJECT_DIR$/uploads/companies/logos/logo_owner_4.jpg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/employer/JobServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend_full_code.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobJpaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -483,6 +481,7 @@ package com.smartmatch.api.controller.candidate;
 import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
 import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
 import com.smartmatch.application.service.candidate.CandidateProfileService;
+import com.smartmatch.domain.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -495,20 +494,27 @@ import org.springframework.web.bind.annotation.*;
 public class CandidateProfileController {
 
     private final CandidateProfileService profileService;
+    private final UserRepository userRepository;
+
+    private Long getUserId(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"))
+                .getId();
+    }
 
     @PostMapping
     public ResponseEntity<CandidateProfileResponse> saveProfile(
             @Valid @RequestBody CandidateProfileRequest request,
             Authentication authentication) {
 
-        Long candidateId = Long.parseLong(authentication.getName());
+        Long candidateId = getUserId(authentication);
         CandidateProfileResponse response = profileService.saveOrUpdate(request, candidateId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<CandidateProfileResponse> getMyProfile(Authentication authentication) {
-        Long candidateId = Long.parseLong(authentication.getName());
+        Long candidateId = getUserId(authentication);
         CandidateProfileResponse response = profileService.getMyProfile(candidateId);
         return ResponseEntity.ok(response);
     }
@@ -3684,6 +3690,7 @@ public class JobApplicationRepositoryImpl implements JobApplicationRepository {
 // backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobJpaRepository.java
 package com.smartmatch.infrastructure.persistence.repository;
 
+import com.smartmatch.domain.common.enums.JobStatus;
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -3695,6 +3702,7 @@ import java.util.Optional;
 public interface JobJpaRepository extends JpaRepository<JobJpaEntity, Long> {
     List<JobJpaEntity> findByCompanyId(Long companyId);
     List<JobJpaEntity> findByPostedById(Long postedById);                    // ← MỚI
+    List<JobJpaEntity> findByStatus(JobStatus status);
     List<JobJpaEntity> findByStatus(String status);
     Optional<JobJpaEntity> findByIdAndPostedById(Long id, Long postedById); // ← MỚI
 }
@@ -3707,6 +3715,7 @@ public interface JobJpaRepository extends JpaRepository<JobJpaEntity, Long> {
 // backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/JobRepositoryImpl.java
 package com.smartmatch.infrastructure.persistence.repository;
 
+import com.smartmatch.domain.common.enums.JobStatus;
 import com.smartmatch.domain.job.model.Job;
 import com.smartmatch.domain.job.repository.JobRepository;
 import com.smartmatch.infrastructure.persistence.jpa.JobJpaEntity;
@@ -3744,12 +3753,6 @@ public class JobRepositoryImpl implements JobRepository {
     }
 
     @Override
-    public List<Job> findAllPublished() {
-        return jpaRepository.findByStatus("PUBLISHED").stream()
-                .map(mapper::toDomain)
-                .toList();
-    }
-    @Override
     public List<Job> findByPostedById(Long postedById) {
         return jpaRepository.findByPostedById(postedById).stream()
                 .map(mapper::toDomain)
@@ -3766,6 +3769,14 @@ public class JobRepositoryImpl implements JobRepository {
     public void delete(Job job) {
         JobJpaEntity entity = mapper.toEntity(job);
         jpaRepository.delete(entity);
+    }
+
+    @Override
+    public List<Job> findAllPublished() {
+        // <-- 2. Đổi "PUBLISHED" thành JobStatus.PUBLISHED
+        return jpaRepository.findByStatus(JobStatus.PUBLISHED).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 }
 
@@ -4289,7 +4300,7 @@ public class SecurityConfig {
 
                         // 2. Public APIs: BỎ TIỀN TỐ /api
                         // Vì Spring Security khớp dựa trên Path sau Context-Path
-                        .requestMatchers("/api/auth/**", "/public/**", "/error", "/swagger-ui/**", "/uploads/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/public/**", "/error", "/swagger-ui/**", "/uploads/**", "/v3/api-docs/**").permitAll()
 
                         // 3. Phân quyền các API nghiệp vụ (Cũng bỏ /api)
                         .requestMatchers(HttpMethod.POST, "/candidate/**").hasRole("CANDIDATE")
