@@ -2,7 +2,7 @@
 package com.smartmatch.domain.user.repository;
 
 import com.smartmatch.domain.user.model.User;
-
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -18,6 +18,9 @@ public interface UserRepository {
     boolean existsByUsername(String username);
 
     boolean existsByPhoneNumber(String phoneNumber);
+    List<User> findAll();
+    Optional<User> findById(Long id);
+    void deleteById(Long id);
 
     // Có thể thêm sau này:
     // Optional<User> findById(Long id);

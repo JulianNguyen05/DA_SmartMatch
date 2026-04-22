@@ -8,6 +8,7 @@ import com.smartmatch.infrastructure.persistence.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -55,5 +56,21 @@ public class UserRepositoryImpl implements UserRepository {
         // SỬA 1: Đổi chữ 'p' thành 'P' viết hoa để khớp với Interface UserRepository
         // SỬA 2: Đổi existsByPhone thành existsByPhoneNumber vì Entity đã đổi thành biến phoneNumber
         return jpaRepository.existsByPhoneNumber(phoneNumber);
+    }
+    @Override
+    public List<User> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(userMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return jpaRepository.findById(id).map(userMapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
     }
 }

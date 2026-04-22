@@ -20,7 +20,8 @@ import JobSearchPage from './pages/candidate/JobSearchPage';
 import ProfilePage from './pages/candidate/ProfilePage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
-import ResumesPage from './pages/candidate/ResumesPage'; // <-- IMPORT TRANG QUẢN LÝ CV
+import ResumesPage from './pages/candidate/ResumesPage';
+import ManageUsersPage from "./pages/admin/ManageUsersPage";
 
 // Protected Route
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -40,6 +41,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<ManageUsersPage />} />
           </Route>
         </Route>
 
