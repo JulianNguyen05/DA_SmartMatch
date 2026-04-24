@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class CandidateProfile {
     private Long id;
     private Long candidateId;           // userId
+    private String profileName;
     private String fullName;
     private String headline;            // ví dụ: "Senior Java Developer"
     private String summary;             // giới thiệu bản thân

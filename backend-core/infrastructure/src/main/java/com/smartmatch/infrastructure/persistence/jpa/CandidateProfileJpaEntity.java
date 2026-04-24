@@ -30,6 +30,9 @@ public class CandidateProfileJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String experience;
 
+    @Column(name = "profile_name", nullable = false)
+    private String profileName = "Hồ sơ mặc định";
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

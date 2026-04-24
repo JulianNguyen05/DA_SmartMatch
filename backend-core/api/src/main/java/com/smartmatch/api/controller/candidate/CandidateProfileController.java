@@ -10,8 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/candidate/profile")
+@RequestMapping("/api/candidate/profiles") // <-- Đã sửa thành "profiles" (có chữ s)
 @RequiredArgsConstructor
 public class CandidateProfileController {
 
@@ -30,14 +32,16 @@ public class CandidateProfileController {
             Authentication authentication) {
 
         Long candidateId = getUserId(authentication);
+        // Lưu hồ sơ (tạo mới hoặc cập nhật tùy vào việc request có truyền ID lên hay không)
         CandidateProfileResponse response = profileService.saveOrUpdate(request, candidateId);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<CandidateProfileResponse> getMyProfile(Authentication authentication) {
+    public ResponseEntity<List<CandidateProfileResponse>> getMyProfiles(Authentication authentication) {
         Long candidateId = getUserId(authentication);
-        CandidateProfileResponse response = profileService.getMyProfile(candidateId);
-        return ResponseEntity.ok(response);
+        // Trả về danh sách (List) các Tab hồ sơ của ứng viên
+        List<CandidateProfileResponse> responses = profileService.getMyProfiles(candidateId);
+        return ResponseEntity.ok(responses);
     }
 }

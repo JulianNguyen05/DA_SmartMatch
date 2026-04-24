@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -21,6 +22,7 @@ public class CandidateProfileRepositoryImpl implements CandidateProfileRepositor
     public CandidateProfile save(CandidateProfile profile) {
         CandidateProfileJpaEntity entity = mapper.toEntity(profile);
 
+        // Đảm bảo thời gian tạo và cập nhật được set đúng
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(LocalDateTime.now());
         }
@@ -30,9 +32,18 @@ public class CandidateProfileRepositoryImpl implements CandidateProfileRepositor
         return mapper.toDomain(saved);
     }
 
+    // 1. Lấy danh sách TẤT CẢ các hồ sơ (Tab) của một ứng viên
     @Override
-    public Optional<CandidateProfile> findByCandidateId(Long candidateId) {
-        return jpaRepository.findByCandidateId(candidateId)
+    public List<CandidateProfile> findAllByCandidateId(Long candidateId) {
+        return jpaRepository.findAllByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    // 2. Lấy chi tiết MỘT hồ sơ cụ thể dựa vào ID của hồ sơ đó (Dùng khi Edit/Cập nhật)
+    @Override
+    public Optional<CandidateProfile> findById(Long id) {
+        return jpaRepository.findById(id)
                 .map(mapper::toDomain);
     }
 }

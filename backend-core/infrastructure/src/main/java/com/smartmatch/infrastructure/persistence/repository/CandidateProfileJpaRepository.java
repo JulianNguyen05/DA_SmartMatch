@@ -4,10 +4,11 @@ import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CandidateProfileJpaRepository extends JpaRepository<CandidateProfileJpaEntity, Long> {
 
-    Optional<CandidateProfileJpaEntity> findByCandidateId(Long candidateId);
+    List<CandidateProfileJpaEntity> findAllByCandidateId(Long candidateId);
 }

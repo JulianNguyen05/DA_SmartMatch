@@ -11,6 +11,11 @@ import lombok.*;
 @Builder
 public class CandidateProfileRequest {
 
+    private Long id;
+
+    @NotBlank(message = "Tên hồ sơ không được để trống")
+    @Size(max = 50, message = "Tên hồ sơ tối đa 50 ký tự")
+    private String profileName;
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 100, message = "Họ tên tối đa 100 ký tự")
     private String fullName;

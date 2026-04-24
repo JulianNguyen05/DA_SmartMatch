@@ -14,6 +14,7 @@ public class CandidateProfileMapper {
         if (request == null) return null;
         return CandidateProfile.builder()
                 .candidateId(candidateId)
+                .profileName(request.getProfileName())
                 .fullName(request.getFullName())
                 .headline(request.getHeadline())
                 .summary(request.getSummary())
@@ -29,6 +30,7 @@ public class CandidateProfileMapper {
         if (profile == null) return null;
         return CandidateProfileResponse.builder()
                 .id(profile.getId())
+                .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
                 .summary(profile.getSummary())

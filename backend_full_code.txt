@@ -218,16 +218,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/admin/AdminUserController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/admin/ToggleStatusRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/admin/UserAdminResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/service/admin/AdminUserService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/admin/AdminUserServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../backend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../backend_full_code.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../frontend-app/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend-app/src/App.jsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/CandidateProfileRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/CandidateProfileRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileRepositoryImpl.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -549,6 +548,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/candidate/profile")
 @RequiredArgsConstructor
@@ -574,10 +575,11 @@ public class CandidateProfileController {
     }
 
     @GetMapping
-    public ResponseEntity<CandidateProfileResponse> getMyProfile(Authentication authentication) {
+    public ResponseEntity<List<CandidateProfileResponse>> getMyProfiles(Authentication authentication) {
         Long candidateId = getUserId(authentication);
-        CandidateProfileResponse response = profileService.getMyProfile(candidateId);
-        return ResponseEntity.ok(response);
+        // Gọi hàm mới trả về List
+        List<CandidateProfileResponse> responses = profileService.getMyProfiles(candidateId);
+        return ResponseEntity.ok(responses);
     }
 }
 
@@ -1343,6 +1345,7 @@ public class ApplyJobRequest {
 
     @Size(max = 2000, message = "Thư xin việc tối đa 2000 ký tự")
     private String coverLetter;
+    private String customAnswers;
 }
 
 
@@ -1369,6 +1372,7 @@ public class JobApplicationResponse {
     private String coverLetter;
     private LocalDateTime appliedAt;
     private ApplicationStatus status;
+    private String customAnswers;
 }
 
 
@@ -1473,6 +1477,11 @@ import lombok.*;
 @Builder
 public class CandidateProfileRequest {
 
+    private Long id;
+
+    @NotBlank(message = "Tên hồ sơ không được để trống")
+    @Size(max = 50, message = "Tên hồ sơ tối đa 50 ký tự")
+    private String profileName;
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 100, message = "Họ tên tối đa 100 ký tự")
     private String fullName;
@@ -1506,6 +1515,7 @@ import java.time.LocalDateTime;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class CandidateProfileResponse {
     private Long id;
+    private String profileName;
     private String fullName;
     private String headline;
     private String summary;
@@ -1665,6 +1675,8 @@ public class CreateJobRequest {
 
     @FutureOrPresent(message = "Hạn nộp phải là ngày hiện tại hoặc tương lai")
     private LocalDate deadline;
+
+    private String customFormTemplate;
 }
 
 
@@ -1707,6 +1719,7 @@ public class JobResponse {
     private LocalDateTime postedAt;
     private LocalDate deadline;
     private JobStatus status;
+    private String customFormTemplate;
 }
 
 
@@ -1856,6 +1869,7 @@ public class CandidateProfileMapper {
         if (request == null) return null;
         return CandidateProfile.builder()
                 .candidateId(candidateId)
+                .profileName(request.getProfileName())
                 .fullName(request.getFullName())
                 .headline(request.getHeadline())
                 .summary(request.getSummary())
@@ -1871,6 +1885,7 @@ public class CandidateProfileMapper {
         if (profile == null) return null;
         return CandidateProfileResponse.builder()
                 .id(profile.getId())
+                .profileName(request.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
                 .summary(profile.getSummary())
@@ -1958,6 +1973,7 @@ public class JobApplicationMapper {
                 .coverLetter(request.getCoverLetter())
                 .appliedAt(LocalDateTime.now())
                 .status(ApplicationStatus.PENDING)
+                .customAnswers(request.getCustomAnswers())
                 .build();
     }
 
@@ -1970,6 +1986,7 @@ public class JobApplicationMapper {
                 .coverLetter(app.getCoverLetter())
                 .appliedAt(app.getAppliedAt())
                 .status(app.getStatus())
+                .customAnswers(app.getCustomAnswers())
                 .build();
     }
 }
@@ -2012,6 +2029,7 @@ public class JobMapper {
                 .status(JobStatus.PUBLISHED)
                 .postedAt(LocalDateTime.now())
                 .postedById(postedById)
+                .customFormTemplate(request.getCustomFormTemplate())
                 .build();
     }
 
@@ -2034,6 +2052,7 @@ public class JobMapper {
                 .postedAt(job.getPostedAt())
                 .deadline(job.getDeadline())
                 .status(job.getStatus())
+                .customFormTemplate(job.getCustomFormTemplate())
                 .build();
     }
 
@@ -2130,9 +2149,11 @@ package com.smartmatch.application.service.candidate;
 import com.smartmatch.application.dto.candidate.CandidateProfileRequest;
 import com.smartmatch.application.dto.candidate.CandidateProfileResponse;
 
+import java.util.List;
+
 public interface CandidateProfileService {
     CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId);
-    CandidateProfileResponse getMyProfile(Long candidateId);
+    List<CandidateProfileResponse> getMyProfiles(Long candidateId);
 }
 
 
@@ -2374,6 +2395,7 @@ public class JobApplication {
     private String coverLetter;    // Thư xin việc (có thể để trống)
     private LocalDateTime appliedAt;
     private ApplicationStatus status;
+    private String customAnswers;
 }
 
 
@@ -2532,6 +2554,7 @@ public class Job {
     private LocalDate deadline;
     private JobStatus status;
     private Long postedById;
+    private String customFormTemplate;
 }
 
 
@@ -2618,6 +2641,7 @@ import java.time.LocalDateTime;
 public class CandidateProfile {
     private Long id;
     private Long candidateId;           // userId
+    private String profileName;
     private String fullName;
     private String headline;            // ví dụ: "Senior Java Developer"
     private String summary;             // giới thiệu bản thân
@@ -2741,11 +2765,20 @@ package com.smartmatch.domain.user.repository;
 
 import com.smartmatch.domain.user.model.CandidateProfile;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface CandidateProfileRepository {
+
+    // 1. Lưu hoặc cập nhật hồ sơ
     CandidateProfile save(CandidateProfile profile);
-    Optional<CandidateProfile> findByCandidateId(Long candidateId);
+
+    // 2. Lấy danh sách tất cả các Tab hồ sơ của ứng viên
+    List<CandidateProfile> findAllByCandidateId(Long candidateId);
+
+    // 3. Lấy đích danh một hồ sơ cụ thể để chỉnh sửa
+    Optional<CandidateProfile> findById(Long id);
+
 }
 
 
@@ -2976,6 +3009,9 @@ public class CandidateProfileJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String experience;
 
+    @Column(name = "profile_name", nullable = false)
+    private String profileName = "Hồ sơ mặc định";
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
@@ -3053,6 +3089,9 @@ public class JobApplicationJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String coverLetter;
 
+    @Column(columnDefinition = "json")
+    private String customAnswers;
+
     private LocalDateTime appliedAt;
 
     @Enumerated(EnumType.STRING)
@@ -3093,6 +3132,9 @@ public class JobJpaEntity {
     private String title;
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(columnDefinition = "json")
+    private String customFormTemplate;
 
     private Long companyId;
     private String location;
@@ -3282,6 +3324,7 @@ public class CandidateProfileMapper {
         return CandidateProfileJpaEntity.builder()
                 .id(profile.getId())
                 .candidateId(profile.getCandidateId())
+                .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
                 .summary(profile.getSummary())
@@ -3298,6 +3341,7 @@ public class CandidateProfileMapper {
         return CandidateProfile.builder()
                 .id(entity.getId())
                 .candidateId(entity.getCandidateId())
+                .profileName(entity.getProfileName())
                 .fullName(entity.getFullName())
                 .headline(entity.getHeadline())
                 .summary(entity.getSummary())
@@ -3382,6 +3426,7 @@ public class JobApplicationMapper {
                 .coverLetter(app.getCoverLetter())
                 .appliedAt(app.getAppliedAt())
                 .status(app.getStatus())
+                .customAnswers(app.getCustomAnswers())
                 .build();
     }
 
@@ -3394,6 +3439,7 @@ public class JobApplicationMapper {
                 .coverLetter(entity.getCoverLetter())
                 .appliedAt(entity.getAppliedAt())
                 .status(entity.getStatus())
+                .customAnswers(entity.getCustomAnswers())
                 .build();
     }
 }
@@ -3436,6 +3482,7 @@ public class JobMapper {
                 .deadline(job.getDeadline())
                 .status(job.getStatus())
                 .postedById(job.getPostedById())
+                .customFormTemplate(job.getCustomFormTemplate())
                 .build();
     }
 
@@ -3459,6 +3506,7 @@ public class JobMapper {
                 .deadline(entity.getDeadline())
                 .status(entity.getStatus())
                 .postedById(entity.getPostedById())
+                .customFormTemplate(entity.getCustomFormTemplate())
                 .build();
     }
 }
@@ -3602,12 +3650,13 @@ import com.smartmatch.infrastructure.persistence.jpa.CandidateProfileJpaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface CandidateProfileJpaRepository extends JpaRepository<CandidateProfileJpaEntity, Long> {
 
-    Optional<CandidateProfileJpaEntity> findByCandidateId(Long candidateId);
+    List<CandidateProfileJpaEntity> findAllByCandidateId(Long candidateId);
 }
 
 
@@ -3625,6 +3674,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -3638,6 +3688,7 @@ public class CandidateProfileRepositoryImpl implements CandidateProfileRepositor
     public CandidateProfile save(CandidateProfile profile) {
         CandidateProfileJpaEntity entity = mapper.toEntity(profile);
 
+        // Đảm bảo thời gian tạo và cập nhật được set đúng
         if (entity.getCreatedAt() == null) {
             entity.setCreatedAt(LocalDateTime.now());
         }
@@ -3647,9 +3698,18 @@ public class CandidateProfileRepositoryImpl implements CandidateProfileRepositor
         return mapper.toDomain(saved);
     }
 
+    // 1. Lấy danh sách TẤT CẢ các hồ sơ (Tab) của một ứng viên
     @Override
-    public Optional<CandidateProfile> findByCandidateId(Long candidateId) {
-        return jpaRepository.findByCandidateId(candidateId)
+    public List<CandidateProfile> findAllByCandidateId(Long candidateId) {
+        return jpaRepository.findAllByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    // 2. Lấy chi tiết MỘT hồ sơ cụ thể dựa vào ID của hồ sơ đó (Dùng khi Edit/Cập nhật)
+    @Override
+    public Optional<CandidateProfile> findById(Long id) {
+        return jpaRepository.findById(id)
                 .map(mapper::toDomain);
     }
 }
@@ -4756,19 +4816,40 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CandidateProfileServiceImpl implements CandidateProfileService {
 
     private final CandidateProfileRepository profileRepository;
-    private final com.smartmatch.application.mapper.CandidateProfileMapper appMapper; // app layer mapper
+    private final CandidateProfileMapper appMapper; // app layer mapper
 
     @Override
     public CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId) {
-        CandidateProfile profile = profileRepository.findByCandidateId(candidateId)
-                .orElse(CandidateProfile.builder().candidateId(candidateId).build());
+        CandidateProfile profile;
 
+        // Nếu request có truyền ID -> Chỉnh sửa Tab hiện tại
+        if (request.getId() != null) {
+            profile = profileRepository.findById(request.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ!"));
+
+            // Bảo mật: Tránh việc user này sửa hồ sơ của user khác
+            if (!profile.getCandidateId().equals(candidateId)) {
+                throw new IllegalArgumentException("Bạn không có quyền chỉnh sửa hồ sơ này!");
+            }
+        }
+        // Nếu không có ID -> Tạo Tab hồ sơ mới
+        else {
+            profile = CandidateProfile.builder()
+                    .candidateId(candidateId)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+        }
+
+        // Cập nhật dữ liệu từ Form
+        profile.setProfileName(request.getProfileName());
         profile.setFullName(request.getFullName());
         profile.setHeadline(request.getHeadline());
         profile.setSummary(request.getSummary());
@@ -4778,14 +4859,15 @@ public class CandidateProfileServiceImpl implements CandidateProfileService {
         profile.setUpdatedAt(LocalDateTime.now());
 
         CandidateProfile saved = profileRepository.save(profile);
-        return appMapper.toResponse(saved); // bạn cần tạo app mapper
+        return appMapper.toResponse(saved);
     }
 
+    // Lấy danh sách tất cả các Tab hồ sơ
     @Override
-    public CandidateProfileResponse getMyProfile(Long candidateId) {
-        CandidateProfile profile = profileRepository.findByCandidateId(candidateId)
-                .orElseThrow(() -> new IllegalArgumentException("Chưa có profile. Vui lòng tạo trước!"));
-        return appMapper.toResponse(profile);
+    public List<CandidateProfileResponse> getMyProfiles(Long candidateId) {
+        return profileRepository.findAllByCandidateId(candidateId).stream()
+                .map(appMapper::toResponse)
+                .collect(Collectors.toList());
     }
 }
 

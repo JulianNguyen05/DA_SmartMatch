@@ -1,18 +1,23 @@
 import api from './api';
 
 export const candidateService = {
-  // ================= PROFILE =================
-  getMyProfile: async () => {
-    const res = await api.get('/candidate/profile');
+  // ================= QUẢN LÝ HỒ SƠ TRỰC TUYẾN (PROFILES TABS) =================
+  
+  // Lấy danh sách tất cả các Tab hồ sơ
+  getMyProfiles: async () => {
+    // Lưu ý: Đã đổi '/candidate/profile' thành '/candidate/profiles' (số nhiều)
+    const res = await api.get('/candidate/profiles'); 
     return res.data;
   },
   
+  // Lưu hồ sơ mới hoặc cập nhật hồ sơ cũ (dựa vào việc profileData có ID hay không)
   saveProfile: async (profileData) => {
-    const res = await api.post('/candidate/profile', profileData);
+    const res = await api.post('/candidate/profiles', profileData);
     return res.data;
   },
 
-  // ================= RESUME (CV) =================
+  // ================= QUẢN LÝ FILE CV ĐÍNH KÈM (PDF/DOCX) =================
+  
   getMyResumes: async () => {
     const res = await api.get('/candidate/resumes/my');
     return res.data;

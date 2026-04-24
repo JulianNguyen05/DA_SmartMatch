@@ -1,6 +1,6 @@
 // frontend-app/src/components/candidate/ApplyModal.jsx
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, Loader2 } from 'lucide-react';
+import { X, UploadCloud, Loader2, UserCircle } from 'lucide-react';
 import { applicationService } from '../../services/applicationService';
 import { candidateService } from '../../services/candidateService';
 
@@ -10,39 +10,63 @@ const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Các state mới cho Form động
+  // States quản lý danh sách Profile và Form động
+  const [profiles, setProfiles] = useState([]); // Danh sách tất cả profile của user
+  const [selectedProfileId, setSelectedProfileId] = useState(''); // ID profile đang chọn để auto-fill
   const [formTemplate, setFormTemplate] = useState([]);
   const [dynamicAnswers, setDynamicAnswers] = useState({});
 
-  // Logic: Tự động đọc Template và điền dữ liệu từ Profile
+  // 1. Khởi tạo template và lấy danh sách Profile khi mở Modal
   useEffect(() => {
     if (isOpen && job) {
-      // 1. Phân tích Template từ tin tuyển dụng
+      // Phân tích Template từ tin tuyển dụng
       const template = job.customFormTemplate ? JSON.parse(job.customFormTemplate) : [];
       setFormTemplate(template);
 
-      // 2. Tải Profile ứng viên để Auto-fill
-      candidateService.getMyProfile()
-        .then(profile => {
-          const initialAnswers = {};
-          template.forEach(field => {
-            // Nếu field có autoFillKey khớp với thông tin trong Profile thì tự điền
-            if (field.autoFillKey && profile[field.autoFillKey]) {
-              initialAnswers[field.id] = profile[field.autoFillKey];
-            } else {
-              initialAnswers[field.id] = '';
-            }
-          });
-          setDynamicAnswers(initialAnswers);
+      // Lấy danh sách tất cả profile của ứng viên
+      candidateService.getMyProfiles()
+        .then(data => {
+          const profileList = Array.isArray(data) ? data : data.content || [];
+          setProfiles(profileList);
+          
+          // Nếu có profile, mặc định chọn cái đầu tiên để auto-fill
+          if (profileList.length > 0) {
+            setSelectedProfileId(profileList[0].id);
+            autoFillFromProfile(profileList[0], template);
+          } else {
+            // Nếu không có profile nào, khởi tạo answers trống
+            const blankAnswers = {};
+            template.forEach(field => blankAnswers[field.id] = '');
+            setDynamicAnswers(blankAnswers);
+          }
         })
-        .catch(() => {
-          // Nếu chưa có profile thì để trống các trường
-          const blankAnswers = {};
-          template.forEach(field => blankAnswers[field.id] = '');
-          setDynamicAnswers(blankAnswers);
-        });
+        .catch(err => console.error("Lỗi lấy danh sách profiles:", err));
     }
   }, [isOpen, job]);
+
+  // 2. Logic Auto-fill: Map dữ liệu từ profile vào template
+  const autoFillFromProfile = (profile, template) => {
+    const initialAnswers = {};
+    template.forEach(field => {
+      // Nếu field có autoFillKey khớp với thông tin trong Profile thì tự điền
+      if (field.autoFillKey && profile[field.autoFillKey]) {
+        initialAnswers[field.id] = profile[field.autoFillKey];
+      } else {
+        initialAnswers[field.id] = '';
+      }
+    });
+    setDynamicAnswers(initialAnswers);
+  };
+
+  // 3. Xử lý khi ứng viên thay đổi lựa chọn Profile trong Dropdown
+  const handleProfileChange = (e) => {
+    const profileId = e.target.value;
+    setSelectedProfileId(profileId);
+    const selectedProfile = profiles.find(p => p.id === parseInt(profileId));
+    if (selectedProfile) {
+      autoFillFromProfile(selectedProfile, formTemplate);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -76,8 +100,6 @@ const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
       formData.append('jobId', job.id);
       formData.append('coverLetter', coverLetter);
       formData.append('cvFile', file);
-      
-      // Đóng gói các câu trả lời form động thành chuỗi JSON
       formData.append('customAnswers', JSON.stringify(dynamicAnswers));
 
       await applicationService.applyJob(formData);
@@ -110,10 +132,31 @@ const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
             </div>
           )}
 
-          {/* Phần Render Form Động từ Nhà tuyển dụng */}
+          {/* CHỌN HỒ SƠ ĐỂ AUTO-FILL */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 ml-1">
+              <UserCircle size={18} className="text-blue-500" />
+              Chọn hồ sơ của bạn để tự động điền
+            </label>
+            <select
+              value={selectedProfileId}
+              onChange={handleProfileChange}
+              className="w-full p-3 bg-blue-50 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-blue-800 transition-all"
+            >
+              {profiles.length > 0 ? (
+                profiles.map(p => (
+                  <option key={p.id} value={p.id}>{p.profileName}</option>
+                ))
+              ) : (
+                <option value="">Bạn chưa có hồ sơ trực tuyến nào</option>
+              )}
+            </select>
+          </div>
+
+          {/* PHẦN RENDER FORM ĐỘNG */}
           {formTemplate.length > 0 && (
-            <div className="space-y-4 p-5 bg-blue-50/50 rounded-2xl border border-blue-100">
-              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Thông tin yêu cầu</h3>
+            <div className="space-y-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Thông tin yêu cầu từ nhà tuyển dụng</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {formTemplate.map((field) => (
                   <div key={field.id} className="space-y-1">
@@ -134,7 +177,7 @@ const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
             </div>
           )}
 
-          {/* Upload CV */}
+          {/* UPLOAD CV */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 ml-1">Hồ sơ ứng tuyển (CV) *</label>
             <div className="relative group">
@@ -154,7 +197,7 @@ const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
             </div>
           </div>
 
-          {/* Cover Letter */}
+          {/* COVER LETTER */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-700 ml-1">Thư giới thiệu (Cover Letter)</label>
             <textarea 
