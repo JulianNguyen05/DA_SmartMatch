@@ -217,7 +217,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="" />
+    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/api/src/main/java/com/smartmatch/api/controller/admin/AdminUserController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/admin/ToggleStatusRequest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/admin/UserAdminResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/service/admin/AdminUserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/admin/AdminUserServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/UserRepositoryImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/security/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../backend_full_code.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend-app/src/App.jsx" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend-app/src/App.jsx" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -227,6 +238,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Interface" />
+        <option value="package-info" />
         <option value="Class" />
       </list>
     </option>
@@ -296,6 +308,17 @@
       <updated>1775059483644</updated>
     </task>
     <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/UserRepository.java</url>
+          <line>27</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
 
@@ -383,6 +406,47 @@
     </build>
 
 </project>
+
+
+// ==========================================================================
+// File: backend-core/api/src/main/java/com/smartmatch/api/controller/admin/AdminUserController.java
+// ==========================================================================
+
+package com.smartmatch.api.controller.admin;
+
+import com.smartmatch.application.dto.admin.ToggleStatusRequest;
+import com.smartmatch.application.dto.admin.UserAdminResponse;
+import com.smartmatch.application.service.admin.AdminUserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin/users")
+@RequiredArgsConstructor
+public class AdminUserController {
+
+    private final AdminUserService adminUserService;
+
+    @GetMapping
+    public ResponseEntity<List<UserAdminResponse>> getAllUsers() {
+        return ResponseEntity.ok(adminUserService.getAllUsers());
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Void> toggleUserStatus(@PathVariable Long id, @RequestBody ToggleStatusRequest request) {
+        adminUserService.toggleUserStatus(id, request.isEnabled());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        adminUserService.deleteUser(id);
+        return ResponseEntity.ok().build();
+    }
+}
 
 
 // ==========================================================================
@@ -1178,6 +1242,44 @@ logging:
 
 
 // ==========================================================================
+// File: backend-core/application/src/main/java/com/smartmatch/application/dto/admin/ToggleStatusRequest.java
+// ==========================================================================
+
+package com.smartmatch.application.dto.admin;
+
+import lombok.Data;
+
+@Data
+public class ToggleStatusRequest {
+    private boolean enabled;
+}
+
+
+// ==========================================================================
+// File: backend-core/application/src/main/java/com/smartmatch/application/dto/admin/UserAdminResponse.java
+// ==========================================================================
+
+package com.smartmatch.application.dto.admin;
+
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserAdminResponse {
+    private Long id;
+    private String username;
+    private String email;
+    private String role;
+    private boolean enabled;
+    private LocalDateTime createdAt;
+}
+
+
+// ==========================================================================
 // File: backend-core/application/src/main/java/com/smartmatch/application/dto/ApiErrorResponse.java
 // ==========================================================================
 
@@ -1969,6 +2071,22 @@ public class ResumeMapper {
 
 
 // ==========================================================================
+// File: backend-core/application/src/main/java/com/smartmatch/application/service/admin/AdminUserService.java
+// ==========================================================================
+
+package com.smartmatch.application.service.admin;
+
+import com.smartmatch.application.dto.admin.UserAdminResponse;
+import java.util.List;
+
+public interface AdminUserService {
+    List<UserAdminResponse> getAllUsers();
+    void toggleUserStatus(Long userId, boolean enabled);
+    void deleteUser(Long userId);
+}
+
+
+// ==========================================================================
 // File: backend-core/application/src/main/java/com/smartmatch/application/service/auth/AuthService.java
 // ==========================================================================
 
@@ -2659,7 +2777,7 @@ public interface ResumeRepository {
 package com.smartmatch.domain.user.repository;
 
 import com.smartmatch.domain.user.model.User;
-
+import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository {
@@ -2675,6 +2793,9 @@ public interface UserRepository {
     boolean existsByUsername(String username);
 
     boolean existsByPhoneNumber(String phoneNumber);
+    List<User> findAll();
+    Optional<User> findById(Long id);
+    void deleteById(Long id);
 
     // Có thể thêm sau này:
     // Optional<User> findById(Long id);
@@ -3967,6 +4088,7 @@ import com.smartmatch.infrastructure.persistence.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -4014,6 +4136,22 @@ public class UserRepositoryImpl implements UserRepository {
         // SỬA 1: Đổi chữ 'p' thành 'P' viết hoa để khớp với Interface UserRepository
         // SỬA 2: Đổi existsByPhone thành existsByPhoneNumber vì Entity đã đổi thành biến phoneNumber
         return jpaRepository.existsByPhoneNumber(phoneNumber);
+    }
+    @Override
+    public List<User> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(userMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return jpaRepository.findById(id).map(userMapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
     }
 }
 
@@ -4306,7 +4444,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/employer/**").hasRole("EMPLOYER")
                         .requestMatchers(HttpMethod.GET, "/employer/**").hasAnyRole("EMPLOYER", "ADMIN")
 
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )
@@ -4318,6 +4456,72 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
+    }
+}
+
+
+// ==========================================================================
+// File: backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/service/admin/AdminUserServiceImpl.java
+// ==========================================================================
+
+package com.smartmatch.infrastructure.service.admin;
+
+import com.smartmatch.application.dto.admin.UserAdminResponse;
+import com.smartmatch.application.service.admin.AdminUserService;
+import com.smartmatch.domain.user.model.User;
+import com.smartmatch.domain.user.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class AdminUserServiceImpl implements AdminUserService {
+
+    private final UserRepository userRepository;
+
+    @Override
+    public List<UserAdminResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> UserAdminResponse.builder()
+                        .id(user.getId())
+                        .username(user.getUsername())
+                        .email(user.getEmail())
+                        .role(user.getRole().name())
+                        .enabled(user.isEnabled())
+                        .createdAt(user.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void toggleUserStatus(Long userId, boolean enabled) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng!"));
+
+        if ("ADMIN".equals(user.getRole().name())) {
+            throw new IllegalArgumentException("Không thể thay đổi trạng thái của tài khoản Quản trị viên (ADMIN)!");
+        }
+
+        user.setEnabled(enabled);
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy người dùng!"));
+
+        if ("ADMIN".equals(user.getRole().name())) {
+            throw new IllegalArgumentException("Không thể xóa tài khoản Quản trị viên (ADMIN)!");
+        }
+
+        userRepository.deleteById(userId);
     }
 }
 

@@ -16,6 +16,7 @@ public class JobApplicationMapper {
                 .coverLetter(app.getCoverLetter())
                 .appliedAt(app.getAppliedAt())
                 .status(app.getStatus())
+                .customAnswers(app.getCustomAnswers())
                 .build();
     }
 
@@ -28,6 +29,7 @@ public class JobApplicationMapper {
                 .coverLetter(entity.getCoverLetter())
                 .appliedAt(entity.getAppliedAt())
                 .status(entity.getStatus())
+                .customAnswers(entity.getCustomAnswers())
                 .build();
     }
 }

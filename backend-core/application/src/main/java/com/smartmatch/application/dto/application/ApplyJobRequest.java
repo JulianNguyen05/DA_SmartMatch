@@ -16,4 +16,5 @@ public class ApplyJobRequest {
 
     @Size(max = 2000, message = "Thư xin việc tối đa 2000 ký tự")
     private String coverLetter;
+    private String customAnswers;
 }

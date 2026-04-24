@@ -31,6 +31,7 @@ public class JobMapper {
                 .status(JobStatus.PUBLISHED)
                 .postedAt(LocalDateTime.now())
                 .postedById(postedById)
+                .customFormTemplate(request.getCustomFormTemplate())
                 .build();
     }
 
@@ -53,6 +54,7 @@ public class JobMapper {
                 .postedAt(job.getPostedAt())
                 .deadline(job.getDeadline())
                 .status(job.getStatus())
+                .customFormTemplate(job.getCustomFormTemplate())
                 .build();
     }
 

@@ -17,4 +17,5 @@ public class JobApplicationResponse {
     private String coverLetter;
     private LocalDateTime appliedAt;
     private ApplicationStatus status;
+    private String customAnswers;
 }

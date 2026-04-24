@@ -31,6 +31,7 @@ public class JobMapper {
                 .deadline(job.getDeadline())
                 .status(job.getStatus())
                 .postedById(job.getPostedById())
+                .customFormTemplate(job.getCustomFormTemplate())
                 .build();
     }
 
@@ -54,6 +55,7 @@ public class JobMapper {
                 .deadline(entity.getDeadline())
                 .status(entity.getStatus())
                 .postedById(entity.getPostedById())
+                .customFormTemplate(entity.getCustomFormTemplate())
                 .build();
     }
 }

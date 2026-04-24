@@ -33,4 +33,5 @@ public class JobResponse {
     private LocalDateTime postedAt;
     private LocalDate deadline;
     private JobStatus status;
+    private String customFormTemplate;
 }

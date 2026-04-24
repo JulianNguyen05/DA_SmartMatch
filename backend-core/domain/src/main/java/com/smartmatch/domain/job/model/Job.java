@@ -34,4 +34,5 @@ public class Job {
     private LocalDate deadline;
     private JobStatus status;
     private Long postedById;
+    private String customFormTemplate;
 }

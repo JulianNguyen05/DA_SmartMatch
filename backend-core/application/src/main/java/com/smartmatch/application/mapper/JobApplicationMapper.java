@@ -19,6 +19,7 @@ public class JobApplicationMapper {
                 .coverLetter(request.getCoverLetter())
                 .appliedAt(LocalDateTime.now())
                 .status(ApplicationStatus.PENDING)
+                .customAnswers(request.getCustomAnswers())
                 .build();
     }
 
@@ -31,6 +32,7 @@ public class JobApplicationMapper {
                 .coverLetter(app.getCoverLetter())
                 .appliedAt(app.getAppliedAt())
                 .status(app.getStatus())
+                .customAnswers(app.getCustomAnswers())
                 .build();
     }
 }

@@ -51,4 +51,6 @@ public class CreateJobRequest {
 
     @FutureOrPresent(message = "Hạn nộp phải là ngày hiện tại hoặc tương lai")
     private LocalDate deadline;
+
+    private String customFormTemplate;
 }

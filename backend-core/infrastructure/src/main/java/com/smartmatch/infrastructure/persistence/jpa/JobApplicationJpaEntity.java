@@ -24,6 +24,9 @@ public class JobApplicationJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String coverLetter;
 
+    @Column(columnDefinition = "json")
+    private String customAnswers;
+
     private LocalDateTime appliedAt;
 
     @Enumerated(EnumType.STRING)

@@ -132,7 +132,8 @@ import JobSearchPage from './pages/candidate/JobSearchPage';
 import ProfilePage from './pages/candidate/ProfilePage';
 import JobDetailPage from './pages/candidate/JobDetailPage';
 import CandidateApplicationsPage from './pages/candidate/CandidateApplicationsPage';
-import ResumesPage from './pages/candidate/ResumesPage'; // <-- IMPORT TRANG QUẢN LÝ CV
+import ResumesPage from './pages/candidate/ResumesPage';
+import ManageUsersPage from "./pages/admin/ManageUsersPage";
 
 // Protected Route
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -152,6 +153,7 @@ function App() {
         <Route element={<ProtectedRoute allowedRoles={["ADMIN"]} />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<ManageUsersPage />} />
           </Route>
         </Route>
 
@@ -310,38 +312,35 @@ export default UserTable;
 // ==========================================================================
 
 import React from 'react';
-import { Search, Filter, Plus } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 
-const UserToolbar = ({ searchTerm, onSearchChange }) => {
+// Nhận thêm prop activeTab
+const UserToolbar = ({ searchTerm, onSearchChange, activeTab }) => {
+  
+  // Logic đổi tên nút theo Tab
+  const buttonText = activeTab === 'CANDIDATE' ? 'Thêm Ứng viên' : 'Thêm Nhà tuyển dụng';
+
   return (
     <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
       <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
         {/* Search Bar */}
-        <div className="relative w-full sm:max-w-xs">
+        <div className="relative w-full sm:max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={18} className="text-gray-400" />
           </div>
           <input
             type="text"
-            placeholder="Tìm theo email/username..."
+            placeholder="Tìm kiếm theo email hoặc tên đăng nhập..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-100 transition-all text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-sm"
           />
         </div>
-
-        {/* Filter Dropdown */}
-        <button className="flex items-center justify-between gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 text-sm font-medium w-full sm:w-auto transition-colors">
-          <div className="flex items-center gap-2">
-            <Filter size={18} className="text-gray-400" />
-            <span>Tất cả vai trò</span>
-          </div>
-        </button>
       </div>
 
-      {/* Add Admin Button */}
+      {/* Button hiển thị text linh hoạt */}
       <button className="w-full md:w-auto flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-purple-700 transition shadow-lg shadow-purple-200">
-        <Plus size={18} /> Thêm Quản trị viên
+        <Plus size={18} /> {buttonText}
       </button>
     </div>
   );
@@ -2149,16 +2148,20 @@ export default AdminDashboard;
 // File: frontend-app/src/pages/admin/ManageUsersPage.jsx
 // ==========================================================================
 
-import React, { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
-import UserToolbar from '../../components/admin/UserToolbar';
-import UserTable from '../../components/admin/UserTable';
+import React, { useState, useEffect } from "react";
+import { User, Briefcase } from "lucide-react";
+import { adminService } from "../../services/adminService";
+import UserToolbar from "../../components/admin/UserToolbar";
+import UserTable from "../../components/admin/UserTable";
 
 const ManageUsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
+
+  // State quản lý tab hiện tại
+  const [activeTab, setActiveTab] = useState("CANDIDATE");
 
   useEffect(() => {
     fetchUsers();
@@ -2177,12 +2180,16 @@ const ManageUsersPage = () => {
   };
 
   const handleToggleStatus = async (userId, currentEnabled) => {
-    if (!window.confirm(`Bạn có chắc muốn ${currentEnabled ? 'khóa' : 'mở khóa'} người dùng này?`)) return;
-    
+    if (
+      !window.confirm(
+        `Bạn có chắc muốn ${currentEnabled ? "khóa" : "mở khóa"} người dùng này?`,
+      )
+    )
+      return;
     try {
       setActionLoading(userId);
       await adminService.toggleUserStatus(userId, !currentEnabled);
-      fetchUsers(); 
+      fetchUsers();
     } catch {
       alert("Cập nhật trạng thái thất bại!");
     } finally {
@@ -2190,11 +2197,14 @@ const ManageUsersPage = () => {
     }
   };
 
-  // Lọc user theo ô tìm kiếm
-  const filteredUsers = users.filter(user => 
-    user.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Lọc user theo Tab VÀ theo ô tìm kiếm
+  const filteredUsers = users.filter((user) => {
+    const matchTab = user.role === activeTab;
+    const matchSearch =
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchTab && matchSearch;
+  });
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
@@ -2203,26 +2213,60 @@ const ManageUsersPage = () => {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             Quản lý Người dùng 👥
           </h1>
-          <p className="text-gray-500 mt-1">Quản lý tài khoản và phân quyền hệ thống.</p>
+          <p className="text-gray-500 mt-1">
+            Quản lý tài khoản và phân quyền hệ thống.
+          </p>
         </div>
       </div>
 
-      <UserToolbar 
-        searchTerm={searchTerm} 
-        onSearchChange={setSearchTerm} 
+      {/* ================= DÃY TABS ================= */}
+      <div className="flex gap-6 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab("CANDIDATE")}
+          className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition-all relative ${
+            activeTab === "CANDIDATE"
+              ? "text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <User size={18} /> Ứng viên
+          {activeTab === "CANDIDATE" && (
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("EMPLOYER")}
+          className={`pb-4 px-2 text-sm font-bold flex items-center gap-2 transition-all relative ${
+            activeTab === "EMPLOYER"
+              ? "text-blue-600"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Briefcase size={18} /> Nhà tuyển dụng
+          {activeTab === "EMPLOYER" && (
+            <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>
+          )}
+        </button>
+      </div>
+
+      <UserToolbar
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        activeTab={activeTab}
       />
 
-      <UserTable 
-        users={filteredUsers} 
-        loading={loading} 
+      <UserTable
+        users={filteredUsers}
+        loading={loading}
         actionLoading={actionLoading}
-        onToggleStatus={handleToggleStatus} 
+        onToggleStatus={handleToggleStatus}
       />
     </div>
   );
 };
 
 export default ManageUsersPage;
+
 
 
 // ==========================================================================

@@ -17,4 +17,5 @@ public class JobApplication {
     private String coverLetter;    // Thư xin việc (có thể để trống)
     private LocalDateTime appliedAt;
     private ApplicationStatus status;
+    private String customAnswers;
 }

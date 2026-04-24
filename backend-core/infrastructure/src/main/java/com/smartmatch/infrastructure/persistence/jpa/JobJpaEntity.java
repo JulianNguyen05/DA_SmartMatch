@@ -28,6 +28,9 @@ public class JobJpaEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(columnDefinition = "json")
+    private String customFormTemplate;
+
     private Long companyId;
     private String location;
 
