@@ -21,17 +21,13 @@ public class CandidateProfileJpaEntity {
 
     private String fullName;
     private String headline;
-    @Column(columnDefinition = "TEXT")
-    private String summary;
-    @Column(columnDefinition = "TEXT")
-    private String skills;
-    @Column(columnDefinition = "TEXT")
-    private String education;
-    @Column(columnDefinition = "TEXT")
-    private String experience;
 
+    @Builder.Default
     @Column(name = "profile_name", nullable = false)
     private String profileName = "Hồ sơ mặc định";
+
+    @Column(columnDefinition = "json")
+    private String sections;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

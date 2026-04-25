@@ -217,17 +217,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/CandidateProfileRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/repository/CandidateProfileRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileRepositoryImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/repository/CandidateProfileRepositoryImpl.java" afterDir="false" />
-    </list>
+    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -551,7 +541,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/candidate/profile")
+@RequestMapping("/api/candidate/profiles") // <-- Đã sửa thành "profiles" (có chữ s)
 @RequiredArgsConstructor
 public class CandidateProfileController {
 
@@ -570,6 +560,7 @@ public class CandidateProfileController {
             Authentication authentication) {
 
         Long candidateId = getUserId(authentication);
+        // Lưu hồ sơ (tạo mới hoặc cập nhật tùy vào việc request có truyền ID lên hay không)
         CandidateProfileResponse response = profileService.saveOrUpdate(request, candidateId);
         return ResponseEntity.ok(response);
     }
@@ -577,7 +568,7 @@ public class CandidateProfileController {
     @GetMapping
     public ResponseEntity<List<CandidateProfileResponse>> getMyProfiles(Authentication authentication) {
         Long candidateId = getUserId(authentication);
-        // Gọi hàm mới trả về List
+        // Trả về danh sách (List) các Tab hồ sơ của ứng viên
         List<CandidateProfileResponse> responses = profileService.getMyProfiles(candidateId);
         return ResponseEntity.ok(responses);
     }
@@ -1885,7 +1876,7 @@ public class CandidateProfileMapper {
         if (profile == null) return null;
         return CandidateProfileResponse.builder()
                 .id(profile.getId())
-                .profileName(request.getProfileName())
+                .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
                 .summary(profile.getSummary())

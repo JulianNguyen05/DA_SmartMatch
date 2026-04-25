@@ -18,45 +18,36 @@ import java.util.stream.Collectors;
 public class CandidateProfileServiceImpl implements CandidateProfileService {
 
     private final CandidateProfileRepository profileRepository;
-    private final CandidateProfileMapper appMapper; // app layer mapper
+    private final CandidateProfileMapper appMapper;
 
     @Override
     public CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId) {
         CandidateProfile profile;
 
-        // Nếu request có truyền ID -> Chỉnh sửa Tab hiện tại
         if (request.getId() != null) {
             profile = profileRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ!"));
 
-            // Bảo mật: Tránh việc user này sửa hồ sơ của user khác
             if (!profile.getCandidateId().equals(candidateId)) {
                 throw new IllegalArgumentException("Bạn không có quyền chỉnh sửa hồ sơ này!");
             }
-        }
-        // Nếu không có ID -> Tạo Tab hồ sơ mới
-        else {
+        } else {
             profile = CandidateProfile.builder()
                     .candidateId(candidateId)
                     .createdAt(LocalDateTime.now())
                     .build();
         }
 
-        // Cập nhật dữ liệu từ Form
         profile.setProfileName(request.getProfileName());
         profile.setFullName(request.getFullName());
         profile.setHeadline(request.getHeadline());
-        profile.setSummary(request.getSummary());
-        profile.setSkills(request.getSkills());
-        profile.setEducation(request.getEducation());
-        profile.setExperience(request.getExperience());
+        profile.setSections(request.getSections());
         profile.setUpdatedAt(LocalDateTime.now());
 
         CandidateProfile saved = profileRepository.save(profile);
         return appMapper.toResponse(saved);
     }
 
-    // Lấy danh sách tất cả các Tab hồ sơ
     @Override
     public List<CandidateProfileResponse> getMyProfiles(Long candidateId) {
         return profileRepository.findAllByCandidateId(candidateId).stream()

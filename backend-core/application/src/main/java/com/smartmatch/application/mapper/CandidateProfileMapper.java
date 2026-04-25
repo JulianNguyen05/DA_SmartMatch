@@ -17,10 +17,7 @@ public class CandidateProfileMapper {
                 .profileName(request.getProfileName())
                 .fullName(request.getFullName())
                 .headline(request.getHeadline())
-                .summary(request.getSummary())
-                .skills(request.getSkills())
-                .education(request.getEducation())
-                .experience(request.getExperience())
+                .sections(request.getSections())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -33,10 +30,7 @@ public class CandidateProfileMapper {
                 .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
-                .summary(profile.getSummary())
-                .skills(profile.getSkills())
-                .education(profile.getEducation())
-                .experience(profile.getExperience())
+                .sections(profile.getSections())
                 .updatedAt(profile.getUpdatedAt())
                 .build();
     }
