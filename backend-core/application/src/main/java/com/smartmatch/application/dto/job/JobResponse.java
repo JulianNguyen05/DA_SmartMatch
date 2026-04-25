@@ -1,4 +1,3 @@
-// backend-core/application/src/main/java/com/smartmatch/application/dto/job/JobResponse.java
 package com.smartmatch.application.dto.job;
 
 import com.smartmatch.domain.common.enums.ExperienceLevel;

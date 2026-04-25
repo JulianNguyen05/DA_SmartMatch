@@ -97,13 +97,13 @@ const ResumeManager = () => {
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <LayoutGrid className="text-blue-600" size={24} /> Hồ sơ trực
-              tuyến (SmartMatch)
+              tuyến
             </h3>
             <button
               onClick={handleCreateNew}
               className="flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2.5 rounded-xl font-bold hover:bg-blue-100 transition"
             >
-              <Plus size={18} /> Tạo Mới (Builder)
+              <Plus size={18} /> Tạo Mới
             </button>
           </div>
 

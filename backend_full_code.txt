@@ -217,7 +217,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="" />
+    <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileRequest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/dto/candidate/CandidateProfileResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/smartmatch/application/mapper/CandidateProfileMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/smartmatch/domain/user/model/CandidateProfile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/CandidateProfileJpaEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/mapper/CandidateProfileMapper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/candidate/CandidateProfileServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/smartmatch/infrastructure/service/candidate/CandidateProfileServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../backend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../backend_full_code.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../frontend_full_code.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../frontend_full_code.txt" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -1473,6 +1483,7 @@ public class CandidateProfileRequest {
     @NotBlank(message = "Tên hồ sơ không được để trống")
     @Size(max = 50, message = "Tên hồ sơ tối đa 50 ký tự")
     private String profileName;
+
     @NotBlank(message = "Họ và tên không được để trống")
     @Size(max = 100, message = "Họ tên tối đa 100 ký tự")
     private String fullName;
@@ -1480,17 +1491,7 @@ public class CandidateProfileRequest {
     @Size(max = 200, message = "Headline tối đa 200 ký tự")
     private String headline;
 
-    @Size(max = 2000, message = "Giới thiệu tối đa 2000 ký tự")
-    private String summary;
-
-    @Size(max = 1000, message = "Kỹ năng tối đa 1000 ký tự")
-    private String skills;
-
-    @Size(max = 1000, message = "Học vấn tối đa 1000 ký tự")
-    private String education;
-
-    @Size(max = 2000, message = "Kinh nghiệm tối đa 2000 ký tự")
-    private String experience;
+    private String sections;
 }
 
 
@@ -1503,16 +1504,19 @@ package com.smartmatch.application.dto.candidate;
 import lombok.*;
 import java.time.LocalDateTime;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CandidateProfileResponse {
     private Long id;
     private String profileName;
     private String fullName;
     private String headline;
-    private String summary;
-    private String skills;
-    private String education;
-    private String experience;
+
+    private String sections;
+
     private LocalDateTime updatedAt;
 }
 
@@ -1863,10 +1867,7 @@ public class CandidateProfileMapper {
                 .profileName(request.getProfileName())
                 .fullName(request.getFullName())
                 .headline(request.getHeadline())
-                .summary(request.getSummary())
-                .skills(request.getSkills())
-                .education(request.getEducation())
-                .experience(request.getExperience())
+                .sections(request.getSections())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -1879,10 +1880,7 @@ public class CandidateProfileMapper {
                 .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
-                .summary(profile.getSummary())
-                .skills(profile.getSkills())
-                .education(profile.getEducation())
-                .experience(profile.getExperience())
+                .sections(profile.getSections())
                 .updatedAt(profile.getUpdatedAt())
                 .build();
     }
@@ -2631,14 +2629,11 @@ import java.time.LocalDateTime;
 @Builder
 public class CandidateProfile {
     private Long id;
-    private Long candidateId;           // userId
+    private Long candidateId;
     private String profileName;
     private String fullName;
-    private String headline;            // ví dụ: "Senior Java Developer"
-    private String summary;             // giới thiệu bản thân
-    private String skills;              // "Java, Spring Boot, MySQL" (có thể dùng List<String> sau)
-    private String education;
-    private String experience;
+    private String headline;
+    private String sections;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
@@ -2991,17 +2986,13 @@ public class CandidateProfileJpaEntity {
 
     private String fullName;
     private String headline;
-    @Column(columnDefinition = "TEXT")
-    private String summary;
-    @Column(columnDefinition = "TEXT")
-    private String skills;
-    @Column(columnDefinition = "TEXT")
-    private String education;
-    @Column(columnDefinition = "TEXT")
-    private String experience;
 
+    @Builder.Default
     @Column(name = "profile_name", nullable = false)
     private String profileName = "Hồ sơ mặc định";
+
+    @Column(columnDefinition = "json")
+    private String sections;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -3318,10 +3309,7 @@ public class CandidateProfileMapper {
                 .profileName(profile.getProfileName())
                 .fullName(profile.getFullName())
                 .headline(profile.getHeadline())
-                .summary(profile.getSummary())
-                .skills(profile.getSkills())
-                .education(profile.getEducation())
-                .experience(profile.getExperience())
+                .sections(profile.getSections())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();
@@ -3335,10 +3323,7 @@ public class CandidateProfileMapper {
                 .profileName(entity.getProfileName())
                 .fullName(entity.getFullName())
                 .headline(entity.getHeadline())
-                .summary(entity.getSummary())
-                .skills(entity.getSkills())
-                .education(entity.getEducation())
-                .experience(entity.getExperience())
+                .sections(entity.getSections())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -4815,45 +4800,36 @@ import java.util.stream.Collectors;
 public class CandidateProfileServiceImpl implements CandidateProfileService {
 
     private final CandidateProfileRepository profileRepository;
-    private final CandidateProfileMapper appMapper; // app layer mapper
+    private final CandidateProfileMapper appMapper;
 
     @Override
     public CandidateProfileResponse saveOrUpdate(CandidateProfileRequest request, Long candidateId) {
         CandidateProfile profile;
 
-        // Nếu request có truyền ID -> Chỉnh sửa Tab hiện tại
         if (request.getId() != null) {
             profile = profileRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ!"));
 
-            // Bảo mật: Tránh việc user này sửa hồ sơ của user khác
             if (!profile.getCandidateId().equals(candidateId)) {
                 throw new IllegalArgumentException("Bạn không có quyền chỉnh sửa hồ sơ này!");
             }
-        }
-        // Nếu không có ID -> Tạo Tab hồ sơ mới
-        else {
+        } else {
             profile = CandidateProfile.builder()
                     .candidateId(candidateId)
                     .createdAt(LocalDateTime.now())
                     .build();
         }
 
-        // Cập nhật dữ liệu từ Form
         profile.setProfileName(request.getProfileName());
         profile.setFullName(request.getFullName());
         profile.setHeadline(request.getHeadline());
-        profile.setSummary(request.getSummary());
-        profile.setSkills(request.getSkills());
-        profile.setEducation(request.getEducation());
-        profile.setExperience(request.getExperience());
+        profile.setSections(request.getSections());
         profile.setUpdatedAt(LocalDateTime.now());
 
         CandidateProfile saved = profileRepository.save(profile);
         return appMapper.toResponse(saved);
     }
 
-    // Lấy danh sách tất cả các Tab hồ sơ
     @Override
     public List<CandidateProfileResponse> getMyProfiles(Long candidateId) {
         return profileRepository.findAllByCandidateId(candidateId).stream()

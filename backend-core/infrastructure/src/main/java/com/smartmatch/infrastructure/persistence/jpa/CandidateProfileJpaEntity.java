@@ -26,6 +26,7 @@ public class CandidateProfileJpaEntity {
     @Column(name = "profile_name", nullable = false)
     private String profileName = "Hồ sơ mặc định";
 
+    // Cột lưu các khối nội dung của CV Builder dưới dạng JSON
     @Column(columnDefinition = "json")
     private String sections;
 

@@ -1,4 +1,3 @@
-// backend-core/infrastructure/src/main/java/com/smartmatch/infrastructure/persistence/jpa/JobJpaEntity.java
 package com.smartmatch.infrastructure.persistence.jpa;
 
 import com.smartmatch.domain.common.enums.ExperienceLevel;
@@ -25,9 +24,11 @@ public class JobJpaEntity {
     private Long id;
 
     private String title;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    // Cột lưu cấu trúc form yêu cầu tùy chỉnh của NTD dưới dạng JSON
     @Column(columnDefinition = "json")
     private String customFormTemplate;
 
