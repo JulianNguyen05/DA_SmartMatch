@@ -1,9 +1,9 @@
 spring:
   datasource:
-    # Kết nối qua cổng 3307 của Docker, tự tạo DB nếu chưa có
-    url: jdbc:mysql://localhost:3307/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    # Kết nối qua cổng 3306 của MySQL Local, tự tạo DB nếu chưa có
+    url: jdbc:mysql://localhost:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
     username: root
-    password: root123
+    password: 1234 # <-- LƯU Ý: Đảm bảo khớp với mật khẩu MySQL trên máy bạn
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

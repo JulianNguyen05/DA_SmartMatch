@@ -353,247 +353,250 @@ export default UserToolbar;
 // File: frontend-app/src/components/candidate/ApplyModal.jsx
 // ==========================================================================
 
-// frontend-app/src/components/candidate/ApplyModal.jsx
-import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, Loader2, UserCircle } from 'lucide-react';
-import { applicationService } from '../../services/applicationService';
-import { candidateService } from '../../services/candidateService';
+import React, { useState, useEffect } from "react";
+import { X, Loader2, UserCircle, FileText } from "lucide-react";
+import { applicationService } from "../../services/applicationService";
+import { candidateService } from "../../services/candidateService";
+import { matchProfileToJob } from "../../utils/profileMatcher"; // <-- Import hàm xử lý logic
 
 const ApplyModal = ({ isOpen, onClose, job, onSuccess }) => {
-  const [file, setFile] = useState(null);
-  const [coverLetter, setCoverLetter] = useState('');
+  const [coverLetter, setCoverLetter] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   // States quản lý danh sách Profile và Form động
-  const [profiles, setProfiles] = useState([]); // Danh sách tất cả profile của user
-  const [selectedProfileId, setSelectedProfileId] = useState(''); // ID profile đang chọn để auto-fill
+  const [profiles, setProfiles] = useState([]);
+  const [selectedProfileId, setSelectedProfileId] = useState("");
   const [formTemplate, setFormTemplate] = useState([]);
   const [dynamicAnswers, setDynamicAnswers] = useState({});
 
-  // 1. Khởi tạo template và lấy danh sách Profile khi mở Modal
   useEffect(() => {
     if (isOpen && job) {
-      // Phân tích Template từ tin tuyển dụng
-      const template = job.customFormTemplate ? JSON.parse(job.customFormTemplate) : [];
+      // 1. Parse Template từ tin tuyển dụng
+      const template = job.customFormTemplate
+        ? JSON.parse(job.customFormTemplate)
+        : [];
       setFormTemplate(template);
 
-      // Lấy danh sách tất cả profile của ứng viên
-      candidateService.getMyProfiles()
-        .then(data => {
+      // 2. Lấy danh sách CV trực tuyến của ứng viên
+      candidateService
+        .getMyProfiles()
+        .then((data) => {
           const profileList = Array.isArray(data) ? data : data.content || [];
           setProfiles(profileList);
-          
-          // Nếu có profile, mặc định chọn cái đầu tiên để auto-fill
+
+          // Nếu ứng viên có CV, mặc định chọn CV đầu tiên và tự động điền form
           if (profileList.length > 0) {
-            setSelectedProfileId(profileList[0].id);
-            autoFillFromProfile(profileList[0], template);
-          } else {
-            // Nếu không có profile nào, khởi tạo answers trống
-            const blankAnswers = {};
-            template.forEach(field => blankAnswers[field.id] = '');
-            setDynamicAnswers(blankAnswers);
+            const defaultProfile = profileList[0];
+            setSelectedProfileId(defaultProfile.id);
+
+            // Dùng hàm utils tách riêng để map dữ liệu
+            const filledData = matchProfileToJob(defaultProfile, template);
+            setDynamicAnswers(filledData);
           }
         })
-        .catch(err => console.error("Lỗi lấy danh sách profiles:", err));
+        .catch((err) => {
+          console.error("Lỗi khi tải hồ sơ:", err);
+          setError("Không thể tải danh sách hồ sơ. Vui lòng thử lại.");
+        });
     }
   }, [isOpen, job]);
 
-  // 2. Logic Auto-fill: Map dữ liệu từ profile vào template
-  const autoFillFromProfile = (profile, template) => {
-    const initialAnswers = {};
-    template.forEach(field => {
-      // Nếu field có autoFillKey khớp với thông tin trong Profile thì tự điền
-      if (field.autoFillKey && profile[field.autoFillKey]) {
-        initialAnswers[field.id] = profile[field.autoFillKey];
-      } else {
-        initialAnswers[field.id] = '';
-      }
-    });
-    setDynamicAnswers(initialAnswers);
-  };
-
-  // 3. Xử lý khi ứng viên thay đổi lựa chọn Profile trong Dropdown
+  // Khi ứng viên đổi CV khác trong lúc Apply
   const handleProfileChange = (e) => {
     const profileId = e.target.value;
     setSelectedProfileId(profileId);
-    const selectedProfile = profiles.find(p => p.id === parseInt(profileId));
+
+    const selectedProfile = profiles.find((p) => p.id === parseInt(profileId));
     if (selectedProfile) {
-      autoFillFromProfile(selectedProfile, formTemplate);
+      // Gọi lại hàm map dữ liệu để cập nhật form tương ứng với CV mới
+      const filledData = matchProfileToJob(selectedProfile, formTemplate);
+      setDynamicAnswers(filledData);
     }
   };
 
-  if (!isOpen) return null;
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile && selectedFile.size > 5 * 1024 * 1024) {
-      setError('File CV không được vượt quá 5MB');
-      setFile(null);
-      return;
-    }
-    setFile(selectedFile);
-    setError('');
-  };
-
-  const handleDynamicInputChange = (id, value) => {
-    setDynamicAnswers(prev => ({ ...prev, [id]: value }));
+  const handleDynamicAnswerChange = (fieldId, value) => {
+    setDynamicAnswers((prev) => ({ ...prev, [fieldId]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) {
-      setError('Vui lòng đính kèm CV của bạn!');
+    if (!selectedProfileId) {
+      setError("Vui lòng chọn một hồ sơ để ứng tuyển.");
       return;
     }
 
     setSubmitting(true);
-    setError('');
+    setError("");
 
     try {
-      const formData = new FormData();
-      formData.append('jobId', job.id);
-      formData.append('coverLetter', coverLetter);
-      formData.append('cvFile', file);
-      formData.append('customAnswers', JSON.stringify(dynamicAnswers));
+      // Chuẩn bị payload ứng tuyển
+      const payload = {
+        jobId: job.id,
+        candidateProfileId: selectedProfileId,
+        coverLetter: coverLetter,
+        // Gửi các câu trả lời động dưới dạng chuỗi JSON lên Backend
+        customAnswers: JSON.stringify(dynamicAnswers),
+      };
 
-      await applicationService.applyJob(formData);
-      onSuccess();
+      await applicationService.applyJob(payload);
+      if (onSuccess) onSuccess();
       onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || 'Đã có lỗi xảy ra khi nộp đơn.');
+    } catch {
+      setError("Có lỗi xảy ra khi gửi hồ sơ. Vui lòng thử lại!");
     } finally {
       setSubmitting(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+      <div className="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+        {/* Header Modal */}
+        <div className="flex justify-between items-center p-6 border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Ứng tuyển vị trí</h2>
-            <p className="text-blue-600 font-medium">{job?.title}</p>
+            <h3 className="text-xl font-bold text-gray-900">
+              Ứng tuyển vị trí
+            </h3>
+            <p className="text-blue-600 font-medium mt-1">{job?.title}</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <X size={24} className="text-gray-400" />
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
+          >
+            <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+        {/* Nội dung form ứng tuyển */}
+        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
           {error && (
-            <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm font-medium">
+            <div className="p-3 mb-6 bg-red-50 text-red-600 rounded-xl text-sm font-medium">
               {error}
             </div>
           )}
 
-          {/* CHỌN HỒ SƠ ĐỂ AUTO-FILL */}
-          <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm font-bold text-gray-700 ml-1">
-              <UserCircle size={18} className="text-blue-500" />
-              Chọn hồ sơ của bạn để tự động điền
-            </label>
-            <select
-              value={selectedProfileId}
-              onChange={handleProfileChange}
-              className="w-full p-3 bg-blue-50 border border-blue-100 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium text-blue-800 transition-all"
-            >
+          <form id="applyForm" onSubmit={handleSubmit} className="space-y-6">
+            {/* 1. Chọn Hồ sơ (CV) */}
+            <div className="space-y-3">
+              <label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                <UserCircle size={18} className="text-blue-600" /> Chọn hồ sơ
+                ứng tuyển *
+              </label>
               {profiles.length > 0 ? (
-                profiles.map(p => (
-                  <option key={p.id} value={p.id}>{p.profileName}</option>
-                ))
+                <select
+                  value={selectedProfileId}
+                  onChange={handleProfileChange}
+                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-medium text-gray-800"
+                  required
+                >
+                  <option value="" disabled>
+                    -- Chọn hồ sơ của bạn --
+                  </option>
+                  {profiles.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.profileName} - Cập nhật:{" "}
+                      {new Date(p.updatedAt).toLocaleDateString("vi-VN")}
+                    </option>
+                  ))}
+                </select>
               ) : (
-                <option value="">Bạn chưa có hồ sơ trực tuyến nào</option>
+                <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-2xl text-sm">
+                  Bạn chưa có hồ sơ nào. Vui lòng vào phần quản lý CV để tạo
+                  mới.
+                </div>
               )}
-            </select>
-          </div>
-
-          {/* PHẦN RENDER FORM ĐỘNG */}
-          {formTemplate.length > 0 && (
-            <div className="space-y-4 p-5 bg-gray-50 rounded-2xl border border-gray-100">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Thông tin yêu cầu từ nhà tuyển dụng</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {formTemplate.map((field) => (
-                  <div key={field.id} className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-500 ml-1">
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                    </label>
-                    <input
-                      type="text"
-                      value={dynamicAnswers[field.id] || ''}
-                      onChange={(e) => handleDynamicInputChange(field.id, e.target.value)}
-                      required={field.required}
-                      placeholder={`Nhập ${field.label.toLowerCase()}...`}
-                      className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
-                    />
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
 
-          {/* UPLOAD CV */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 ml-1">Hồ sơ ứng tuyển (CV) *</label>
-            <div className="relative group">
-              <input
-                type="file"
-                onChange={handleFileChange}
-                accept=".pdf,.docx"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+            {/* 2. DYNAMIC FORM: Hiển thị các trường NTD yêu cầu */}
+            {formTemplate.length > 0 && (
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h4 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <FileText size={18} className="text-purple-600" /> Yêu cầu bổ
+                  sung từ Nhà tuyển dụng
+                </h4>
+                <div className="p-5 bg-purple-50/50 rounded-2xl border border-purple-100 space-y-4">
+                  {formTemplate.map((field) => (
+                    <div key={field.id}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {field.label}{" "}
+                        {field.required && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      </label>
+                      {field.type === "textarea" ? (
+                        <textarea
+                          value={dynamicAnswers[field.id] || ""}
+                          onChange={(e) =>
+                            handleDynamicAnswerChange(field.id, e.target.value)
+                          }
+                          required={field.required}
+                          rows="3"
+                          placeholder={`Nhập ${field.label.toLowerCase()}...`}
+                          className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm"
+                        />
+                      ) : (
+                        <input
+                          type={field.type || "text"}
+                          value={dynamicAnswers[field.id] || ""}
+                          onChange={(e) =>
+                            handleDynamicAnswerChange(field.id, e.target.value)
+                          }
+                          required={field.required}
+                          placeholder={`Nhập ${field.label.toLowerCase()}...`}
+                          className="w-full p-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 outline-none text-sm"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 3. Thư giới thiệu (Cover Letter) */}
+            <div className="space-y-2 pt-4 border-t border-gray-100">
+              <label className="text-sm font-bold text-gray-700 ml-1">
+                Thư giới thiệu (Cover Letter)
+              </label>
+              <textarea
+                rows="3"
+                placeholder="Chia sẻ lý do bạn phù hợp với vị trí này..."
+                value={coverLetter}
+                onChange={(e) => setCoverLetter(e.target.value)}
+                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
               />
-              <div className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all ${file ? 'border-green-400 bg-green-50' : 'border-gray-200 bg-gray-50 group-hover:border-blue-400 group-hover:bg-blue-50'}`}>
-                <UploadCloud size={40} className={file ? 'text-green-500' : 'text-gray-400'} />
-                <p className="mt-2 text-sm font-medium text-gray-600">
-                  {file ? file.name : 'Nhấn hoặc kéo thả file CV vào đây'}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">Hỗ trợ PDF, DOCX (Tối đa 5MB)</p>
-              </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          {/* COVER LETTER */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 ml-1">Thư giới thiệu (Cover Letter)</label>
-            <textarea 
-              rows="4" 
-              placeholder="Chia sẻ lý do bạn phù hợp với vị trí này..."
-              value={coverLetter}
-              onChange={(e) => setCoverLetter(e.target.value)}
-              className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 outline-none text-sm transition-all"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="px-6 py-3 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors"
-            >
-              Hủy
-            </button>
-            <button 
-              type="submit" 
-              disabled={submitting}
-              className="flex items-center gap-2 bg-blue-600 text-white px-10 py-3 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-70 shadow-lg shadow-blue-200 transition-all active:scale-95"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Đang xử lý...
-                </>
-              ) : (
-                'Nộp đơn ngay'
-              )}
-            </button>
-          </div>
-        </form>
+        {/* Footer Modal */}
+        <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-3xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-xl font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            form="applyForm"
+            disabled={submitting || profiles.length === 0}
+            className="flex items-center gap-2 bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-blue-700 disabled:opacity-70 transition-all active:scale-95 shadow-md shadow-blue-200"
+          >
+            {submitting ? <Loader2 className="animate-spin" size={20} /> : null}
+            {submitting ? "Đang gửi..." : "Nộp Hồ Sơ Ngay"}
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
 export default ApplyModal;
+
 
 
 // ==========================================================================
@@ -4983,6 +4986,55 @@ export const parseToken = (token) => {
     console.error("Lỗi giải mã token:", error);
     return null;
   }
+};
+
+
+// ==========================================================================
+// File: frontend-app/src/utils/profileMatcher.js
+// ==========================================================================
+
+/**
+ * Hàm tự động điền dữ liệu (Auto-fill) từ Profile của ứng viên vào Form của Job
+ * @param {Object} selectedProfile - Dữ liệu CV ứng viên đang chọn
+ * @param {Array|String} jobTemplate - Template form do NTD thiết lập
+ * @returns {Object} - Object chứa dữ liệu đã được map { fieldId: content }
+ */
+export const matchProfileToJob = (selectedProfile, jobTemplate) => {
+  if (!selectedProfile) return {};
+
+  let profileSections = [];
+  try {
+    profileSections = selectedProfile.sections ? JSON.parse(selectedProfile.sections) : [];
+  } catch (e) {
+    console.error("Lỗi parse sections JSON từ Profile:", e);
+  }
+
+  let templateFields = [];
+  try {
+    // Đảm bảo templateFields luôn là mảng
+    templateFields = typeof jobTemplate === 'string' ? JSON.parse(jobTemplate) : (jobTemplate || []);
+  } catch (e) {
+    console.error("Lỗi parse template JSON từ Job:", e);
+  }
+
+  const autoFilledAnswers = {};
+
+  templateFields.forEach(field => {
+    // 1. Tìm block trong CV có type khớp với field.id hoặc field.autoFillKey
+    // Ví dụ: NTD yêu cầu field.id = 'experience' -> Tìm block 'experience' trong CV
+    const matchedBlock = profileSections.find(block => 
+      block.type === field.id || block.type === field.autoFillKey
+    );
+
+    if (matchedBlock) {
+      autoFilledAnswers[field.id] = matchedBlock.content || "";
+    } else {
+      // 2. Nếu không tìm thấy khối, kiểm tra các trường cơ bản tĩnh (Họ tên, Headline)
+      autoFilledAnswers[field.id] = selectedProfile[field.autoFillKey] || selectedProfile[field.id] || "";
+    }
+  });
+
+  return autoFilledAnswers;
 };
 
 

@@ -15,6 +15,7 @@ public class JobMapper {
         if (job == null) return null;
         return JobJpaEntity.builder()
                 .id(job.getId())
+                .postedById(job.getPostedById())
                 .title(job.getTitle())
                 .description(job.getDescription())
                 .companyId(job.getCompanyId())

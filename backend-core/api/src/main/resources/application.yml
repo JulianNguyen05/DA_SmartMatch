@@ -3,9 +3,10 @@ spring:
     name: smartmatch-api
 
   datasource:
-    url: jdbc:mysql://localhost:3307/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+    # Đã đổi port từ 3307 sang 3306 (Port mặc định của MySQL local)
+    url: jdbc:mysql://localhost:3306/smartmatch_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
     username: root
-    password: root123
+    password: 1234 # <-- LƯU Ý: Sửa lại thành mật khẩu MySQL Workbench của bạn (ví dụ: 123456, hoặc để trống '')
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:

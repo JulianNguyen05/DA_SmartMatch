@@ -40,6 +40,7 @@ public class JobMapper {
         return JobResponse.builder()
                 .id(job.getId())
                 .title(job.getTitle())
+                .postedById(job.getPostedById())
                 .description(job.getDescription())
                 .companyId(job.getCompanyId())
                 .location(job.getLocation())

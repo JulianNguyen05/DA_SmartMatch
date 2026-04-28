@@ -1,4 +1,3 @@
-// backend-core/api/src/main/java/com/smartmatch/api/controller/publics/PublicJobController.java
 package com.smartmatch.api.controller.publics;
 
 import com.smartmatch.application.dto.PageResponse;
@@ -17,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/public/jobs")
@@ -39,7 +36,7 @@ public class PublicJobController {
     })
     @GetMapping
     public ResponseEntity<PageResponse<JobResponse>> getAllPublishedJobs(
-            @Parameter(hidden = true) // Pageable sẽ được Swagger tự render
+            @Parameter(hidden = true)
             @PageableDefault(size = 20, sort = "postedAt", direction = org.springframework.data.domain.Sort.Direction.DESC)
             Pageable pageable) {
 
@@ -84,7 +81,7 @@ public class PublicJobController {
     @GetMapping("/{id}")
     public ResponseEntity<JobResponse> getPublicJobById(
             @Parameter(description = "ID của tin tuyển dụng", example = "1", required = true)
-            @PathVariable Long id) {
+            @PathVariable("id") Long id) {
 
         return ResponseEntity.ok(jobService.getPublicJobById(id));
     }
