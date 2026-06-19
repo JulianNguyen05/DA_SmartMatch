@@ -29,6 +29,8 @@ import ForgotPasswordPage from "../pages/auth/ForgotPasswordPage";
 // 4. IMPORT CANDIDATE PAGES
 // ==========================================
 import CandidateDashboard from "../pages/candidate/DashboardPage";
+import CVManagerPage from "../pages/candidate/CVManagerPage";
+import CVTemplatesPage from "../pages/candidate/CVTemplatesPage";
 import CVBuilderPage from "../pages/candidate/CVBuilderPage";
 import MyApplicationsPage from "../pages/candidate/MyApplicationsPage";
 import CandidateProfile from "../pages/candidate/ProfilePage";
@@ -65,7 +67,7 @@ export const router = createBrowserRouter([
   {
     path: "/",
     element: <MainLayout />,
-    errorElement: <NotFoundPage />, // Hiển thị NotFoundPage nếu gõ sai URL
+    errorElement: <NotFoundPage />,
     children: [
       // Public Routes
       { index: true, element: <HomePage /> },
@@ -76,7 +78,9 @@ export const router = createBrowserRouter([
 
       // Candidate Routes
       { path: "candidate/dashboard", element: <CandidateDashboard /> },
-      { path: "candidate/cv-builder", element: <CVBuilderPage /> },
+      { path: "candidate/cv-manager", element: <CVManagerPage /> },
+      { path: "candidate/cv-templates", element: <CVTemplatesPage /> },
+      { path: "candidate/cv-builder/:id", element: <CVBuilderPage /> },
       { path: "candidate/applications", element: <MyApplicationsPage /> },
       { path: "candidate/profile", element: <CandidateProfile /> },
       { path: "candidate/settings", element: <CandidateSettings /> },
