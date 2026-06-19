@@ -357,6 +357,7 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     // Sửa hàm private trong CandidateServiceImpl.java
+    // Sửa hàm private trong CandidateServiceImpl.java
     private CvDocumentResponse mapToCvResponse(CvDocument cv) {
         // Ưu tiên lấy fileName từ Domain (đã lưu trong DB), nếu null mới bóc tách từ path
         String finalFileName = (cv.getFileName() != null && !cv.getFileName().isEmpty())
@@ -373,9 +374,27 @@ public class CandidateServiceImpl implements CandidateService {
                 .id(cv.getId())
                 .candidateId(cv.getCandidateId())
                 .filePath(cv.getFilePath())
-                .fileName(finalFileName) // Sử dụng tên đã chọn
+                .fileName(finalFileName)
+                .rawText(cv.getRawText()) // <--- DÒNG CỰC KỲ QUAN TRỌNG ĐỂ FRONTEND CÓ THỂ ĐỌC ĐƯỢC JSON
                 .isGenerated(cv.getIsGenerated())
                 .createdAt(cv.getCreatedAt())
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CvDocumentResponse getCvDetail(Long userId, Long cvId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        CvDocument cv = cvDocumentRepository.findById(cvId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy CV với ID: " + cvId));
+
+        // Kiểm tra quyền sở hữu
+        if (!cv.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền truy cập CV này.");
+        }
+
+        return mapToCvResponse(cv);
     }
 }

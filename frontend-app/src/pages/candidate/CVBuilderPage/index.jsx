@@ -1,281 +1,344 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Button from '../../../components/common/Button';
-import Toast from '../../../components/common/Toast';
-import candidateService from '../../../features/candidate/candidateService';
-import authService from '../../../features/auth/authService';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Palette, LayoutList, LayoutTemplate, X } from 'lucide-react';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import SimpleTemplate from '../../../components/cv-builder/templates/SimpleTemplate';
+import LayoutSidebar from '../../../components/cv-builder/sidebar/LayoutSidebar';
 
-const TabButton = ({ active, onClick, children, icon }) => (
-  <button
-    onClick={onClick}
-    style={{
-      display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px',
-      borderRadius: '8px 8px 0 0', border: 'none', cursor: 'pointer',
-      fontWeight: active ? 600 : 400, fontSize: '14px',
-      background: active ? '#fff' : 'transparent',
-      color: active ? '#2563eb' : '#6b7280',
-      borderBottom: active ? '2px solid #2563eb' : '2px solid transparent',
-      transition: 'all 0.15s',
-    }}
-  >
-    <span>{icon}</span>{children}
-  </button>
-);
-
-const SectionCard = ({ title, children }) => (
-  <div style={{
-    background: '#fff', border: '1px solid #e5e7eb', borderRadius: '10px',
-    padding: '20px 24px', marginBottom: '16px',
-  }}>
-    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#1f2937', marginBottom: '16px' }}>{title}</h3>
-    {children}
-  </div>
-);
-
-const UploadTab = ({ userId }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [customCvName, setCustomCvName] = useState(''); // State lưu tên CV nhập tay
-  const [isLoading, setIsLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(true);
-  const [status, setStatus] = useState({ type: null, message: '' });
-  const [cvList, setCvList] = useState([]);
-  const [actionId, setActionId] = useState(null); 
-  const [editingCv, setEditingCv] = useState(null); 
-  const fileInputRef = useRef(null);
-
-  const loadCvs = async () => {
-    try {
-      setIsFetching(true);
-      const res = await candidateService.getCvs(userId);
-      setCvList(Array.isArray(res) ? res : res?.data || []);
-    } catch {
-      setStatus({ type: 'error', message: 'Không thể tải danh sách CV.' });
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  useEffect(() => { loadCvs(); }, [userId]);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setStatus({ type: 'error', message: 'File vượt quá giới hạn 5MB.' });
-      return;
-    }
-    setSelectedFile(file);
-    // Gợi ý tên mặc định là tên file gốc (bỏ đuôi mở rộng)
-    const fileNameWithoutExt = file.name.split('.').slice(0, -1).join('.');
-    setCustomCvName(fileNameWithoutExt);
-    setStatus({ type: null, message: '' });
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-    setIsLoading(true);
-    try {
-      // 1. Gọi API upload file cứng
-      const res = await candidateService.uploadCv(userId, selectedFile);
-      
-      // Axios response có thể trả thẳng về data hoặc bọc trong thuộc tính data
-      const newCvId = res?.data?.id || res?.id;
-
-      // 2. Nếu người dùng có nhập tên Custom, lập tức gọi API Rename
-      if (newCvId && customCvName.trim() && customCvName.trim() !== selectedFile.name) {
-        await candidateService.renameCv(userId, newCvId, customCvName.trim());
-      }
-
-      setStatus({ type: 'success', message: 'Tải CV lên thành công!' });
-      setSelectedFile(null);
-      setCustomCvName('');
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      await loadCvs();
-    } catch (error) {
-      console.error(error);
-      setStatus({ type: 'error', message: 'Lỗi tải lên. Vui lòng thử lại.' });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async (cvId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa CV này?')) return;
-    setActionId(cvId);
-    try {
-      await candidateService.deleteCv(userId, cvId);
-      setStatus({ type: 'success', message: 'Xóa CV thành công.' });
-      await loadCvs();
-    } catch {
-      setStatus({ type: 'error', message: 'Xóa CV thất bại.' });
-    } finally {
-      setActionId(null);
-    }
-  };
-
-  const handleRenameSubmit = async (cvId) => {
-    if (!editingCv.newName.trim()) return setEditingCv(null);
-    setActionId(cvId);
-    try {
-      await candidateService.renameCv(userId, cvId, editingCv.newName);
-      setStatus({ type: 'success', message: 'Đổi tên CV thành công.' });
-      await loadCvs();
-    } catch {
-      setStatus({ type: 'error', message: 'Lỗi khi đổi tên CV.' });
-    } finally {
-      setEditingCv(null);
-      setActionId(null);
-    }
-  };
-
-  // Hàm hỗ trợ mở file CV
-  const handleViewCv = (filePath) => {
-    if (!filePath) {
-      alert("Đường dẫn file không tồn tại.");
-      return;
-    }
-    // Gắn cứng domain API backend tạm thời. 
-    // Nếu bạn có dùng biến môi trường (vd: import.meta.env.VITE_API_URL) thì nên thay thế vào đây.
-    const fileUrl = filePath.startsWith('http') ? filePath : `http://localhost:8080${filePath}`;
-    window.open(fileUrl, '_blank');
-  };
-
-  return (
-    <div>
-      <SectionCard title="📤 Tải CV lên hệ thống">
-        {status.type && (
-          <div style={{ marginBottom: '14px' }}>
-            <Toast type={status.type} message={status.message} />
-          </div>
-        )}
-        
-        <div
-          onClick={() => !selectedFile && fileInputRef.current?.click()}
-          style={{
-            border: `2px dashed ${selectedFile ? '#2563eb' : '#d1d5db'}`, borderRadius: '10px',
-            padding: '28px', textAlign: 'center', cursor: selectedFile ? 'default' : 'pointer',
-            background: selectedFile ? '#eff6ff' : '#f9fafb', marginBottom: '14px',
-          }}
-        >
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>{selectedFile ? '📄' : '📁'}</div>
-          {selectedFile ? (
-            <div>
-              <p style={{ fontWeight: 600, color: '#1d4ed8', marginBottom: '12px' }}>{selectedFile.name}</p>
-              {/* Vùng nhập Tên CV */}
-              <div style={{ maxWidth: '400px', margin: '0 auto', textAlign: 'left' }}>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                  Tên hiển thị CV:
-                </label>
-                <input 
-                  type="text" 
-                  value={customCvName}
-                  onChange={(e) => setCustomCvName(e.target.value)}
-                  placeholder="Nhập tên cho CV của bạn..."
-                  style={{
-                    width: '100%', padding: '8px 12px', border: '1px solid #bfdbfe', 
-                    borderRadius: '6px', fontSize: '14px', outline: 'none'
-                  }}
-                />
-              </div>
-            </div>
-          ) : (
-            <>
-              <p style={{ fontWeight: 500, color: '#374151' }}>Kéo thả hoặc click để chọn file</p>
-              <p style={{ fontSize: '13px', color: '#9ca3af' }}>Hỗ trợ PDF, DOCX — Tối đa 5MB</p>
-            </>
-          )}
-        </div>
-        <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} style={{ display: 'none' }} />
-        
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <Button onClick={handleUpload} isLoading={isLoading} disabled={!selectedFile || isLoading}>
-            {isLoading ? 'Đang tải lên...' : 'Tải lên'}
-          </Button>
-          {selectedFile && (
-            <button onClick={() => { setSelectedFile(null); setCustomCvName(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
-              style={{ padding: '8px 16px', background: 'transparent', border: '1px solid #d1d5db', borderRadius: '6px', cursor: 'pointer' }}>
-              Hủy
-            </button>
-          )}
-        </div>
-      </SectionCard>
-
-      <SectionCard title="📋 CV đã lưu">
-        {isFetching ? <p>Đang tải...</p> : cvList.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '24px 0' }}><p>Bạn chưa tải lên CV nào.</p></div>
-        ) : (
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {cvList.map((cv) => (
-              <li key={cv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #f3f4f6' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                  <span style={{ fontSize: '22px' }}>{cv.fileName?.toLowerCase().endsWith('.pdf') ? '🔴' : '📘'}</span>
-                  
-                  {/* Giao diện Đổi Tên CV (khi bấm nút Sửa) */}
-                  {editingCv?.id === cv.id ? (
-                    <div style={{ display: 'flex', gap: '8px', flex: 1, marginRight: '20px' }}>
-                      <input 
-                        type="text" 
-                        value={editingCv.newName} 
-                        onChange={(e) => setEditingCv({...editingCv, newName: e.target.value})}
-                        style={{ padding: '4px 8px', borderRadius: '4px', border: '1px solid #d1d5db', flex: 1 }}
-                        autoFocus
-                      />
-                      <button onClick={() => handleRenameSubmit(cv.id)} style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: '4px', padding: '0 10px', cursor: 'pointer' }}>Lưu</button>
-                      <button onClick={() => setEditingCv(null)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '4px', padding: '0 10px', cursor: 'pointer' }}>Hủy</button>
-                    </div>
-                  ) : (
-                    <div>
-                      <p style={{ fontWeight: 500, fontSize: '14px', color: '#1f2937', margin: 0 }}>{cv.fileName || 'CV Không tên'}</p>
-                      <p style={{ fontSize: '12px', color: '#9ca3af', margin: 0 }}>
-                        {cv.createdAt ? new Date(cv.createdAt).toLocaleDateString('vi-VN') : ''}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Các Nút Hành Động */}
-                {!editingCv && (
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => handleViewCv(cv.filePath)} disabled={actionId === cv.id}
-                      style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '6px', color: '#1d4ed8', padding: '5px 12px', fontSize: '13px', cursor: 'pointer' }}>
-                      👁️ Xem
-                    </button>
-                    <button onClick={() => setEditingCv({ id: cv.id, newName: cv.fileName })} disabled={actionId === cv.id}
-                      style={{ background: 'transparent', border: '1px solid #d1d5db', borderRadius: '6px', color: '#4b5563', padding: '5px 12px', fontSize: '13px', cursor: 'pointer' }}>
-                      ✏️ Sửa tên
-                    </button>
-                    <button onClick={() => handleDelete(cv.id)} disabled={actionId === cv.id}
-                      style={{ background: 'transparent', border: '1px solid #fca5a5', borderRadius: '6px', color: '#ef4444', padding: '5px 12px', fontSize: '13px', cursor: 'pointer' }}>
-                      {actionId === cv.id ? '...' : 'Xóa'}
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </SectionCard>
-    </div>
-  );
+const TEMPLATE_COMPONENTS = {
+  'simple': SimpleTemplate,
 };
 
-const CVBuilderPage = () => {
-  const currentUser = authService?.getCurrentUser ? authService.getCurrentUser() : null;
-  const userId = currentUser?.userId || currentUser?.id;
+const FONT_OPTIONS = ['Roboto', 'Arial', 'Times New Roman', 'Georgia', 'Courier New'];
+const COLOR_THEMES = [
+  { name: 'Xanh lá', primary: '#00b14f', accent: '#e8f7ee' },
+  { name: 'Xanh dương', primary: '#0066cc', accent: '#e6f2ff' },
+  { name: 'Đỏ', primary: '#dc2626', accent: '#fee2e2' },
+  { name: 'Tím', primary: '#7c3aed', accent: '#f3e8ff' },
+];
 
-  if (!userId) return <div style={{ textAlign: 'center', marginTop: '50px' }}><h2 style={{ color: '#ef4444' }}>Vui lòng đăng nhập.</h2></div>;
+const ALL_AVAILABLE_SECTIONS = [
+  'personalInfo', 'objective', 'experience', 'education', 
+  'skills', 'hobbies', 'awards', 'certifications', 'projects', 'references'
+];
+
+const CVBuilderPage = () => {
+  const { id: cvId } = useParams();
+  const navigate = useNavigate();
+
+  const [activeTab, setActiveTab] = useState('layout');
+  const [isPanelOpen, setIsPanelOpen] = useState(true);
+
+  // === STATE CHÍNH - QUẢN LÝ CẢ CV ===
+  const [cvData, setCvData] = useState({
+    settings: { 
+      template: 'simple', 
+      font: 'Roboto',
+      primaryColor: '#00b14f',
+      accentColor: '#e8f7ee'
+    },
+    
+    // Layout state - này là trái tim của tính năng
+    layout: {
+      activeRows: [
+        { id: 'row-1', ratio: '10-0', leftItems: ['personalInfo'], rightItems: [] },
+        { id: 'row-2', ratio: '7-3', leftItems: ['objective', 'experience', 'education', 'hobbies'], rightItems: ['skills', 'awards'] }
+      ],
+      unusedItems: ['projects', 'references', 'certifications']
+    },
+    
+    // Mockdata
+    data: {
+      personalInfo: { 
+        fullName: 'Trọng Hữu', 
+        jobTitle: 'Software Developer',
+        avatar: 'https://via.placeholder.com/100',
+        phone: '(123) 456-7890',
+        email: 'trong.huu@example.com',
+        website: 'github.com/tronghuu',
+        address: 'Đà Nẵng, Việt Nam',
+        dateOfBirth: '15/05/2002',
+        gender: 'Nam'
+      },
+      objective: 'Mục tiêu trở thành Senior Developer với 5+ năm kinh nghiệm. Đam mê công nghệ mới và giải quyết các bài toán phức tạp.',
+      experience: [
+        { 
+          company: 'Tech Company A', 
+          role: 'Junior Developer', 
+          duration: '01/2023 - Hiện tại',
+          description: 'Phát triển và bảo trì ứng dụng web ReactJS'
+        },
+        { 
+          company: 'Startup B', 
+          role: 'Intern', 
+          duration: '06/2022 - 12/2022',
+          description: 'Hỗ trợ phát triển tính năng frontend'
+        }
+      ],
+      education: [
+        { 
+          school: 'Đại học Bách Khoa Đà Nẵng', 
+          major: 'Công nghệ Thông tin',
+          duration: '2020 - 2024',
+          gpa: '3.8/4.0'
+        }
+      ],
+      skills: ['ReactJS', 'NodeJS', 'JavaScript/ES6+', 'HTML/CSS', 'MongoDB', 'PostgreSQL', 'Git', 'Docker'],
+      hobbies: ['Lập trình', 'Đọc sách', 'Chơi game'],
+      awards: [
+        { title: 'Best Developer Award', issuer: 'Tech Company A', date: '2023' }
+      ],
+      certifications: [
+        { name: 'React Advanced', issuer: 'Udemy', date: '2023' }
+      ],
+      projects: [
+        { name: 'E-commerce', description: 'MERN stack', link: 'github.com' }
+      ],
+      references: [
+        { name: 'Phạm Thị Kim Ngoan', position: 'Senior Manager', company: 'Tech Company A' }
+      ]
+    }
+  });
+
+  // === HÀM CẬP NHẬT LAYOUT TỪ SIDEBAR ===
+  const updateLayout = (newLayout) => {
+    setCvData(prev => ({
+      ...prev,
+      layout: newLayout
+    }));
+  };
+
+  // === HÀM XỬ LÝ DRAG & DROP ===
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    // Lấy active item và over container
+    const activeId = active.id; // VD: 'item-experience'
+    const overId = over.id;     // VD: 'droppable-row-2-left'
+
+    // Parse IDs
+    const activeType = String(activeId).split('-')[0]; // 'item' hoặc 'unused'
+    const itemId = String(activeId).split('-').slice(1).join('-'); // 'experience' hoặc 'projects'
+    
+    const overType = String(overId).split('-')[0]; // 'droppable'
+    const overLocation = String(overId).split('-').slice(1).join('-'); // 'row-1-left'
+
+    // Copy current layout
+    let newLayout = JSON.parse(JSON.stringify(cvData.layout));
+
+    // 1. Xóa item khỏi vị trí cũ
+    if (activeType === 'item') {
+      // Item đang ở trong activeRows
+      newLayout.activeRows = newLayout.activeRows.map(row => ({
+        ...row,
+        leftItems: row.leftItems.filter(id => id !== itemId),
+        rightItems: row.rightItems.filter(id => id !== itemId)
+      }));
+    } else if (activeType === 'unused') {
+      // Item đang ở trong unusedItems
+      newLayout.unusedItems = newLayout.unusedItems.filter(id => id !== itemId);
+    }
+
+    // 2. Thêm item vào vị trí mới
+    if (overType === 'droppable') {
+      const [rowIdStr, colStr] = overLocation.split('-');
+      const rowId = `row-${rowIdStr}`;
+      const column = colStr; // 'left' hoặc 'right'
+
+      newLayout.activeRows = newLayout.activeRows.map(row => {
+        if (row.id === rowId) {
+          if (column === 'left') {
+            return { ...row, leftItems: [...row.leftItems, itemId] };
+          } else if (column === 'right') {
+            return { ...row, rightItems: [...row.rightItems, itemId] };
+          }
+        }
+        return row;
+      });
+    } else if (overType === 'unused') {
+      // Thả vào kho lưu trữ
+      newLayout.unusedItems = [...newLayout.unusedItems, itemId];
+    }
+
+    // 3. Cập nhật state
+    updateLayout(newLayout);
+  };
+
+  // === HÀM ĐỔI TỶ LỆ CỘT ===
+  const handleChangeRatio = (rowId, newRatio) => {
+    let newLayout = JSON.parse(JSON.stringify(cvData.layout));
+    newLayout.activeRows = newLayout.activeRows.map(row => 
+      row.id === rowId ? { ...row, ratio: newRatio } : row
+    );
+    updateLayout(newLayout);
+  };
+
+  // === HÀM ĐỔI MÀU & FONT ===
+  const handleColorChange = (primaryColor, accentColor) => {
+    setCvData(prev => ({
+      ...prev,
+      settings: { ...prev.settings, primaryColor, accentColor }
+    }));
+  };
+
+  const handleFontChange = (font) => {
+    setCvData(prev => ({
+      ...prev,
+      settings: { ...prev.settings, font }
+    }));
+  };
+
+  // === HÀM TỪ TEMPLATE GỌI LẠI - CLICK SECTION TRONG CV ===
+  const handleSectionClick = (sectionId) => {
+    // Nếu click vào section trong CV, scroll sidebar đến section đó
+    // Có thể highlight section trong sidebar
+    console.log('Clicked section:', sectionId);
+    // TODO: Implement focus/highlight logic
+  };
+
+  const SelectedTemplate = TEMPLATE_COMPONENTS[cvData.settings.template] || SimpleTemplate;
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '24px 16px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, margin: 0 }}>Quản lý CV</h1>
+    <div className="flex flex-col h-screen bg-[#f3f4f6]">
+      {/* HEADER */}
+      <header className="h-14 bg-white border-b flex items-center p-4 shadow-sm z-20 font-bold text-gray-700">
+        Worklify CV Builder
+      </header>
+
+      <div className="flex flex-1 overflow-hidden relative">
+        {/* === NAVBAR BÊN TRÁI === */}
+        <div className="w-24 bg-white border-r z-20 shadow-sm flex flex-col items-center py-4 gap-4">
+          <button 
+            onClick={() => { setActiveTab('design'); setIsPanelOpen(true); }} 
+            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === 'design' && isPanelOpen ? 'bg-[#e8f7ee] text-[#00b14f]' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Thiết kế & Font"
+          >
+            <Palette size={20}/>
+            <span className="text-[10px] mt-1 font-medium text-center">Thiết kế</span>
+          </button>
+
+          <button 
+            onClick={() => { setActiveTab('layout'); setIsPanelOpen(true); }} 
+            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === 'layout' && isPanelOpen ? 'bg-[#e8f7ee] text-[#00b14f]' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Bố cục CV"
+          >
+            <LayoutList size={20}/>
+            <span className="text-[10px] mt-1 font-medium">Bố cục</span>
+          </button>
+
+          <button 
+            onClick={() => { setActiveTab('template'); setIsPanelOpen(true); }} 
+            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === 'template' && isPanelOpen ? 'bg-[#e8f7ee] text-[#00b14f]' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Đổi mẫu CV"
+          >
+            <LayoutTemplate size={20}/>
+            <span className="text-[10px] mt-1 font-medium text-center">Mẫu CV</span>
+          </button>
+        </div>
+
+        {/* === TAB PANEL === */}
+        <div className={`w-80 bg-white border-r z-10 overflow-y-auto transition-transform shadow-lg ${isPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+          
+          {/* TAB: DESIGN */}
+          {activeTab === 'design' && (
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold text-lg">Thiết kế & Font</h3>
+                <button onClick={() => setIsPanelOpen(false)} className="hover:bg-gray-100 p-1 rounded">
+                  <X size={16}/>
+                </button>
+              </div>
+
+              {/* Font */}
+              <div className="mb-6">
+                <label className="block font-semibold text-sm text-gray-700 mb-3">Chọn Font</label>
+                <select 
+                  value={cvData.settings.font}
+                  onChange={(e) => handleFontChange(e.target.value)}
+                  className="w-full p-2 border rounded bg-white text-sm focus:outline-none focus:border-[#00b14f]"
+                >
+                  {FONT_OPTIONS.map(font => (
+                    <option key={font} value={font}>{font}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Color Theme */}
+              <div>
+                <label className="block font-semibold text-sm text-gray-700 mb-3">Chủ đề màu sắc</label>
+                <div className="space-y-2">
+                  {COLOR_THEMES.map(theme => (
+                    <button
+                      key={theme.name}
+                      onClick={() => handleColorChange(theme.primary, theme.accent)}
+                      className={`w-full flex items-center gap-3 p-3 border-2 rounded-lg transition-all ${
+                        cvData.settings.primaryColor === theme.primary 
+                          ? 'border-[#00b14f] bg-[#e8f7ee]' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div 
+                        className="w-8 h-8 rounded-full border border-gray-300"
+                        style={{ backgroundColor: theme.primary }}
+                      />
+                      <span className="text-sm font-medium text-gray-700">{theme.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: LAYOUT - DND VERSION */}
+          {activeTab === 'layout' && (
+            <DndContext onDragEnd={handleDragEnd}>
+              <LayoutSidebar 
+                layout={cvData.layout}
+                onChangeRatio={handleChangeRatio}
+                primaryColor={cvData.settings.primaryColor}
+              />
+            </DndContext>
+          )}
+
+          {/* TAB: TEMPLATE */}
+          {activeTab === 'template' && (
+            <div className="p-5">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-bold text-lg">Đổi mẫu CV</h3>
+                <button onClick={() => setIsPanelOpen(false)} className="hover:bg-gray-100 p-1 rounded">
+                  <X size={16}/>
+                </button>
+              </div>
+              
+              <button 
+                onClick={() => setCvData({...cvData, settings: {...cvData.settings, template: 'simple'}})} 
+                className={`block w-full p-3 mb-2 rounded font-medium border-2 transition-all ${
+                  cvData.settings.template === 'simple'
+                    ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]'
+                    : 'border-gray-200 text-gray-700 hover:border-[#00b14f]'
+                }`}
+              >
+                Mẫu Tiêu Chuẩn
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* === CANVAS A4 === */}
+        <div 
+          className="flex-1 overflow-y-auto bg-gray-200 relative flex justify-center py-10 transition-all"
+          style={{ marginLeft: isPanelOpen ? '320px' : '0' }}
+        >
+          <div className="w-[794px] min-h-[1123px] shadow-xl bg-white">
+            <SelectedTemplate 
+              cvData={cvData}
+              onSectionClick={handleSectionClick}
+            />
+          </div>
+        </div>
       </div>
-      <div style={{ display: 'flex', borderBottom: '1px solid #e5e7eb', marginBottom: '24px', gap: '4px' }}>
-        <TabButton active={true} onClick={() => {}} icon="📤">Tải lên CV</TabButton>
-        <TabButton active={false} onClick={() => alert("Tính năng Thiết kế CV đang được phát triển.")} icon="✏️">
-          Thiết kế CV <span style={{ fontSize: '10px', background: '#eab308', color: '#fff', padding: '2px 6px', borderRadius: '10px', marginLeft: '6px' }}>Beta</span>
-        </TabButton>
-      </div>
-      <UploadTab userId={userId} />
     </div>
   );
 };

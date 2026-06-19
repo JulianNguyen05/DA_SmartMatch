@@ -12,6 +12,7 @@ public class CvDocumentResponse {
     private Long candidateId;
     private String filePath;
     private String fileName;
+    private String rawText;
     private Boolean isGenerated;
     private LocalDateTime createdAt;
 }

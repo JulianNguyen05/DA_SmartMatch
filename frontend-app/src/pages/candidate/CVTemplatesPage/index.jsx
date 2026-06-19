@@ -3,43 +3,39 @@ import { useNavigate } from 'react-router-dom';
 import authService from '../../../features/auth/authService';
 import candidateService from '../../../features/candidate/candidateService';
 import Toast from '../../../components/common/Toast';
-import { LayoutGrid, Star, Briefcase, LayoutTemplate, GraduationCap, FileCheck2, Globe } from 'lucide-react';
+import { LayoutGrid, Briefcase, LayoutTemplate, GraduationCap } from 'lucide-react';
 
-// 1. CẤU HÌNH DỮ LIỆU MẪU (Giống cấu trúc TopCV)
+// 1. CẤU HÌNH DỮ LIỆU CHÍNH XÁC 3 MẪU CV (Đã bỏ mảng colors, chỉ giữ 1 màu mặc định)
 const TEMPLATES = [
   {
     id: 'simple',
-    name: 'Tiêu chuẩn',
-    categories: ['Đơn giản', 'ATS'],
-    colors: ['#1f2937', '#dc2626', '#2563eb', '#16a34a'], // Đen, Đỏ, Xanh dương, Xanh lá
-    // Thay URL này bằng ảnh chụp màn hình mẫu CV của bạn (khổ A4)
+    name: 'Mẫu Tiêu Chuẩn',
+    categories: ['Tiêu chuẩn'],
+    color: '#1f2937', // Màu mặc định: Đen xám
     thumbnail: 'http://localhost:8080/uploads/logos/user.jpg', 
   },
   {
     id: 'professional',
-    name: 'Ấn tượng 6',
-    categories: ['Chuyên nghiệp', 'Hiện đại', 'Ấn tượng'],
-    colors: ['#451a03', '#1e3a8a', '#14532d', '#701a75'], // Nâu, Xanh navy, Xanh rêu, Tím
+    name: 'Mẫu Chuyên Nghiệp',
+    categories: ['Chuyên nghiệp'],
+    color: '#1e3a8a', // Màu mặc định: Xanh Navy
     thumbnail: 'http://localhost:8080/uploads/logos/user.jpg',
   },
   {
     id: 'harvard',
-    name: 'Senior (Harvard)',
-    categories: ['Harvard', 'Đơn giản', 'ATS'],
-    colors: ['#000000', '#1e3a8a'], // Đen, Xanh navy
+    name: 'Mẫu Harvard',
+    categories: ['Harvard'],
+    color: '#000000', // Màu mặc định: Đen
     thumbnail: 'http://localhost:8080/uploads/logos/user.jpg',
   }
 ];
 
-// Danh mục bộ lọc kèm Icon
+// Danh mục bộ lọc
 const CATEGORIES = [
   { id: 'Tất cả', icon: LayoutGrid },
-  { id: 'Đơn giản', icon: LayoutTemplate },
+  { id: 'Tiêu chuẩn', icon: LayoutTemplate },
   { id: 'Chuyên nghiệp', icon: Briefcase },
-  { id: 'Hiện đại', icon: Star },
-  { id: 'Ấn tượng', icon: Globe },
-  { id: 'Harvard', icon: GraduationCap },
-  { id: 'ATS', icon: FileCheck2 },
+  { id: 'Harvard', icon: GraduationCap }
 ];
 
 const CVTemplatesPage = () => {
@@ -47,9 +43,6 @@ const CVTemplatesPage = () => {
   const [activeCategory, setActiveCategory] = useState('Tất cả');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  
-  // State lưu trữ màu được chọn tạm thời cho từng mẫu { templateId: colorIndex }
-  const [selectedColors, setSelectedColors] = useState({});
 
   // Lọc template theo danh mục
   const filteredTemplates = activeCategory === 'Tất cả' 
@@ -70,14 +63,10 @@ const CVTemplatesPage = () => {
     setError(null);
 
     try {
-      // Lấy màu đang được chọn, nếu không có thì lấy màu đầu tiên của template
-      const selectedColorIndex = selectedColors[template.id] || 0;
-      const themeColor = template.colors[selectedColorIndex];
-
       const defaultCVData = {
         settings: {
           template: template.id,
-          color: themeColor,
+          color: template.color, // Lấy trực tiếp màu mặc định của mẫu
           font: 'Roboto',
           fontSize: 'medium'
         },
@@ -123,7 +112,7 @@ const CVTemplatesPage = () => {
       {/* HEADER */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Mẫu CV xin việc tiếng Việt, Anh, Nhật, Trung chuẩn 2026
+          Mẫu CV xin việc tiếng Việt chuẩn 2026
         </h1>
         <p className="text-gray-600">
           Tuyển chọn {TEMPLATES.length} mẫu CV đa dạng phong cách, giúp bạn tạo dấu ấn cá nhân và kết nối mạnh mẽ hơn với nhà tuyển dụng.
@@ -147,7 +136,7 @@ const CVTemplatesPage = () => {
               onClick={() => setActiveCategory(category.id)}
               className={`flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm border transition-all duration-200 ${
                 isActive 
-                  ? 'bg-[#00b14f] text-white border-[#00b14f] shadow-sm' // Màu xanh đặc trưng của TopCV
+                  ? 'bg-[#00b14f] text-white border-[#00b14f] shadow-sm' 
                   : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400'
               }`}
             >
@@ -159,71 +148,54 @@ const CVTemplatesPage = () => {
       </div>
 
       {/* TEMPLATES GRID */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredTemplates.map((template) => {
-          const activeColorIdx = selectedColors[template.id] || 0;
-
-          return (
-            <div key={template.id} className="flex flex-col gap-3">
-              {/* VÙNG CHỨA ẢNH (Nền xám nhạt, border bo góc) */}
-              <div className="group relative bg-[#f3f4f6] p-4 rounded-xl border border-gray-200 transition-all hover:border-[#00b14f] hover:shadow-md">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 max-w-5xl">
+        {filteredTemplates.map((template) => (
+          <div key={template.id} className="flex flex-col gap-3">
+            
+            {/* VÙNG CHỨA ẢNH (Nền xám nhạt, border bo góc) */}
+            <div className="group relative bg-[#f3f4f6] p-4 rounded-xl border border-gray-200 transition-all hover:border-[#00b14f] hover:shadow-md">
+              
+              {/* Thumbnail CV khổ A4 (Tỷ lệ 21/29.7) */}
+              <div className="relative w-full aspect-[21/29.7] bg-white shadow-sm overflow-hidden border border-gray-200">
+                <img 
+                  src={template.thumbnail} 
+                  alt={template.name} 
+                  className="w-full h-full object-cover object-top"
+                />
                 
-                {/* Thumbnail CV khổ A4 (Tỷ lệ 21/29.7) */}
-                <div className="relative w-full aspect-[21/29.7] bg-white shadow-sm overflow-hidden border border-gray-200">
-                  <img 
-                    src={template.thumbnail} 
-                    alt={template.name} 
-                    className="w-full h-full object-cover object-top"
-                  />
-                  
-                  {/* Overlay khi Hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[1px]">
-                    <button
-                      onClick={() => handleUseTemplate(template)}
-                      disabled={isLoading}
-                      className="bg-[#00b14f] hover:bg-[#009643] text-white font-semibold py-2 px-6 rounded-full transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
-                    >
-                      {isLoading ? 'Đang tạo...' : 'Sử dụng mẫu này'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* VÙNG THÔNG TIN MẪU */}
-              <div className="px-1">
-                {/* Các chấm màu */}
-                <div className="flex items-center gap-2 mb-3">
-                  {template.colors.map((color, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedColors(prev => ({ ...prev, [template.id]: idx }))}
-                      className={`w-5 h-5 rounded-full border-2 transition-transform ${
-                        activeColorIdx === idx ? 'scale-125 border-gray-400' : 'border-transparent hover:scale-110'
-                      }`}
-                      style={{ backgroundColor: color }}
-                      title="Đổi màu"
-                    />
-                  ))}
-                </div>
-
-                {/* Tên mẫu */}
-                <h3 className="text-[17px] font-bold text-gray-800 mb-2">{template.name}</h3>
-
-                {/* Các Tag phân loại */}
-                <div className="flex flex-wrap gap-2">
-                  {template.categories.map((cat, idx) => (
-                    <span 
-                      key={idx} 
-                      className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium"
-                    >
-                      {cat}
-                    </span>
-                  ))}
+                {/* Overlay khi Hover */}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[1px]">
+                  <button
+                    onClick={() => handleUseTemplate(template)}
+                    disabled={isLoading}
+                    className="bg-[#00b14f] hover:bg-[#009643] text-white font-semibold py-2 px-6 rounded-full transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 shadow-lg"
+                  >
+                    {isLoading ? 'Đang tạo...' : 'Sử dụng mẫu này'}
+                  </button>
                 </div>
               </div>
             </div>
-          );
-        })}
+
+            {/* VÙNG THÔNG TIN MẪU */}
+            <div className="px-1 mt-2">
+              {/* Tên mẫu */}
+              <h3 className="text-[17px] font-bold text-gray-800 mb-2">{template.name}</h3>
+
+              {/* Các Tag phân loại */}
+              <div className="flex flex-wrap gap-2">
+                {template.categories.map((cat, idx) => (
+                  <span 
+                    key={idx} 
+                    className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium"
+                  >
+                    {cat}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        ))}
       </div>
     </div>
   );

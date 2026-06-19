@@ -26,4 +26,5 @@ public interface CandidateService {
 
     CvDocumentResponse renameCv(Long userId, Long cvId, String newName);
     PageResponse<CandidateProfileResponse> searchCandidates(String keyword, DomainPageable pageable);
+    CvDocumentResponse getCvDetail(Long userId, Long cvId);
 }

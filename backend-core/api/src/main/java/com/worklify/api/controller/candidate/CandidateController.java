@@ -136,4 +136,15 @@ public class CandidateController {
         DomainPageable pageable = new SearchPageable(page, size);
         return ApiResponse.success(candidateService.searchCandidates(keyword, pageable));
     }
+
+    @GetMapping("/{userId}/cvs/{cvId}")
+    @Operation(summary = "Lấy chi tiết một CV của ứng viên")
+    public ApiResponse<CvDocumentResponse> getCvDetail(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId) {
+
+        // Gọi service lấy chi tiết CV.
+        // Lưu ý: Đảm bảo trong CandidateService của bạn đã có hàm getCvDetail (hoặc getCvById).
+        return ApiResponse.success(candidateService.getCvDetail(userId, cvId));
+    }
 }
