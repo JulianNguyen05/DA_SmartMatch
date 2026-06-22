@@ -1,326 +1,211 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Palette, LayoutList, LayoutTemplate, X } from "lucide-react";
-import { DndContext } from "@dnd-kit/core";
-import LayoutSidebar from "../../../components/cv-builder/sidebar/LayoutSidebar";
+import { Palette, LayoutList, LayoutTemplate } from "lucide-react";
+import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
+import { arrayMove } from "@dnd-kit/sortable";
 
 import TabPanel from "../../../components/cv-builder/sidebar/TabPanel";
 import SimpleTemplate from "../../../components/cv-builder/templates/SimpleTemplate";
+import DraggableItem from "../../../components/cv-builder/sidebar/DraggableItem";
 
-const TEMPLATE_COMPONENTS = {
-  simple: SimpleTemplate,
-};
-
-const FONT_OPTIONS = [
-  "Roboto",
-  "Arial",
-  "Times New Roman",
-  "Georgia",
-  "Courier New",
-];
-const COLOR_THEMES = [
-  { name: "Xanh lá", primary: "#00b14f", accent: "#e8f7ee" },
-  { name: "Xanh dương", primary: "#0066cc", accent: "#e6f2ff" },
-  { name: "Đỏ", primary: "#dc2626", accent: "#fee2e2" },
-  { name: "Tím", primary: "#7c3aed", accent: "#f3e8ff" },
-];
-
-const ALL_AVAILABLE_SECTIONS = [
-  "personalInfo",
-  "objective",
-  "experience",
-  "education",
-  "skills",
-  "hobbies",
-  "awards",
-  "certifications",
-  "projects",
-  "references",
-];
+const TEMPLATE_COMPONENTS = { simple: SimpleTemplate };
 
 const CVBuilderPage = () => {
   const { id: cvId } = useParams();
   const navigate = useNavigate();
-
   const [activeTab, setActiveTab] = useState("layout");
   const [isPanelOpen, setIsPanelOpen] = useState(true);
 
-  // === STATE CHÍNH - QUẢN LÝ CẢ CV ===
-  const [cvData, setCvData] = useState({
-    settings: {
-      template: "simple",
-      font: "Roboto",
-      primaryColor: "#00b14f",
-      accentColor: "#e8f7ee",
-    },
+  // State lưu ID của item đang được nhấc lên
+  const [activeDragId, setActiveDragId] = useState(null);
 
-    // Layout state - này là trái tim của tính năng
+  const [cvData, setCvData] = useState({
+    settings: { template: "simple", font: "Roboto", primaryColor: "#00b14f", accentColor: "#e8f7ee" },
     layout: {
       activeRows: [
-        {
-          id: "row-1",
-          ratio: "10-0",
-          leftItems: ["personalInfo"],
-          rightItems: [],
-        },
-        {
-          id: "row-2",
-          ratio: "7-3",
-          leftItems: ["objective", "experience", "education", "hobbies"],
-          rightItems: ["skills", "awards"],
-        },
+        { id: "row-1", ratio: "10-0", leftItems: ["avatar", "personalInfo", "contactInfo", "objective"], rightItems: [] },
+        { id: "row-2", ratio: "50-50", leftItems: ["experience", "education"], rightItems: ["skills", "hobbies"] },
       ],
-      unusedItems: ["projects", "references", "certifications"],
+      unusedItems: ["activities", "awards", "certifications", "projects", "references", "customSection"],
     },
-
-    // Mockdata
     data: {
-      personalInfo: {
-        fullName: "Trọng Hữu",
-        jobTitle: "Software Developer",
-        avatar: "https://via.placeholder.com/100",
-        phone: "(123) 456-7890",
-        email: "trong.huu@example.com",
-        website: "github.com/tronghuu",
-        address: "Đà Nẵng, Việt Nam",
-        dateOfBirth: "15/05/2002",
-        gender: "Nam",
-      },
-      objective:
-        "Mục tiêu trở thành Senior Developer với 5+ năm kinh nghiệm. Đam mê công nghệ mới và giải quyết các bài toán phức tạp.",
-      experience: [
-        {
-          company: "Tech Company A",
-          role: "Junior Developer",
-          duration: "01/2023 - Hiện tại",
-          description: "Phát triển và bảo trì ứng dụng web ReactJS",
-        },
-        {
-          company: "Startup B",
-          role: "Intern",
-          duration: "06/2022 - 12/2022",
-          description: "Hỗ trợ phát triển tính năng frontend",
-        },
-      ],
-      education: [
-        {
-          school: "Đại học Bách Khoa Đà Nẵng",
-          major: "Công nghệ Thông tin",
-          duration: "2020 - 2024",
-          gpa: "3.8/4.0",
-        },
-      ],
-      skills: [
-        "ReactJS",
-        "NodeJS",
-        "JavaScript/ES6+",
-        "HTML/CSS",
-        "MongoDB",
-        "PostgreSQL",
-        "Git",
-        "Docker",
-      ],
-      hobbies: ["Lập trình", "Đọc sách", "Chơi game"],
-      awards: [
-        {
-          title: "Best Developer Award",
-          issuer: "Tech Company A",
-          date: "2023",
-        },
-      ],
-      certifications: [
-        { name: "React Advanced", issuer: "Udemy", date: "2023" },
-      ],
-      projects: [
-        { name: "E-commerce", description: "MERN stack", link: "github.com" },
-      ],
-      references: [
-        {
-          name: "Phạm Thị Kim Ngoan",
-          position: "Senior Manager",
-          company: "Tech Company A",
-        },
-      ],
+      avatar: { url: "" }, personalInfo: { fullName: "", jobTitle: "" }, contactInfo: { phone: "", email: "", website: "", address: "", dateOfBirth: "", gender: "" },
+      objective: "", experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
     },
   });
 
-  // === HÀM CẬP NHẬT LAYOUT TỪ SIDEBAR ===
-  const updateLayout = (newLayout) => {
-    setCvData((prev) => ({
-      ...prev,
-      layout: newLayout,
-    }));
+  const updateLayout = (newLayout) => setCvData((prev) => ({ ...prev, layout: newLayout }));
+
+  // ===============================================
+  // XỬ LÝ LOGIC KÉO THẢ
+  // ===============================================
+  const handleDragStart = (event) => {
+    setActiveDragId(event.active.id);
   };
 
-  // === HÀM XỬ LÝ DRAG & DROP ===
   const handleDragEnd = (event) => {
+    setActiveDragId(null);
     const { active, over } = event;
-
     if (!over) return;
 
-    // Lấy active item và over container
-    const activeId = active.id; // VD: 'item-experience'
-    const overId = over.id; // VD: 'droppable-row-2-left'
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (activeId === overId) return;
 
-    // Parse IDs
-    const activeType = String(activeId).split("-")[0]; // 'item' hoặc 'unused'
-    const itemId = String(activeId).split("-").slice(1).join("-"); // 'experience' hoặc 'projects'
+    const getRawId = (str) => str.replace("item-", "").replace("unused-", "");
+    const rawActiveId = getRawId(activeId);
+    const rawOverId = getRawId(overId);
 
-    const overType = String(overId).split("-")[0]; // 'droppable'
-    const overLocation = String(overId).split("-").slice(1).join("-"); // 'row-1-left'
-
-    // Copy current layout
     let newLayout = JSON.parse(JSON.stringify(cvData.layout));
 
-    // 1. Xóa item khỏi vị trí cũ
-    if (activeType === "item") {
-      // Item đang ở trong activeRows
-      newLayout.activeRows = newLayout.activeRows.map((row) => ({
-        ...row,
-        leftItems: row.leftItems.filter((id) => id !== itemId),
-        rightItems: row.rightItems.filter((id) => id !== itemId),
-      }));
-    } else if (activeType === "unused") {
-      // Item đang ở trong unusedItems
-      newLayout.unusedItems = newLayout.unusedItems.filter(
-        (id) => id !== itemId,
-      );
-    }
-
-    // 2. Thêm item vào vị trí mới
-    if (overType === "droppable") {
-      const [rowIdStr, colStr] = overLocation.split("-");
-      const rowId = `row-${rowIdStr}`;
-      const column = colStr; // 'left' hoặc 'right'
-
-      newLayout.activeRows = newLayout.activeRows.map((row) => {
-        if (row.id === rowId) {
-          if (column === "left") {
-            return { ...row, leftItems: [...row.leftItems, itemId] };
-          } else if (column === "right") {
-            return { ...row, rightItems: [...row.rightItems, itemId] };
-          }
-        }
-        return row;
+    let source = { type: null, list: null, index: -1, rowId: null, col: null };
+    if (activeId.startsWith("unused-")) {
+      source = { type: "unused", list: newLayout.unusedItems, index: newLayout.unusedItems.indexOf(rawActiveId) };
+    } else {
+      newLayout.activeRows.forEach(row => {
+        if (row.leftItems.includes(rawActiveId)) source = { type: "active", list: row.leftItems, index: row.leftItems.indexOf(rawActiveId), rowId: row.id, col: "left" };
+        if (row.rightItems.includes(rawActiveId)) source = { type: "active", list: row.rightItems, index: row.rightItems.indexOf(rawActiveId), rowId: row.id, col: "right" };
       });
-    } else if (overType === "unused") {
-      // Thả vào kho lưu trữ
-      newLayout.unusedItems = [...newLayout.unusedItems, itemId];
     }
 
-    // 3. Cập nhật state
+    let dest = { type: null, list: null, index: -1, rowId: null, col: null };
+    if (overId.startsWith("unused-") || overId === "unused-pool") {
+      dest = { type: "unused", list: newLayout.unusedItems, index: overId === "unused-pool" ? newLayout.unusedItems.length : newLayout.unusedItems.indexOf(rawOverId) };
+    } else if (overId.startsWith("droppable-")) {
+      const parts = overId.split("-");
+      const rId = `row-${parts[2]}`; const cId = parts[3];
+      const row = newLayout.activeRows.find(r => r.id === rId);
+      dest = { type: "active", list: cId === "left" ? row.leftItems : row.rightItems, index: -1, rowId: rId, col: cId };
+    } else {
+      newLayout.activeRows.forEach(row => {
+        if (row.leftItems.includes(rawOverId)) dest = { type: "active", list: row.leftItems, index: row.leftItems.indexOf(rawOverId), rowId: row.id, col: "left" };
+        if (row.rightItems.includes(rawOverId)) dest = { type: "active", list: row.rightItems, index: row.rightItems.indexOf(rawOverId), rowId: row.id, col: "right" };
+      });
+    }
+
+    if (!source.type || !dest.type) return;
+
+    if (source.list === dest.list) {
+      const updatedList = arrayMove(source.list, source.index, dest.index !== -1 ? dest.index : dest.list.length - 1);
+      if (source.type === "unused") newLayout.unusedItems = updatedList;
+      else {
+        const row = newLayout.activeRows.find(r => r.id === source.rowId);
+        if (source.col === "left") row.leftItems = updatedList; else row.rightItems = updatedList;
+      }
+      return updateLayout(newLayout);
+    }
+
+    if (source.type === "unused" && rawActiveId === "customSection" && dest.type === "active") {
+      const newCustomId = `customSection_${Date.now()}`;
+      if (dest.index === -1) dest.list.push(newCustomId);
+      else dest.list.splice(dest.index, 0, newCustomId);
+
+      return setCvData(prev => ({
+        ...prev, layout: newLayout, data: { ...prev.data, [newCustomId]: { title: "Thông tin thêm", content: "" } }
+      }));
+    }
+
+    const itemToMove = rawActiveId;
+    source.list.splice(source.index, 1);
+
+    if (dest.type === "unused" && itemToMove.startsWith("customSection_")) {
+      return setCvData(prev => {
+        const newData = { ...prev.data }; delete newData[itemToMove];
+        return { ...prev, layout: newLayout, data: newData };
+      });
+    }
+
+    if (dest.index === -1) dest.list.push(itemToMove);
+    else dest.list.splice(dest.index, 0, itemToMove);
+
     updateLayout(newLayout);
   };
 
-  // === HÀM ĐỔI TỶ LỆ CỘT ===
+  // ===============================================
+  // XỬ LÝ GỘP / TÁCH CỘT THÔNG MINH
+  // ===============================================
   const handleChangeRatio = (rowId, newRatio) => {
     let newLayout = JSON.parse(JSON.stringify(cvData.layout));
-    newLayout.activeRows = newLayout.activeRows.map((row) =>
-      row.id === rowId ? { ...row, ratio: newRatio } : row,
-    );
+    newLayout.activeRows = newLayout.activeRows.map(row => {
+      if (row.id === rowId) {
+        const oldIsOneCol = row.ratio === '10-0' || row.ratio === '100-0';
+        const newIsOneCol = newRatio === '10-0' || newRatio === '100-0';
+
+        let newLeft = [...row.leftItems];
+        let newRight = [...row.rightItems];
+
+        // 2 Cột -> 1 Cột: Trút hết nội dung cột phải sang dưới đáy cột trái
+        if (!oldIsOneCol && newIsOneCol) {
+          newLeft = [...newLeft, ...newRight];
+          newRight = [];
+        } 
+        // 1 Cột -> 2 Cột: Cắt đôi mảng ở cột trái ra chia đều cho 2 bên
+        else if (oldIsOneCol && !newIsOneCol) {
+          const mid = Math.ceil(newLeft.length / 2);
+          newRight = newLeft.splice(mid); 
+        }
+
+        return { ...row, ratio: newRatio, leftItems: newLeft, rightItems: newRight };
+      }
+      return row;
+    });
     updateLayout(newLayout);
   };
 
-  // === HÀM ĐỔI MÀU & FONT ===
-  const handleColorChange = (primaryColor, accentColor) => {
-    setCvData((prev) => ({
-      ...prev,
-      settings: { ...prev.settings, primaryColor, accentColor },
-    }));
-  };
+  const handleFontChange = (font) => setCvData(prev => ({ ...prev, settings: { ...prev.settings, font } }));
+  const handleColorChange = (primaryColor, accentColor) => setCvData(prev => ({ ...prev, settings: { ...prev.settings, primaryColor, accentColor } }));
+  
+  const handleSaveCv = () => alert("Dữ liệu đã sẵn sàng gửi xuống DB!");
 
-  const handleFontChange = (font) => {
-    setCvData((prev) => ({
-      ...prev,
-      settings: { ...prev.settings, font },
-    }));
-  };
+  const SelectedTemplate = TEMPLATE_COMPONENTS[cvData.settings.template] || SimpleTemplate;
 
-  // === HÀM TỪ TEMPLATE GỌI LẠI - CLICK SECTION TRONG CV ===
-  const handleSectionClick = (sectionId) => {
-    // Nếu click vào section trong CV, scroll sidebar đến section đó
-    // Có thể highlight section trong sidebar
-    console.log("Clicked section:", sectionId);
-    // TODO: Implement focus/highlight logic
+  // Render "Bóng ma" lơ lửng khi kéo thả
+// Render "Bóng ma" lơ lửng khi kéo thả
+  const renderDragOverlay = () => {
+    if (!activeDragId) return null;
+    const rawId = activeDragId.replace("item-", "").replace("unused-", "");
+    
+    return (
+      <DraggableItem 
+        id="overlay" 
+        itemId={rawId} 
+        primaryColor={cvData.settings.primaryColor} 
+        isOverlay={true} 
+      />
+    );
   };
-
-  const SelectedTemplate =
-    TEMPLATE_COMPONENTS[cvData.settings.template] || SimpleTemplate;
 
   return (
     <div className="flex flex-col h-screen bg-[#f3f4f6]">
-      {/* HEADER */}
-      <header className="h-14 bg-white border-b flex items-center p-4 shadow-sm z-20 font-bold text-gray-700">
-        Worklify CV Builder
+      <header className="h-14 bg-white border-b flex items-center justify-between p-4 shadow-sm z-20 font-bold text-gray-700">
+        <span>Worklify CV Builder</span>
+        <button onClick={handleSaveCv} className="bg-[#00b14f] text-white px-4 py-1.5 rounded text-sm hover:bg-green-600">Lưu CV</button>
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">
-        {/* === NAVBAR BÊN TRÁI === */}
         <div className="w-[150px] bg-white border-r z-20 shadow-sm flex flex-col items-center py-4 gap-4">
-          <button
-            onClick={() => {
-              setActiveTab("design");
-              setIsPanelOpen(true);
-            }}
-            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "design" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`}
-            title="Thiết kế & Font"
-          >
-            <Palette size={20} />
-            <span className="text-[10px] mt-1 font-medium text-center">
-              Thiết kế & Font
-            </span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("layout");
-              setIsPanelOpen(true);
-            }}
-            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "layout" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`}
-            title="Bố cục CV"
-          >
-            <LayoutList size={20} />
-            <span className="text-[10px] mt-1 font-medium">Bố cục</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("template");
-              setIsPanelOpen(true);
-            }}
-            className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "template" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`}
-            title="Đổi mẫu CV"
-          >
-            <LayoutTemplate size={20} />
-            <span className="text-[10px] mt-1 font-medium text-center">
-              Mẫu CV
-            </span>
-          </button>
+          <button onClick={() => { setActiveTab("design"); setIsPanelOpen(true); }} className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "design" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`} > <Palette size={20} /> <span className="text-[10px] mt-1 font-medium text-center">Thiết kế</span> </button>
+          <button onClick={() => { setActiveTab("layout"); setIsPanelOpen(true); }} className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "layout" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`} > <LayoutList size={20} /> <span className="text-[10px] mt-1 font-medium">Bố cục</span> </button>
+          <button onClick={() => { setActiveTab("template"); setIsPanelOpen(true); }} className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === "template" && isPanelOpen ? "bg-[#e8f7ee] text-[#00b14f]" : "text-gray-500 hover:bg-gray-100"}`} > <LayoutTemplate size={20} /> <span className="text-[10px] mt-1 font-medium text-center">Mẫu CV</span> </button>
         </div>
 
-        {/* === TAB PANEL === */}
-        <TabPanel
-          activeTab={activeTab}
-          isPanelOpen={isPanelOpen}
-          setIsPanelOpen={setIsPanelOpen}
-          cvData={cvData}
-          setCvData={setCvData}
-          handleFontChange={handleFontChange}
-          handleColorChange={handleColorChange}
-          handleDragEnd={handleDragEnd}
-          handleChangeRatio={handleChangeRatio}
-        />
-
-        {/* === CANVAS A4 === */}
-        <div
-          className="flex-1 overflow-y-auto bg-gray-200 relative flex justify-center py-10 transition-all"
-          style={{ marginLeft: isPanelOpen ? "10px" : "0" }}
+        {/* THÊM onDragStart VÀ DragOverlay */}
+        <DndContext 
+          collisionDetection={closestCenter} 
+          onDragStart={handleDragStart} 
+          onDragEnd={handleDragEnd}
         >
+          <TabPanel activeTab={activeTab} isPanelOpen={isPanelOpen} setIsPanelOpen={setIsPanelOpen} cvData={cvData} setCvData={setCvData} handleFontChange={handleFontChange} handleColorChange={handleColorChange} handleDragEnd={handleDragEnd} handleChangeRatio={handleChangeRatio} />
+          
+          {/* Lớp phủ chứa item đang bay */}
+          <DragOverlay>
+            {renderDragOverlay()}
+          </DragOverlay>
+        </DndContext>
+
+        <div className="flex-1 overflow-y-auto bg-gray-200 relative flex justify-center py-10 transition-all" style={{ marginLeft: isPanelOpen ? "10px" : "0" }}>
           <div className="w-[794px] min-h-[1123px] shadow-xl bg-white">
-            <SelectedTemplate
-              cvData={cvData}
-              onSectionClick={handleSectionClick}
-            />
+            <SelectedTemplate cvData={cvData} onSectionClick={(id) => console.log('Edit', id)} />
           </div>
         </div>
       </div>

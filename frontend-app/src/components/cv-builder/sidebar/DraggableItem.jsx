@@ -1,34 +1,56 @@
 import React from 'react';
-import { useDraggable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { GripVertical } from 'lucide-react';
 
-// Mapping item ID sang display name (Vietnamese)
 const SECTION_NAMES = {
+  avatar: 'Ảnh đại diện',
+  contactInfo: 'Danh thiếp',
   personalInfo: 'Thông tin cá nhân',
   objective: 'Mục tiêu nghề nghiệp',
-  experience: 'Kinh nghiệm làm việc',
   education: 'Học vấn',
-  skills: 'Kỹ năng',
-  hobbies: 'Sở thích',
-  awards: 'Danh hiệu & Giải thưởng',
+  experience: 'Kinh nghiệm làm việc',
+  activities: 'Hoạt động',
   certifications: 'Chứng chỉ',
+  awards: 'Giải thưởng',
+  skills: 'Kỹ năng',
+  references: 'Người tham chiếu',
+  hobbies: 'Sở thích',
   projects: 'Dự án',
-  references: 'Người tham chiếu'
+  customSection: 'Thông tin thêm'
 };
 
-const DraggableItem = ({ id, itemId, primaryColor, variant = 'default' }) => {
-  const { attributes, listeners, setNodeRef, isDragging, transform } = useDraggable({
+const DraggableItem = ({ id, itemId, primaryColor, variant = 'default', isOverlay = false }) => {
+  const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: id,
   });
 
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    opacity: isDragging ? 0.5 : 1,
-    transition: 'all 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isOverlay ? 999 : 'auto',
   };
 
-  const displayName = SECTION_NAMES[itemId] || itemId;
+  // Tự động nhận diện ID "customSection_123..." thành "Thông tin thêm"
+  const displayName = itemId?.startsWith('customSection') ? 'Thông tin thêm' : (SECTION_NAMES[itemId] || itemId);
 
+  // === HIỆU ỨNG RĂNG CƯA (PLACEHOLDER) ===
+  // Khi item bị nhấc đi, để lại một khoảng trống có viền nét đứt màu của theme
+  if (isDragging && !isOverlay) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={{ 
+          ...style, 
+          backgroundColor: `${primaryColor}15`, // Nền xanh rất nhạt
+          borderColor: primaryColor 
+        }}
+        className="h-[42px] flex items-center gap-2 p-2.5 rounded-lg border-2 border-dashed opacity-60"
+      />
+    );
+  }
+
+  // === GIAO DIỆN BÌNH THƯỜNG & KHI BAY LƠ LỬNG (OVERLAY) ===
   return (
     <div
       ref={setNodeRef}
@@ -36,25 +58,20 @@ const DraggableItem = ({ id, itemId, primaryColor, variant = 'default' }) => {
       {...attributes}
       className={`
         flex items-center gap-2 p-2.5 rounded-lg cursor-grab active:cursor-grabbing
-        border transition-all select-none
-        ${isDragging 
-          ? 'opacity-50 scale-95' 
-          : 'hover:shadow-md'
-        }
-        ${variant === 'unused'
-          ? 'bg-gray-100 border-gray-200 text-gray-700 hover:border-gray-400'
-          : 'bg-white border-gray-200 text-gray-700'
-        }
+        border transition-colors select-none
+        ${isOverlay ? 'shadow-xl scale-105 rotate-2 text-white' : 'hover:shadow-md text-gray-700'}
+        ${variant === 'unused' && !isOverlay ? 'bg-gray-100 border-gray-200 hover:border-gray-400' : ''}
       `}
       style={{
         ...style,
-        borderColor: isDragging ? primaryColor : '#e5e7eb',
-        backgroundColor: isDragging ? `${primaryColor}20` : (variant === 'unused' ? '#f3f4f6' : '#ffffff'),
+        // Nếu là Overlay -> Đổ full nền màu xanh. Nếu bình thường -> Nền trắng/xám
+        backgroundColor: isOverlay ? primaryColor : (variant === 'unused' ? '#f3f4f6' : '#ffffff'),
+        borderColor: isOverlay ? primaryColor : '#e5e7eb',
       }}
     >
       <GripVertical 
         size={14} 
-        className="text-gray-400 flex-shrink-0"
+        className={`flex-shrink-0 ${isOverlay ? 'text-white' : 'text-gray-400'}`} 
       />
       <span className="text-sm font-medium flex-1 truncate">
         {displayName}

@@ -3,65 +3,37 @@ import { Mail, MapPin, Phone, Globe } from 'lucide-react';
 
 // Từ điển mapping Component tương ứng với từng chuỗi ID
 const SECTION_RENDERER = {
+  avatar: ({ data, primaryColor, isHighlighted }) => (
+    <div className={`mb-6 flex justify-center cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <img 
+        src={data?.url || 'https://via.placeholder.com/150'} 
+        alt="Avatar" 
+        className="w-32 h-32 rounded-full object-cover border-4"
+        style={{ borderColor: primaryColor }}
+      />
+    </div>
+  ),
+
   personalInfo: ({ data, primaryColor, isHighlighted }) => (
+    <div className={`mb-4 text-center cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <h1 className="text-3xl font-bold text-gray-900 uppercase tracking-wide">{data?.fullName || 'HỌ VÀ TÊN'}</h1>
+      <h2 className="text-lg font-medium mt-1" style={{ color: primaryColor }}>{data?.jobTitle || 'Vị trí ứng tuyển'}</h2>
+    </div>
+  ),
+
+  contactInfo: ({ data, primaryColor, isHighlighted }) => (
     <div 
-      className={`pb-6 mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}
-      style={{ borderBottomColor: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
+      className={`mb-6 pb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}
+      style={{ borderBottom: `2px solid ${primaryColor}` }}
     >
-      <div className="flex gap-6">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          <img 
-            src={data?.avatar || 'https://via.placeholder.com/100'} 
-            alt={data?.fullName} 
-            className="w-24 h-24 rounded-full object-cover border-4"
-            style={{ borderColor: primaryColor }}
-          />
-        </div>
-        
-        {/* Thông tin chính */}
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold text-gray-900">{data?.fullName || 'HỌ TÊN'}</h1>
-          <h2 className="text-lg text-gray-600 mt-1">{data?.jobTitle || 'Vị trí'}</h2>
-          
-          {/* Thông tin liên lạc */}
-          <div className="mt-4 space-y-1.5 text-sm text-gray-600">
-            {data?.phone && (
-              <div className="flex items-center gap-2">
-                <Phone size={14} className="text-gray-400"/>
-                <span>{data.phone}</span>
-              </div>
-            )}
-            {data?.email && (
-              <div className="flex items-center gap-2">
-                <Mail size={14} className="text-gray-400"/>
-                <span>{data.email}</span>
-              </div>
-            )}
-            {data?.website && (
-              <div className="flex items-center gap-2">
-                <Globe size={14} className="text-gray-400"/>
-                <span>{data.website}</span>
-              </div>
-            )}
-            {data?.address && (
-              <div className="flex items-center gap-2">
-                <MapPin size={14} className="text-gray-400"/>
-                <span>{data.address}</span>
-              </div>
-            )}
-            {data?.dateOfBirth && (
-              <div className="text-xs">
-                <span className="font-semibold">Ngày sinh:</span> {data.dateOfBirth}
-              </div>
-            )}
-            {data?.gender && (
-              <div className="text-xs">
-                <span className="font-semibold">Giới tính:</span> {data.gender}
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-gray-700">
+        {data?.dateOfBirth && <div><span className="font-semibold">Ngày sinh:</span> {data.dateOfBirth}</div>}
+        {data?.gender && <div><span className="font-semibold">Giới tính:</span> {data.gender}</div>}
+        {data?.phone && <div className="flex items-center gap-1"><Phone size={14}/> {data.phone}</div>}
+        {data?.email && <div className="flex items-center gap-1"><Mail size={14}/> {data.email}</div>}
+        {data?.website && <div className="flex items-center gap-1"><Globe size={14}/> {data.website}</div>}
+        {data?.address && <div className="flex items-center gap-1"><MapPin size={14}/> {data.address}</div>}
+        {(!data?.phone && !data?.email && !data?.address) && <div className="text-gray-400 italic">Chưa nhập thông tin liên hệ...</div>}
       </div>
     </div>
   ),
@@ -257,27 +229,27 @@ const SECTION_RENDERER = {
       </div>
     </div>
   ),
+
+  customSectionRenderer: ({ data, primaryColor, isHighlighted }) => (
+    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <h3 className="font-bold text-lg text-gray-900 uppercase mb-3" style={{ borderBottom: `2px solid ${primaryColor}`, paddingBottom: '8px' }}>
+        {data?.title || 'Thông tin thêm'}
+      </h3>
+      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+        {data?.content || 'Chưa nhập nội dung. Nhấp vào đây để chỉnh sửa...'}
+      </p>
+    </div>
+  )
 };
 
 const getGridClasses = (ratio) => {
   switch (ratio) {
-    case '10-0': 
-    case '100-0': 
-      return { left: 'col-span-10', right: 'hidden' };
-    case '5-5': 
-    case '50-50': 
-      return { left: 'col-span-5', right: 'col-span-5' };
-    case '6-4': 
-    case '60-40': 
-      return { left: 'col-span-6', right: 'col-span-4' };
-    case '7-3': 
-    case '70-30': 
-      return { left: 'col-span-7', right: 'col-span-3' };
-    case '8-2': 
-    case '80-20': 
-      return { left: 'col-span-8', right: 'col-span-2' };
-    default: 
-      return { left: 'col-span-10', right: 'hidden' };
+    case '10-0': case '100-0': return { left: 'col-span-10', right: 'hidden' };
+    case '5-5': case '50-50': return { left: 'col-span-5', right: 'col-span-5' };
+    case '6-4': case '60-40': return { left: 'col-span-6', right: 'col-span-4' };
+    case '7-3': case '70-30': return { left: 'col-span-7', right: 'col-span-3' };
+    case '8-2': case '80-20': return { left: 'col-span-8', right: 'col-span-2' };
+    default: return { left: 'col-span-10', right: 'hidden' };
   }
 };
 
@@ -287,50 +259,34 @@ const SimpleTemplate = ({ cvData, onSectionClick }) => {
 
   const handleSectionClick = (sectionId) => {
     setHighlightedSection(sectionId);
-    if (onSectionClick) {
-      onSectionClick(sectionId);
-    }
+    if (onSectionClick) onSectionClick(sectionId);
   };
 
   const renderItems = (itemIds) => {
     return itemIds.map(itemId => {
-      const SectionComponent = SECTION_RENDERER[itemId];
+      // XỬ LÝ KHỐI ĐỘNG: Nếu id bắt đầu bằng 'customSection_', ta gọi renderer động
+      const isCustomSection = itemId.startsWith('customSection_');
+      const SectionComponent = isCustomSection ? SECTION_RENDERER.customSectionRenderer : SECTION_RENDERER[itemId];
+      
       if (!SectionComponent) return null;
       
       return (
-        <div 
-          key={itemId}
-          onClick={() => handleSectionClick(itemId)}
-          className="transition-all"
-        >
-          <SectionComponent 
-            data={data[itemId]}
-            primaryColor={settings.primaryColor}
-            isHighlighted={highlightedSection === itemId}
-          />
+        <div key={itemId} onClick={() => handleSectionClick(itemId)} className="transition-all">
+          <SectionComponent data={data[itemId]} primaryColor={settings.primaryColor} isHighlighted={highlightedSection === itemId} />
         </div>
       );
     });
   };
 
   return (
-    <div 
-      className="w-full h-full bg-white p-10 text-gray-800"
-      style={{ fontFamily: `${settings.font}, sans-serif` }}
-    >
+    <div className="w-full h-full bg-white p-10 text-gray-800" style={{ fontFamily: `${settings.font}, sans-serif` }}>
       {layout.activeRows.map(row => {
         const { left, right } = getGridClasses(row.ratio);
-
         return (
           <div key={row.id} className="grid grid-cols-10 gap-8 mb-4">
-            <div className={left}>
-              {renderItems(row.leftItems)}
-            </div>
-
-            {row.ratio !== '10-0' && (
-              <div className={right}>
-                {renderItems(row.rightItems)}
-              </div>
+            <div className={left}>{renderItems(row.leftItems)}</div>
+            {row.ratio !== '10-0' && row.ratio !== '100-0' && (
+              <div className={right}>{renderItems(row.rightItems)}</div>
             )}
           </div>
         );

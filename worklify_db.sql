@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Jun 02, 2026 at 07:02 AM
+-- Generation Time: Jun 22, 2026 at 07:06 AM
 -- Server version: 8.4.8
 -- PHP Version: 8.3.30
 
@@ -211,7 +211,12 @@ INSERT INTO `cv_documents` (`id`, `candidate_id`, `file_name`, `file_path`, `raw
 (11, 11, 'cv1.pdf', '/uploads/cv/11_Bản-in.pdf', 'Extracted text from Bản-in.pdf', 0, '2026-05-28 09:56:20'),
 (12, 11, 'cv2.pdf', '/uploads/cv/11_Bản-in.pdf', 'Extracted text from Bản-in.pdf', 0, '2026-05-28 13:40:31'),
 (13, 11, 'cv3.pdf', '/uploads/cv/11_Bản-in.pdf', 'Extracted text from Bản-in.pdf', 0, '2026-06-01 12:47:20'),
-(14, 11, 'cv4.pdf', '/uploads/cv/11_Bản-in.pdf', 'Extracted text from Bản-in.pdf', 0, '2026-06-01 13:12:27');
+(14, 11, 'cv4.pdf', '/uploads/cv/11_Bản-in.pdf', 'Extracted text from Bản-in.pdf', 0, '2026-06-01 13:12:27'),
+(25, 11, 'CV_Tu_Tao', NULL, '{\"settings\":{\"template\":\"simple\",\"color\":\"#1f2937\",\"font\":\"Roboto\",\"fontSize\":\"medium\"},\"personalInfo\":{\"fullName\":\"Nguyễn Hữu Trọngg\",\"jobTitle\":\"\",\"email\":\"user1@gmail.com\",\"phone\":\"\",\"address\":\"\",\"avatar\":\"\"},\"objective\":\"\",\"experiences\":[],\"educations\":[],\"skills\":[]}', 1, '2026-06-19 07:31:47'),
+(26, 11, 'CV_Tu_Tao', NULL, '{\"settings\":{\"template\":\"simple\",\"color\":\"#1f2937\",\"font\":\"Roboto\",\"fontSize\":\"medium\"},\"personalInfo\":{\"fullName\":\"Nguyễn Hữu Trọngg\",\"jobTitle\":\"\",\"email\":\"user1@gmail.com\",\"phone\":\"\",\"address\":\"\",\"avatar\":\"\"},\"objective\":\"\",\"experiences\":[],\"educations\":[],\"skills\":[]}', 1, '2026-06-19 07:33:57'),
+(27, 11, 'CV_Tu_Tao', NULL, '{\"settings\":{\"template\":\"simple\",\"color\":\"#1f2937\",\"font\":\"Roboto\",\"fontSize\":\"medium\"},\"personalInfo\":{\"fullName\":\"Nguyễn Hữu Trọngg\",\"jobTitle\":\"\",\"email\":\"user1@gmail.com\",\"phone\":\"\",\"address\":\"\",\"avatar\":\"\"},\"objective\":\"\",\"experiences\":[],\"educations\":[],\"skills\":[]}', 1, '2026-06-19 07:34:49'),
+(28, 11, 'CV_Tu_Tao', NULL, '{\"settings\":{\"template\":\"simple\",\"color\":\"#1f2937\",\"font\":\"Roboto\",\"fontSize\":\"medium\"},\"personalInfo\":{\"fullName\":\"Nguyễn Hữu Trọngg\",\"jobTitle\":\"\",\"email\":\"user1@gmail.com\",\"phone\":\"\",\"address\":\"\",\"avatar\":\"\"},\"objective\":\"\",\"experiences\":[],\"educations\":[],\"skills\":[]}', 1, '2026-06-19 07:45:53'),
+(29, 11, 'CV_Tu_Tao', NULL, '{\"settings\":{\"template\":\"simple\",\"color\":\"#1f2937\",\"font\":\"Roboto\",\"fontSize\":\"medium\"},\"personalInfo\":{\"fullName\":\"Nguyễn Hữu Trọngg\",\"jobTitle\":\"\",\"email\":\"user1@gmail.com\",\"phone\":\"\",\"address\":\"\",\"avatar\":\"\"},\"objective\":\"\",\"experiences\":[],\"educations\":[],\"skills\":[]}', 1, '2026-06-22 01:23:20');
 
 -- --------------------------------------------------------
 
@@ -516,7 +521,7 @@ ALTER TABLE `company_profiles`
 -- AUTO_INCREMENT for table `cv_documents`
 --
 ALTER TABLE `cv_documents`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `job_postings`

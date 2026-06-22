@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { DndContext } from '@dnd-kit/core';
+// DndContext import can be removed since it's no longer used here
 import LayoutSidebar from './LayoutSidebar';
 
 // Mang các hằng số cấu hình sang đây cho gọn file index
@@ -89,13 +89,12 @@ const TabPanel = ({
           {/* TAB: LAYOUT */}
           {activeTab === 'layout' && (
             <div className="animate-fadeIn">
-              <DndContext onDragEnd={handleDragEnd}>
-                <LayoutSidebar 
-                  layout={cvData.layout}
-                  onChangeRatio={handleChangeRatio}
-                  primaryColor={cvData.settings.primaryColor}
-                />
-              </DndContext>
+              {/* Added back LayoutSidebar WITHOUT the DndContext wrapper */}
+              <LayoutSidebar 
+                layout={cvData.layout}
+                onChangeRatio={handleChangeRatio}
+                primaryColor={cvData.settings.primaryColor}
+              />
             </div>
           )}
 

@@ -30,7 +30,7 @@ services:
       PMA_USER: root
       PMA_PASSWORD: root123
     ports:
-      - "8081:80"
+      - "8089:80"
     networks:
       - worklify-network
 
