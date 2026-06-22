@@ -24,8 +24,8 @@ const TabPanel = ({
   handleChangeRatio
 }) => {
   return (
-    <div className={`transition-all duration-300 ${isPanelOpen ? 'w-[400px] ml-4 my-4 mr-4' : 'w-0 overflow-hidden'}`}>
-      <div className="w-[400px] h-full bg-white rounded-xl shadow-md flex flex-col overflow-hidden">
+    <div className={`transition-all duration-300 ${isPanelOpen ? 'w-[500px] ml-4 my-4 mr-4' : 'w-0 overflow-hidden'}`}>
+      <div className="w-[500px] h-full bg-white rounded-xl shadow-md flex flex-col overflow-hidden">
         
         {/* Header */}
         <div className="flex justify-between items-center p-5 border-b sticky top-0 bg-white z-10">

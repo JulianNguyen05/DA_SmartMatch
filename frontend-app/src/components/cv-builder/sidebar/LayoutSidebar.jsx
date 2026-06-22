@@ -1,7 +1,30 @@
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import { Plus, Trash2, X } from 'lucide-react';
+// Xóa các icon không dùng tới để code gọn hơn
 import DraggableItem from './DraggableItem';
+
+// Hàm dịch chuỗi ratio thành % độ rộng cho CSS
+const getColumnWidths = (ratio) => {
+  switch (ratio) {
+    case '10-0': 
+    case '100-0': 
+      return { left: '100%', right: '0%' };
+    case '5-5': 
+    case '50-50': 
+      return { left: '50%', right: '50%' };
+    case '6-4': 
+    case '60-40': 
+      return { left: '60%', right: '40%' };
+    case '7-3': 
+    case '70-30': 
+      return { left: '70%', right: '30%' };
+    case '8-2': 
+    case '80-20': 
+      return { left: '80%', right: '20%' };
+    default: 
+      return { left: '100%', right: '0%' };
+  }
+};
 
 const LayoutSidebar = ({ layout, onChangeRatio, primaryColor }) => {
   const { activeRows, unusedItems } = layout;
@@ -39,17 +62,20 @@ const LayoutSidebar = ({ layout, onChangeRatio, primaryColor }) => {
 // ============================================
 const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
   const hasRightCol = row.ratio !== '10-0';
+  
+  // Tính toán độ rộng cho dòng hiện tại dựa vào ratio
+  const widths = getColumnWidths(row.ratio);
 
   return (
     <div className="p-4 bg-gray-50 border rounded-lg">
       {/* HEADER - Title + Ratio Selector */}
-      <div className="flex items-center justify-between mb-4 pb-3 border-b">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
         <span className="font-bold text-sm text-gray-700">Hàng {rowIndex + 1}</span>
         
         <select 
           value={row.ratio}
           onChange={(e) => onChangeRatio(row.id, e.target.value)}
-          className="text-xs border p-1.5 rounded bg-white text-gray-700 outline-none focus:ring-2"
+          className="text-xs border p-1.5 rounded bg-white text-gray-700 outline-none focus:ring-1 transition-shadow"
           style={{ focusRing: primaryColor }}
         >
           <option value="10-0">1 cột (100%)</option>
@@ -60,8 +86,8 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
         </select>
       </div>
 
-      {/* COLUMNS CONTAINER */}
-      <div className="flex gap-3">
+      {/* COLUMNS CONTAINER - Ép thành hàng ngang */}
+      <div className="flex flex-row w-full gap-2 items-start">
         {/* LEFT COLUMN */}
         <DroppableColumn 
           rowId={row.id}
@@ -69,6 +95,7 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
           items={row.leftItems}
           primaryColor={primaryColor}
           label="Cột trái"
+          width={widths.left}
         />
 
         {/* RIGHT COLUMN - Only if ratio !== 10-0 */}
@@ -79,6 +106,7 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
             items={row.rightItems}
             primaryColor={primaryColor}
             label="Cột phải"
+            width={widths.right}
           />
         )}
       </div>
@@ -89,7 +117,7 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
 // ============================================
 // COMPONENT: DroppableColumn (Cột thả vào)
 // ============================================
-const DroppableColumn = ({ rowId, column, items, primaryColor, label }) => {
+const DroppableColumn = ({ rowId, column, items, primaryColor, label, width }) => {
   const droppableId = `droppable-${rowId}-${column}`;
   const { setNodeRef, isOver } = useDroppable({
     id: droppableId,
@@ -98,17 +126,19 @@ const DroppableColumn = ({ rowId, column, items, primaryColor, label }) => {
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 min-h-[120px] p-3 border-2 rounded-lg transition-all ${
+      // Thay đổi chính: Bỏ 'flex-1', thêm 'min-w-0' để text tự cắt khi quá dài, và thêm animation duration-300
+      className={`min-w-0 min-h-[120px] p-2 border-2 rounded-lg transition-all duration-300 ${
         isOver 
           ? 'border-dashed' 
           : 'border-gray-200'
       } bg-white`}
       style={{
+        width: width, // Áp dụng % độ rộng tính toán được vào CSS
         borderColor: isOver ? primaryColor : '#e5e7eb',
         backgroundColor: isOver ? `${primaryColor}08` : '#ffffff'
       }}
     >
-      <div className="text-xs font-semibold text-gray-400 mb-2 uppercase">
+      <div className="text-[10px] font-semibold text-gray-400 mb-2 uppercase text-center truncate">
         {label}
       </div>
 
@@ -124,8 +154,8 @@ const DroppableColumn = ({ rowId, column, items, primaryColor, label }) => {
             />
           ))
         ) : (
-          <div className="text-xs text-gray-400 italic py-6 text-center">
-            Kéo item vào đây
+          <div className="text-[10px] text-gray-400 italic py-6 text-center">
+            Kéo thả vào đây
           </div>
         )}
       </div>
@@ -142,14 +172,14 @@ const UnusedItemsPool = ({ items, primaryColor }) => {
   });
 
   return (
-    <div className="mt-8 pt-4 border-t border-dashed">
+    <div className="mt-8 pt-4 border-t border-dashed border-gray-300">
       <h4 className="font-bold text-sm text-gray-500 mb-3 uppercase">
         Mục chưa sử dụng
       </h4>
 
       <div
         ref={setNodeRef}
-        className={`p-3 border-2 rounded-lg transition-all ${
+        className={`p-3 min-h-[100px] border-2 rounded-lg transition-all ${
           isOver ? 'border-dashed' : 'border-gray-200'
         } bg-white`}
         style={{

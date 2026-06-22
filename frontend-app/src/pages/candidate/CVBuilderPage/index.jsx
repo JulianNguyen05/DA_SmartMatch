@@ -314,7 +314,7 @@ const CVBuilderPage = () => {
         {/* === CANVAS A4 === */}
         <div
           className="flex-1 overflow-y-auto bg-gray-200 relative flex justify-center py-10 transition-all"
-          style={{ marginLeft: isPanelOpen ? "150px" : "0" }}
+          style={{ marginLeft: isPanelOpen ? "10px" : "0" }}
         >
           <div className="w-[794px] min-h-[1123px] shadow-xl bg-white">
             <SelectedTemplate
