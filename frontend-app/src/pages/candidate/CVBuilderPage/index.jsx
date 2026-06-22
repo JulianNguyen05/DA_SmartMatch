@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Palette, LayoutList, LayoutTemplate, X } from 'lucide-react';
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { DndContext } from '@dnd-kit/core';
 import SimpleTemplate from '../../../components/cv-builder/templates/SimpleTemplate';
 import LayoutSidebar from '../../../components/cv-builder/sidebar/LayoutSidebar';
 
@@ -209,14 +209,14 @@ const CVBuilderPage = () => {
 
       <div className="flex flex-1 overflow-hidden relative">
         {/* === NAVBAR BÊN TRÁI === */}
-        <div className="w-24 bg-white border-r z-20 shadow-sm flex flex-col items-center py-4 gap-4">
+        <div className="w-[150px] bg-white border-r z-20 shadow-sm flex flex-col items-center py-4 gap-4">
           <button 
             onClick={() => { setActiveTab('design'); setIsPanelOpen(true); }} 
             className={`p-3 rounded-lg flex flex-col items-center transition-all ${activeTab === 'design' && isPanelOpen ? 'bg-[#e8f7ee] text-[#00b14f]' : 'text-gray-500 hover:bg-gray-100'}`}
             title="Thiết kế & Font"
           >
             <Palette size={20}/>
-            <span className="text-[10px] mt-1 font-medium text-center">Thiết kế</span>
+            <span className="text-[10px] mt-1 font-medium text-center">Thiết kế & Font</span>
           </button>
 
           <button 
@@ -239,7 +239,7 @@ const CVBuilderPage = () => {
         </div>
 
         {/* === TAB PANEL === */}
-        <div className={`w-80 bg-white border-r z-10 overflow-y-auto transition-transform shadow-lg ${isPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`w-[500px] bg-white border-r z-10 overflow-y-auto transition-transform shadow-lg ${isPanelOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           
           {/* TAB: DESIGN */}
           {activeTab === 'design' && (
@@ -329,7 +329,7 @@ const CVBuilderPage = () => {
         {/* === CANVAS A4 === */}
         <div 
           className="flex-1 overflow-y-auto bg-gray-200 relative flex justify-center py-10 transition-all"
-          style={{ marginLeft: isPanelOpen ? '320px' : '0' }}
+          style={{ marginLeft: isPanelOpen ? '150px' : '0' }}
         >
           <div className="w-[794px] min-h-[1123px] shadow-xl bg-white">
             <SelectedTemplate 

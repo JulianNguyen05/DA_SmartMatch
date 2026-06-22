@@ -32,7 +32,6 @@ const DraggableItem = ({ id, itemId, primaryColor, variant = 'default' }) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
       {...listeners}
       {...attributes}
       className={`
