@@ -34,12 +34,10 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
 
   const handleAdd = (index) => {
     const updated = [...items];
-    // FIX 1: Chèn phần tử rỗng hoàn toàn để kích hoạt CSS Placeholder nét đứt
     updated.splice(index + 1, 0, { label: '', value: '', placeholder: 'Nhập nội dung...' });
     onUpdateItems(sectionId, updated);
   };
 
-  // Class CSS tạo hiệu ứng nét đứt màu đỏ khi không có nội dung (Giống TopCV)
   const contactEditableClass = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded px-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-red-400 empty:bg-red-50/20 min-w-[40px] inline-block";
 
   return (
@@ -64,7 +62,6 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
             <div
               contentEditable suppressContentEditableWarning
               onBlur={(e) => {
-                // FIX 2: Tự động dọn dẹp thẻ <br> rác khi xóa hết chữ để hiện lại Placeholder
                 const val = e.currentTarget.textContent.trim();
                 if (!val) e.currentTarget.innerHTML = '';
                 handleTextChange(index, 'label', val);
@@ -144,7 +141,7 @@ const revertDataFromTimeline = (timelineData, type) => {
 const SECTION_RENDERER = {
   avatar: ({ data, primaryColor, isHighlighted }) => (
     <div className={`mb-4 flex justify-start cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <img src={data?.url || 'https://via.placeholder.com/150'} alt="Avatar" className="w-[120px] h-[160px] bg-gray-200 rounded object-cover border-2 border-gray-100" />
+      <img src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'} alt="Avatar" className="w-[120px] h-[160px] bg-gray-200 rounded object-cover border-2 border-gray-100" />
     </div>
   ),
 
@@ -171,7 +168,6 @@ const SECTION_RENDERER = {
   ),
 
   contactInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
-    // FIX 3: Luôn hiển thị đầy đủ danh sách rỗng ban đầu để render nét đứt
     const defaultItems = [
       { label: 'Ngày sinh', value: '', placeholder: 'DD/MM/YYYY' },
       { label: 'Giới tính', value: '', placeholder: 'Nam/Nữ' },
@@ -183,7 +179,6 @@ const SECTION_RENDERER = {
 
     let items = [];
     if (Array.isArray(data) && data.length > 0) {
-      // Map data hiện tại và ghép thêm placeholder chuẩn
       items = data.map(d => {
         const defaultMatch = defaultItems.find(def => def.label === d.label);
         return {
@@ -192,7 +187,7 @@ const SECTION_RENDERER = {
         };
       });
     } else {
-      items = defaultItems; // Nếu mảng rỗng, ép trả về toàn bộ form mặc định
+      items = defaultItems; 
     }
 
     return (
@@ -244,7 +239,6 @@ const SECTION_RENDERER = {
     </div>
   ),
 
-  // CÁC KHỐI DANH SÁCH KHÁC (KỸ NĂNG, HỌC VẤN, V.V...) GIỮ NGUYÊN
   skills: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
     <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
       <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Kỹ năng</h3>
