@@ -36,17 +36,24 @@ const DraggableItem = ({ id, itemId, primaryColor, variant = 'default', isOverla
 
   // === HIỆU ỨNG RĂNG CƯA (PLACEHOLDER) ===
   // Khi item bị nhấc đi, để lại một khoảng trống có viền nét đứt màu của theme
+// === HIỆU ỨNG RĂNG CƯA (PLACEHOLDER) ===
   if (isDragging && !isOverlay) {
     return (
       <div
         ref={setNodeRef}
         style={{ 
           ...style, 
-          backgroundColor: `${primaryColor}15`, // Nền xanh rất nhạt
+          backgroundColor: `${primaryColor}15`, 
           borderColor: primaryColor 
         }}
-        className="h-[42px] flex items-center gap-2 p-2.5 rounded-lg border-2 border-dashed opacity-60"
-      />
+        className="flex items-center gap-2 p-2.5 rounded-lg border-2 border-dashed opacity-50"
+      >
+        {/* Render nội dung ẩn để giữ đúng kích thước của item gốc */}
+        <GripVertical size={14} className="opacity-0 flex-shrink-0" />
+        <span className="text-sm font-medium flex-1 truncate opacity-0">
+          {displayName}
+        </span>
+      </div>
     );
   }
 

@@ -6,6 +6,8 @@ import DraggableItem from './DraggableItem';
 const getColumnWidths = (ratio) => {
   switch (ratio) {
     case '10-0': case '100-0': return { left: '100%', right: '0%' };
+    case '3-7': case '30-70': return { left: '30%', right: '70%' }; // THÊM MỚI
+    case '4-6': case '40-60': return { left: '40%', right: '60%' }; // THÊM MỚI
     case '5-5': case '50-50': return { left: '50%', right: '50%' };
     case '6-4': case '60-40': return { left: '60%', right: '40%' };
     case '7-3': case '70-30': return { left: '70%', right: '30%' };
@@ -46,6 +48,8 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
           className="text-xs border p-1.5 rounded bg-white text-gray-700 outline-none"
         >
           <option value="10-0">1 cột (100%)</option>
+          <option value="30-70">2 cột (30-70)</option>
+          <option value="40-60">2 cột (40-60)</option>
           <option value="50-50">2 cột (50-50)</option>
           <option value="60-40">2 cột (60-40)</option>
           <option value="70-30">2 cột (70-30)</option>
@@ -66,8 +70,6 @@ const RowBlock = ({ row, rowIndex, onChangeRatio, primaryColor }) => {
 const DroppableColumn = ({ rowId, column, items, primaryColor, label, width }) => {
   const droppableId = `droppable-${rowId}-${column}`;
   const { setNodeRef, isOver } = useDroppable({ id: droppableId });
-
-  // Render ID của dnd-kit phải khớp với ID của DraggableItem
   const sortableItems = items.map(id => `item-${id}`);
 
   return (
@@ -81,8 +83,6 @@ const DroppableColumn = ({ rowId, column, items, primaryColor, label, width }) =
       }}
     >
       <div className="text-[10px] font-semibold text-gray-400 mb-2 uppercase text-center truncate">{label}</div>
-      
-      {/* THÊM MỚI: SortableContext */}
       <SortableContext items={sortableItems} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {items.length > 0 ? (
