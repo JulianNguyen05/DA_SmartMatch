@@ -397,4 +397,20 @@ public class CandidateServiceImpl implements CandidateService {
 
         return mapToCvResponse(cv);
     }
+
+    @Override
+    public CvDocumentResponse updateGeneratedCv(Long userId, Long cvId, String rawText) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Yêu cầu tạo hồ sơ cá nhân."));
+
+        CvDocument cv = cvDocumentRepository.findById(cvId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy CV."));
+
+        if (!cv.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa CV này.");
+        }
+
+        cv.updateRawText(rawText);
+        return mapToCvResponse(cvDocumentRepository.save(cv));
+    }
 }

@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
 import EditableTimelineList from '../shared/EditableTimelineList';
+// IMPORT THÊM 2 COMPONENT MỚI
+import EditableRowList from '../shared/EditableRowList';
+import EditableTagList from '../shared/EditableTagList';
 
-// ==========================================
-// COMPONENT ĐỘC QUYỀN CHO THÔNG TIN LIÊN HỆ (DANH THIẾP)
-// ==========================================
+const handleHTMLBlur = (e, field, updateFn) => {
+  let val = e.currentTarget.innerHTML.trim();
+  if (val === '<br>') val = '';
+  updateFn(field, val);
+};
+
 const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) => {
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-
   const handleTextChange = (index, field, newText) => {
     const updated = [...items];
     updated[index] = { ...updated[index], [field]: newText };
@@ -28,10 +32,7 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
     onUpdateItems(sectionId, updated);
   };
 
-  const handleDelete = (index) => {
-    onUpdateItems(sectionId, items.filter((_, i) => i !== index));
-  };
-
+  const handleDelete = (index) => onUpdateItems(sectionId, items.filter((_, i) => i !== index));
   const handleAdd = (index) => {
     const updated = [...items];
     updated.splice(index + 1, 0, { label: '', value: '', placeholder: 'Nhập nội dung...' });
@@ -44,46 +45,26 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
     <div className="w-full relative group/section mt-3">
       <div className="space-y-1 relative">
         {items.map((item, index) => (
-          <div
-            key={index}
-            className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 p-1 -ml-1 rounded"
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-          >
-            {hoveredIndex === index && (
-              <div className="absolute right-0 -top-8 flex flex-row gap-1 bg-gray-100 shadow-md border border-gray-200 rounded p-1 z-20 animate-fadeIn">
-                <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowUp size={12}/></button>
-                <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowDown size={12}/></button>
-                <button onClick={() => handleDelete(index)} className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs transition-colors flex items-center gap-1">Xóa</button>
-                <button onClick={() => handleAdd(index)} className="px-2 py-1 bg-[#00b14f] hover:bg-green-600 text-white rounded text-xs transition-colors flex items-center gap-1"><Plus size={12} /> Thêm</button>
-              </div>
-            )}
-
-            <div
-              contentEditable suppressContentEditableWarning
-              onBlur={(e) => {
-                const val = e.currentTarget.textContent.trim();
-                if (!val) e.currentTarget.innerHTML = '';
-                handleTextChange(index, 'label', val);
-              }}
-              className={`font-bold text-gray-800 text-[13px] mr-1 mt-0.5 ${contactEditableClass}`}
-              data-placeholder="Tiêu đề"
-            >
-              {item.label}
+          <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 p-1 -ml-1 rounded">
+            {/* Toolbar mini bằng CSS Hover */}
+            <div className="absolute right-0 -top-8 flex-row gap-1 bg-gray-100 shadow-md border border-gray-200 rounded p-1 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
+              <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowUp size={12}/></button>
+              <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowDown size={12}/></button>
+              <button onClick={() => handleDelete(index)} className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs flex items-center gap-1">Xóa</button>
+              <button onClick={() => handleAdd(index)} className="px-2 py-1 bg-[#00b14f] hover:bg-green-600 text-white rounded text-xs flex items-center gap-1"><Plus size={12} /> Thêm</button>
             </div>
-            <span className="font-bold text-gray-800 text-[13px] mr-2 mt-0.5">:</span>
-            <div
-              contentEditable suppressContentEditableWarning
-              onBlur={(e) => {
-                const val = e.currentTarget.textContent.trim();
-                if (!val) e.currentTarget.innerHTML = '';
-                handleTextChange(index, 'value', val);
-              }}
-              className={`text-gray-700 flex-1 text-[13px] mt-0.5 ${contactEditableClass}`}
-              data-placeholder={item.placeholder || "Nhập nội dung..."}
-            >
-              {item.value}
-            </div>
+            
+            <div 
+              contentEditable suppressContentEditableWarning 
+              onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))} 
+              className={`font-bold text-[13px] mr-1 mt-0.5 ${contactEditableClass}`} 
+              style={{ color: primaryColor }}
+              data-placeholder="Tiêu đề" 
+              dangerouslySetInnerHTML={{ __html: item.label }} 
+            />
+            <span className="font-bold text-[13px] mr-2 mt-0.5" style={{ color: primaryColor }}>:</span>
+            
+            <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))} className={`text-gray-700 flex-1 text-[13px] mt-0.5 ${contactEditableClass}`} data-placeholder={item.placeholder || "Nhập nội dung..."} dangerouslySetInnerHTML={{ __html: item.value }} />
           </div>
         ))}
       </div>
@@ -91,12 +72,21 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
   );
 };
 
-// ==========================================
-// ADAPTERS VÀ SECTION RENDERER
-// ==========================================
 const commonEditableClass = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded p-0.5 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text inline-block min-w-[30px]";
 
-const adaptDataForTimeline = (data, type) => {
+const EditableSectionTitle = ({ sectionId, defaultTitle, sectionTitle, allSectionTitles, primaryColor, onUpdateSectionData }) => (
+  <h3 
+    contentEditable suppressContentEditableWarning 
+    onBlur={e => handleHTMLBlur(e, sectionId, (f, v) => onUpdateSectionData('sectionTitles', { ...allSectionTitles, [f]: v }))}
+    className={`font-bold text-[15px] uppercase mb-3 pb-1.5 w-full ${commonEditableClass}`} 
+    style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
+    data-placeholder={defaultTitle}
+    dangerouslySetInnerHTML={{ __html: sectionTitle ?? defaultTitle }}
+  />
+);
+
+// ĐỔI TÊN HÀM: adaptDataForTimeline -> adaptDataForList
+const adaptDataForList = (data, type) => {
   if (!data || !Array.isArray(data)) return [];
   return data.map(item => {
     switch (type) {
@@ -114,8 +104,9 @@ const adaptDataForTimeline = (data, type) => {
   });
 };
 
-const revertDataFromTimeline = (timelineData, type) => {
-  return timelineData.map(item => {
+// ĐỔI TÊN HÀM: revertDataFromTimeline -> revertDataFromList
+const revertDataFromList = (listData, type) => {
+  return listData.map(item => {
     switch (type) {
       case 'experience': return { duration: item.date, company: item.title, role: item.subtitle, description: item.description };
       case 'education': {
@@ -138,32 +129,55 @@ const revertDataFromTimeline = (timelineData, type) => {
   });
 };
 
+// HÀM HELPER ĐỂ RENDER LIST DỰA TRÊN LAYOUT TYPE
+const renderDynamicList = (layoutType, props) => {
+  switch (layoutType) {
+    case 'row': return <EditableRowList {...props} />;
+    case 'tags': return <EditableTagList {...props} />;
+    case 'timeline':
+    default: return <EditableTimelineList {...props} />;
+  }
+};
+
 const SECTION_RENDERER = {
-  avatar: ({ data, primaryColor, isHighlighted }) => (
-    <div className={`mb-4 flex justify-start cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <img src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'} alt="Avatar" className="w-[120px] h-[160px] bg-gray-200 rounded object-cover border-2 border-gray-100" />
-    </div>
-  ),
+  avatar: ({ data, primaryColor, settings, isHighlighted }) => {
+    const size = settings?.avatarSize || 120;
+    const isCircle = settings?.avatarShape === 'circle';
+    return (
+      <div className={`mb-4 flex justify-start cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <img 
+          src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'} 
+          alt="Avatar" 
+          className="bg-gray-200 object-cover" 
+          style={{ 
+            width: `${size}px`, 
+            height: isCircle ? `${size}px` : `${size * 1.33}px`,
+            borderRadius: isCircle ? '50%' : '8px',
+            border: `3px solid ${primaryColor}` 
+          }} 
+        />
+      </div>
+    );
+  },
 
   personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
     <div className={`mb-2 text-left cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
       <h1 
         contentEditable suppressContentEditableWarning 
-        onBlur={e => onUpdateSectionData(sectionId, { ...data, fullName: e.currentTarget.textContent.trim() === '' ? '' : e.currentTarget.textContent })}
-        className={`text-[28px] font-extrabold text-gray-900 tracking-tight min-w-[200px] ${commonEditableClass}`}
+        onBlur={e => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
+        className={`text-[28px] font-extrabold tracking-tight min-w-[200px] ${commonEditableClass}`}
+        style={{ color: primaryColor }}
         data-placeholder="HỌ VÀ TÊN"
-      >
-        {data?.fullName || ''}
-      </h1>
+        dangerouslySetInnerHTML={{ __html: data?.fullName || '' }}
+      />
       <br/>
       <h2 
         contentEditable suppressContentEditableWarning 
-        onBlur={e => onUpdateSectionData(sectionId, { ...data, jobTitle: e.currentTarget.textContent.trim() === '' ? '' : e.currentTarget.textContent })}
+        onBlur={e => handleHTMLBlur(e, 'jobTitle', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
         className={`text-base font-medium mt-1 text-gray-600 ${commonEditableClass}`}
         data-placeholder="Vị trí ứng tuyển"
-      >
-        {data?.jobTitle || ''}
-      </h2>
+        dangerouslySetInnerHTML={{ __html: data?.jobTitle || '' }}
+      />
     </div>
   ),
 
@@ -176,19 +190,7 @@ const SECTION_RENDERER = {
       { label: 'Website', value: '', placeholder: 'facebook.com/TopCV.vn' },
       { label: 'Địa chỉ', value: '', placeholder: 'Quận A, thành phố Hà Nội' },
     ];
-
-    let items = [];
-    if (Array.isArray(data) && data.length > 0) {
-      items = data.map(d => {
-        const defaultMatch = defaultItems.find(def => def.label === d.label);
-        return {
-          ...d,
-          placeholder: d.placeholder || (defaultMatch ? defaultMatch.placeholder : 'Nhập nội dung...')
-        };
-      });
-    } else {
-      items = defaultItems; 
-    }
+    let items = Array.isArray(data) && data.length > 0 ? data.map(d => ({ ...d, placeholder: d.placeholder || (defaultItems.find(def => def.label === d.label)?.placeholder || 'Nhập nội dung...') })) : defaultItems; 
 
     return (
       <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
@@ -197,110 +199,164 @@ const SECTION_RENDERER = {
     );
   },
 
-  objective: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
+  objective: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles }) => (
     <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Mục tiêu nghề nghiệp</h3>
+      <EditableSectionTitle sectionId={sectionId} defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
       <div 
         contentEditable suppressContentEditableWarning 
-        onBlur={e => {
-          const val = e.currentTarget.textContent.trim();
-          if (!val) e.currentTarget.innerHTML = '';
-          onUpdateSectionData(sectionId, val);
-        }}
+        onBlur={e => handleHTMLBlur(e, null, (_, v) => onUpdateSectionData(sectionId, v))}
         className={`text-sm text-gray-700 leading-relaxed min-h-[40px] whitespace-pre-wrap w-full ${commonEditableClass}`}
         data-placeholder="Nhập mục tiêu nghề nghiệp của bạn..."
-      >
-        {data || ''}
-      </div>
+        dangerouslySetInnerHTML={{ __html: data || '' }}
+      />
     </div>
   ),
 
   customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
     <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
       <h3 
-        contentEditable suppressContentEditableWarning onBlur={e => onUpdateSectionData(sectionId, { ...data, title: e.currentTarget.textContent })}
-        className={`font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`} 
+        contentEditable suppressContentEditableWarning 
+        onBlur={e => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
+        className={`font-bold text-[15px] uppercase mb-3 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`} 
+        style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
         data-placeholder="Tên mục"
-      >
-        {data?.title || 'Thông tin thêm'}
-      </h3>
+        dangerouslySetInnerHTML={{ __html: data?.title || 'Thông tin thêm' }}
+      />
       <div 
         contentEditable suppressContentEditableWarning 
-        onBlur={e => {
-          const val = e.currentTarget.textContent.trim();
-          if (!val) e.currentTarget.innerHTML = '';
-          onUpdateSectionData(sectionId, { ...data, content: val });
-        }}
+        onBlur={e => handleHTMLBlur(e, 'content', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
         className={`text-sm text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[40px] w-full ${commonEditableClass}`}
         data-placeholder="Nội dung thông tin thêm..."
-      >
-        {data?.content || ''}
+        dangerouslySetInnerHTML={{ __html: data?.content || '' }}
+      />
+    </div>
+  ),
+
+  skills: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags'; // Mặc định Kỹ năng là dạng Thẻ (Tags)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="KỸ NĂNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'skills'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'skills'))
+        })}
       </div>
-    </div>
-  ),
+    );
+  },
 
-  skills: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Kỹ năng</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'skills')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'skills'))} />
-    </div>
-  ),
+  hobbies: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags'; // Mặc định Sở thích là dạng Thẻ (Tags)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="SỞ THÍCH" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'hobbies'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'hobbies'))
+        })}
+      </div>
+    );
+  },
 
-  hobbies: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Sở thích</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'hobbies')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'hobbies'))} />
-    </div>
-  ),
+  experience: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline'; // Mặc định Kinh nghiệm là dạng Timeline
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="KINH NGHIỆM LÀM VIỆC" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'experience'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'experience'))
+        })}
+      </div>
+    );
+  },
 
-  experience: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Kinh nghiệm làm việc</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'experience')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'experience'))} />
-    </div>
-  ),
+  education: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline'; // Mặc định Học vấn là dạng Timeline
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="HỌC VẤN" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'education'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'education'))
+        })}
+      </div>
+    );
+  },
 
-  education: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Học vấn</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'education')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'education'))} />
-    </div>
-  ),
+  activities: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'row'; // Mặc định Hoạt động là dạng Danh sách (Row)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="HOẠT ĐỘNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'activities'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'activities'))
+        })}
+      </div>
+    );
+  },
 
-  activities: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Hoạt động</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'activities')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'activities'))} />
-    </div>
-  ),
+  projects: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'row'; // Mặc định Dự án là dạng Danh sách (Row)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="DỰ ÁN" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'projects'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'projects'))
+        })}
+      </div>
+    );
+  },
 
-  projects: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Dự án</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'projects')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'projects'))} />
-    </div>
-  ),
+  certifications: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'row'; // Mặc định Chứng chỉ là dạng Danh sách (Row)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="CHỨNG CHỈ" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'certifications'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'certifications'))
+        })}
+      </div>
+    );
+  },
 
-  certifications: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Chứng chỉ</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'certifications')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'certifications'))} />
-    </div>
-  ),
+  awards: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'row'; // Mặc định Giải thưởng là dạng Danh sách (Row)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="GIẢI THƯỞNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'awards'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'awards'))
+        })}
+      </div>
+    );
+  },
 
-  awards: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Giải thưởng</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'awards')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'awards'))} />
-    </div>
-  ),
-
-  references: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <h3 className="font-bold text-[15px] text-gray-900 uppercase mb-3 border-b border-gray-300 pb-1.5">Người tham chiếu</h3>
-      <EditableTimelineList items={adaptDataForTimeline(data, 'references')} sectionId={sectionId} primaryColor={primaryColor} emptyItemTemplate={{ date: '', title: '', subtitle: '', description: '' }} onUpdateItems={(id, updatedTimeline) => onUpdateSectionData(id, revertDataFromTimeline(updatedTimeline, 'references'))} />
-    </div>
-  )
+  references: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'row'; // Mặc định Người tham chiếu là dạng Danh sách (Row)
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle sectionId={sectionId} defaultTitle="NGƯỜI THAM CHIẾU" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+        {renderDynamicList(layoutType, {
+          items: adaptDataForList(data, 'references'),
+          sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'references'))
+        })}
+      </div>
+    );
+  }
 };
 
 const getGridClasses = (ratio) => {
@@ -375,7 +431,16 @@ const SimpleTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
       
       return (
         <div key={itemId} onClick={() => handleSectionClick(itemId)} className="transition-all cv-section">
-          <SectionComponent data={data[itemId]} primaryColor={settings.primaryColor} isHighlighted={highlightedSection === itemId} sectionId={itemId} onUpdateSectionData={onUpdateSectionData} />
+          <SectionComponent 
+            data={data[itemId]} 
+            sectionTitle={data.sectionTitles?.[itemId]} 
+            allSectionTitles={data.sectionTitles || {}} 
+            primaryColor={settings.primaryColor} 
+            settings={settings}
+            isHighlighted={highlightedSection === itemId} 
+            sectionId={itemId} 
+            onUpdateSectionData={onUpdateSectionData} 
+          />
         </div>
       );
     });

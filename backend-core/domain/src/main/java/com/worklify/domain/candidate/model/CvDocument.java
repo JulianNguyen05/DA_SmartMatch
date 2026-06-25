@@ -61,4 +61,8 @@ public class CvDocument {
         }
         this.fileName = newName;
     }
+
+    public void updateRawText(String rawText) {
+        this.rawText = rawText;
+    }
 }

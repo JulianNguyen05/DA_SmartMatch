@@ -147,4 +147,13 @@ public class CandidateController {
         // Lưu ý: Đảm bảo trong CandidateService của bạn đã có hàm getCvDetail (hoặc getCvById).
         return ApiResponse.success(candidateService.getCvDetail(userId, cvId));
     }
+
+    @PutMapping("/{userId}/cvs/generated/{cvId}")
+    @Operation(summary = "Cập nhật bản thảo CV Sandbox (JSON)")
+    public ApiResponse<CvDocumentResponse> updateGeneratedCv(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId,
+            @Valid @RequestBody GeneratedCvRequest request) { // Dùng lại DTO GeneratedCvRequest
+        return ApiResponse.success(candidateService.updateGeneratedCv(userId, cvId, request.getRawText()), "Cập nhật CV thành công");
+    }
 }
