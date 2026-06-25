@@ -4,6 +4,7 @@ import EditableTimelineList from '../shared/EditableTimelineList';
 // IMPORT THÊM 2 COMPONENT MỚI
 import EditableRowList from '../shared/EditableRowList';
 import EditableTagList from '../shared/EditableTagList';
+import EditableParagraphList from '../shared/EditableParagraphList';
 
 const handleHTMLBlur = (e, field, updateFn) => {
   let val = e.currentTarget.innerHTML.trim();
@@ -134,6 +135,7 @@ const renderDynamicList = (layoutType, props) => {
   switch (layoutType) {
     case 'row': return <EditableRowList {...props} />;
     case 'tags': return <EditableTagList {...props} />;
+    case 'paragraph': return <EditableParagraphList {...props} />;
     case 'timeline':
     default: return <EditableTimelineList {...props} />;
   }
@@ -199,18 +201,32 @@ const SECTION_RENDERER = {
     );
   },
 
-  objective: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles }) => (
-    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-      <EditableSectionTitle sectionId={sectionId} defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-      <div 
-        contentEditable suppressContentEditableWarning 
-        onBlur={e => handleHTMLBlur(e, null, (_, v) => onUpdateSectionData(sectionId, v))}
-        className={`text-sm text-gray-700 leading-relaxed min-h-[40px] whitespace-pre-wrap w-full ${commonEditableClass}`}
-        data-placeholder="Nhập mục tiêu nghề nghiệp của bạn..."
-        dangerouslySetInnerHTML={{ __html: data || '' }}
-      />
-    </div>
-  ),
+  objective: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
+    // Cho phép chọn bố cục, mặc định là 'paragraph' (đoạn văn)
+    const layoutType = settings?.sectionLayouts?.[sectionId] || 'paragraph'; 
+    
+    return (
+      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+        <EditableSectionTitle 
+          sectionId={sectionId} 
+          defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" 
+          sectionTitle={sectionTitle} 
+          allSectionTitles={allSectionTitles} 
+          primaryColor={primaryColor} 
+          onUpdateSectionData={onUpdateSectionData} 
+        />
+        
+        {/* Sử dụng renderDynamicList để hỗ trợ chọn nhiều bố cục */}
+        {renderDynamicList(layoutType, {
+          items: [{ description: data || '' }], // Wrap data vào array để tương thích với các List component
+          sectionId, 
+          primaryColor, 
+          emptyItemTemplate: { description: '' },
+          onUpdateItems: (id, updated) => onUpdateSectionData(id, updated[0]?.description || '')
+        })}
+      </div>
+    );
+  },
 
   customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
     <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>

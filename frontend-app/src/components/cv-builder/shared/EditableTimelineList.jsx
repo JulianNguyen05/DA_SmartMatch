@@ -42,7 +42,7 @@ const EditableTimelineList = ({ items, sectionId, primaryColor, onUpdateItems, e
 
   return (
     <div className="w-full relative group/section">
-      <div className="space-y-4 relative">
+      <div className="space-y-1 relative">
         {items.map((item, index) => (
           <div 
             key={index} 
