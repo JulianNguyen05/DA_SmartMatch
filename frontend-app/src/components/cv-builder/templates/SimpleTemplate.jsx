@@ -105,8 +105,10 @@ const adaptDataForList = (data, type) => {
   });
 };
 
-// ĐỔI TÊN HÀM: revertDataFromTimeline -> revertDataFromList
 const revertDataFromList = (listData, type) => {
+  // Nếu dữ liệu trả về là chuỗi (từ ParagraphList), trả về thẳng chuỗi đó
+  if (type === 'objective' && listData.length > 0) return listData[0].description;
+  
   return listData.map(item => {
     switch (type) {
       case 'experience': return { duration: item.date, company: item.title, role: item.subtitle, description: item.description };
@@ -202,31 +204,25 @@ const SECTION_RENDERER = {
   },
 
   objective: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings }) => {
-    // Cho phép chọn bố cục, mặc định là 'paragraph' (đoạn văn)
-    const layoutType = settings?.sectionLayouts?.[sectionId] || 'paragraph'; 
-    
-    return (
-      <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
-        <EditableSectionTitle 
-          sectionId={sectionId} 
-          defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" 
-          sectionTitle={sectionTitle} 
-          allSectionTitles={allSectionTitles} 
-          primaryColor={primaryColor} 
-          onUpdateSectionData={onUpdateSectionData} 
-        />
-        
-        {/* Sử dụng renderDynamicList để hỗ trợ chọn nhiều bố cục */}
-        {renderDynamicList(layoutType, {
-          items: [{ description: data || '' }], // Wrap data vào array để tương thích với các List component
-          sectionId, 
-          primaryColor, 
-          emptyItemTemplate: { description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, updated[0]?.description || '')
-        })}
-      </div>
-    );
-  },
+  const layoutType = settings?.sectionLayouts?.[sectionId] || 'paragraph';
+  
+  // data bây giờ là array [{ description: '...' }], không phải string nữa
+  const items = Array.isArray(data) ? data : (data ? [{ description: data }] : []);
+
+  return (
+    <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <EditableSectionTitle sectionId={sectionId} defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
+      {renderDynamicList(layoutType, {
+        items: items,
+        sectionId,
+        primaryColor,
+        emptyItemTemplate: { description: '' },
+        // Lưu thẳng array vào state, không convert về string nữa
+        onUpdateItems: (id, updated) => onUpdateSectionData(id, updated)
+      })}
+    </div>
+  );
+},
 
   customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
     <div className={`mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>

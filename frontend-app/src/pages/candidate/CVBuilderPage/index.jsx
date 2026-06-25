@@ -87,7 +87,7 @@ const CVBuilderPage = () => {
         { label: "Website", value: "facebook.com/TopCV.vn" },
         { label: "Địa chỉ", value: "Quận A, thành phố Hà Nội" },
       ],
-      objective: "", experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
+      objective: [], experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
     },
   });
 
@@ -128,7 +128,7 @@ const CVBuilderPage = () => {
               { label: "Số điện thoại", value: "" }, { label: "Email", value: "" },
               { label: "Website", value: "" }, { label: "Địa chỉ", value: "" },
             ],
-            objective: "", experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
+            objective: [], experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
           };
 
           const defaultSettings = {
