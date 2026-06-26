@@ -1,62 +1,193 @@
 version: '3.8'
 
 services:
-  # 1. Cơ sở dữ liệu PostgreSQL
-  postgres-db:
-    image: postgres:15-alpine
+  # ============================================================
+  # 1. MYSQL DATABASE
+  # ============================================================
+  mysql:
+    image: mysql:8.4
+    container_name: worklify-mysql
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: rootpassword
-      POSTGRES_DB: smartmatch_db
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: worklify_db
+      MYSQL_USER: worklify
+      MYSQL_PASSWORD: worklify_password
     ports:
-      - "5435:5432"
+      - "3307:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - worklify-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # 2. Lưu trữ file MinIO
-  minio-storage:
-    image: minio/minio
-    command: server /data --console-address ":9001"
+  # ============================================================
+  # 2. PHPMYADMIN
+  # ============================================================
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    container_name: worklify-phpmyadmin
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root123
     ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - miniodata:/data
+      - "8089:80"
+    networks:
+      - worklify-network
 
-  # 3. FastAPI (AI Machine Learning)
-  backend-ml:
-    build: 
-      context: ./backend-ml
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend-ml/app:/app/app # Để code Python cập nhật ngay khi bạn save (Hot-reload)
-
-  # 4. Spring Boot (Core API)
+  # ============================================================
+  # 3. JAVA BACKEND (Spring Boot)
+  # ============================================================
   backend-core:
-    build: 
+    build:
       context: ./backend-core
+      dockerfile: Dockerfile
+    container_name: worklify-java-backend
+    restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      # Database
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/worklify_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: worklify
+      SPRING_DATASOURCE_PASSWORD: worklify_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      
+      # Server
+      SERVER_PORT: 8080
+      SPRING_APPLICATION_NAME: worklify-api
+      
+      # File Upload
+      FILE_UPLOAD_DIR: /app/uploads
+      FILE_MAX_SIZE: 52428800 # 50MB
+    volumes:
+      - ./uploads:/app/uploads
     depends_on:
-      - postgres-db
-      - minio-storage
-      - backend-ml
+      mysql:
+        condition: service_healthy
+    networks:
+      - worklify-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
-  # 5. React Vite (Frontend)
+  # ============================================================
+  # 4. PYTHON BACKEND (FastAPI ML)
+  # ============================================================
+  backend-ml:
+    build:
+      context: ./backend-ml
+      dockerfile: Dockerfile
+    container_name: worklify-python-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      API_TITLE: Worklify ML Service
+      API_VERSION: 1.0.0
+    volumes:
+      - ./backend-ml/app:/app/app
+    networks:
+      - worklify-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================
+  # 5. NODE.JS PDF SERVICE (Puppeteer) ✨ NEW
+  # ============================================================
+  backend-pdf:
+    build:
+      context: ./backend-pdf
+      dockerfile: Dockerfile
+    container_name: worklify-pdf-service
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      # Node environment
+      NODE_ENV: production
+      PORT: 5000
+      
+      # CORS
+      CORS_ORIGIN: "http://localhost:5173"
+      
+      # Puppeteer
+      PUPPETEER_HEADLESS: "new"
+      PUPPETEER_SKIP_DOWNLOAD: "false"
+      
+      # Logging
+      LOG_LEVEL: "info"
+      
+      # Optional: API Integration (nếu cần)
+      JAVA_API_URL: "http://backend-core:8080"
+      ML_API_URL: "http://backend-ml:8000"
+    volumes:
+      - ./backend-pdf/logs:/app/logs
+      - ./backend-pdf/uploads:/app/uploads
+    depends_on:
+      backend-core:
+        condition: service_healthy
+    networks:
+      - worklify-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================
+  # 6. REACT FRONTEND (Vite)
+  # ============================================================
   frontend-app:
-    build: 
+    build:
       context: ./frontend-app
+      dockerfile: Dockerfile
+    container_name: worklify-frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: "http://localhost:8080"
+      VITE_ML_API_URL: "http://localhost:8000"
+      VITE_PDF_SERVICE_URL: "http://localhost:5000"
     volumes:
-      - ./frontend-app/src:/app/src # Hot-reload cho UI
+      - ./frontend-app/src:/app/src
     depends_on:
       - backend-core
+      - backend-pdf
+    networks:
+      - worklify-network
 
+# ============================================================
+# Networks
+# ============================================================
+networks:
+  worklify-network:
+    driver: bridge
+
+# ============================================================
+# Volumes
+# ============================================================
 volumes:
-  pgdata:
-  miniodata:
+  mysql_data:
+    driver: local

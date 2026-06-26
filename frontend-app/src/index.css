@@ -8,3 +8,28 @@ html, body {
   box-sizing: border-box;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
+
+/* =========================================================
+   FIX LỖI HTML2PDF: Ép Tailwind v4 dùng hệ màu RGBA thay vì OKLCH 
+   ========================================================= */
+:root {
+  --tw-ring-color: rgba(59, 130, 246, 0.5) !important;
+  --tw-outline-color: rgba(59, 130, 246, 0.5) !important;
+  --tw-shadow-color: rgba(0, 0, 0, 0.1) !important;
+  --tw-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  --tw-ring-offset-color: #ffffff !important;
+}
+
+/* Ghi đè OKLCH - html2canvas không hỗ support oklch */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+}
+
+/* Force tất cả màu Tailwind sang rgb thay vì oklch */
+*, *::before, *::after {
+  --tw-text-opacity: 1;
+  --tw-bg-opacity: 1;
+  --tw-border-opacity: 1;
+}

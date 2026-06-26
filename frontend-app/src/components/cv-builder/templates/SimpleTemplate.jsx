@@ -144,11 +144,31 @@ const renderDynamicList = (layoutType, props) => {
 };
 
 const SECTION_RENDERER = {
-  avatar: ({ data, primaryColor, settings, isHighlighted }) => {
+  // TÌM HÀM avatar TRONG SECTION_RENDERER VÀ THAY BẰNG ĐOẠN NÀY:
+
+  avatar: ({ data, primaryColor, settings, isHighlighted, sectionId, onUpdateSectionData }) => {
     const size = settings?.avatarSize || 120;
     const isCircle = settings?.avatarShape === 'circle';
+    const fileInputRef = useRef(null);
+
+    // Xử lý khi người dùng chọn ảnh
+    const handleImageChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          // Lưu ảnh dưới dạng chuỗi Base64 vào thẳng data.url
+          onUpdateSectionData(sectionId, { ...data, url: reader.result });
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
     return (
-      <div className={`mb-4 flex justify-start cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <div 
+        className={`mb-4 flex justify-start cursor-pointer transition-all relative group ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}
+        onClick={() => fileInputRef.current?.click()}
+      >
         <img 
           src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'} 
           alt="Avatar" 
@@ -159,6 +179,23 @@ const SECTION_RENDERER = {
             borderRadius: isCircle ? '50%' : '8px',
             border: `3px solid ${primaryColor}` 
           }} 
+        />
+        
+        {/* Hiệu ứng mờ khi hover để báo hiệu có thể đổi ảnh */}
+        <div 
+          className="absolute flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity" 
+          style={{ width: `${size}px`, height: isCircle ? `${size}px` : `${size * 1.33}px`, borderRadius: isCircle ? '50%' : '8px' }}
+        >
+          <span className="text-white text-xs font-semibold">Đổi ảnh</span>
+        </div>
+
+        {/* Thẻ input ẩn */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleImageChange} 
+          accept="image/*" 
+          className="hidden" 
         />
       </div>
     );

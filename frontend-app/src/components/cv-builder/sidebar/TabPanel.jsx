@@ -110,17 +110,19 @@ const TabPanel = ({
                 </div>
               )}
 
-              <div className="mb-6 pt-5 border-t border-gray-100">
-                <label className="block font-semibold text-sm text-gray-700 mb-3">Tùy chỉnh Ảnh đại diện</label>
-                <div className="flex gap-2 mb-3">
-                  <button onClick={() => handleSettingChange('avatarShape', 'square')} className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded-lg transition-all ${cvData.settings.avatarShape === 'square' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}> <Square size={16}/> Vuông </button>
-                  <button onClick={() => handleSettingChange('avatarShape', 'circle')} className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded-lg transition-all ${cvData.settings.avatarShape === 'circle' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}> <Circle size={16}/> Tròn </button>
+              {selectedSection === 'avatar' && (
+                <div className="mb-6 pt-5 border-t border-gray-100 animate-fadeIn">
+                  <label className="block font-semibold text-sm text-gray-700 mb-3">Tùy chỉnh Ảnh đại diện</label>
+                  <div className="flex gap-2 mb-3">
+                    <button onClick={() => handleSettingChange('avatarShape', 'square')} className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded-lg transition-all ${cvData.settings.avatarShape === 'square' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}> <Square size={16}/> Vuông </button>
+                    <button onClick={() => handleSettingChange('avatarShape', 'circle')} className={`flex-1 flex items-center justify-center gap-2 p-2 border rounded-lg transition-all ${cvData.settings.avatarShape === 'circle' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'}`}> <Circle size={16}/> Tròn </button>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs text-gray-500 mb-1"> <span>Nhỏ</span><span>Vừa</span><span>Lớn</span> </div>
+                    <input type="range" min="80" max="180" step="10" value={cvData.settings.avatarSize} onChange={(e) => handleSettingChange('avatarSize', parseInt(e.target.value))} className="w-full accent-[#00b14f]" />
+                  </div>
                 </div>
-                <div>
-                  <div className="flex justify-between text-xs text-gray-500 mb-1"> <span>Nhỏ</span><span>Vừa</span><span>Lớn</span> </div>
-                  <input type="range" min="80" max="180" step="10" value={cvData.settings.avatarSize} onChange={(e) => handleSettingChange('avatarSize', parseInt(e.target.value))} className="w-full accent-[#00b14f]" />
-                </div>
-              </div>
+              )}
 
               <div className="mb-6 pt-5 border-t border-gray-100">
                 <label className="block font-semibold text-sm text-gray-700 mb-3">Font chữ toàn CV</label>
