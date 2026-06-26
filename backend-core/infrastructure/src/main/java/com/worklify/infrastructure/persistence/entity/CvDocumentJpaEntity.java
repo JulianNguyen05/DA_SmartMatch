@@ -42,4 +42,7 @@ public class CvDocumentJpaEntity {
 
     @Column(name = "file_name")
     private String fileName;
+
+    @Column(name = "thumbnail_path", length = 500)
+    private String thumbnailPath;
 }

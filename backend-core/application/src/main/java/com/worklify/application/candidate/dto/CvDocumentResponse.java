@@ -15,4 +15,5 @@ public class CvDocumentResponse {
     private String rawText;
     private Boolean isGenerated;
     private LocalDateTime createdAt;
+    private String thumbnailPath;
 }

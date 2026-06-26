@@ -79,6 +79,15 @@ const candidateService = {
     return response.data;
   },
 
+  uploadCvThumbnail: async (userId, cvId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosClient.post(`/candidates/${userId}/cvs/${cvId}/thumbnail`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+  },
+
   getMyCVs: async (candidateId) => {
     // Sửa thành '/candidates/${candidateId}/cvs'
     const response = await axiosClient.get(`/candidates/${candidateId}/cvs`);

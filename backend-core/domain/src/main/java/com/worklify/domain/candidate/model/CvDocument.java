@@ -13,7 +13,8 @@ public class CvDocument {
     private Long id;
     private Long candidateId;
     private String filePath;
-    private String fileName; // [ĐÃ BỔ SUNG] Trường lưu tên hiển thị
+    private String fileName;
+    private String thumbnailPath;
     private String rawText;
     private Boolean isGenerated;
     private LocalDateTime createdAt;
@@ -48,6 +49,7 @@ public class CvDocument {
                 .candidateId(candidateId)
                 .filePath(null)
                 .fileName(fileName)
+                .thumbnailPath(null)
                 .rawText(rawText)
                 .isGenerated(true)
                 .createdAt(LocalDateTime.now())
@@ -60,6 +62,10 @@ public class CvDocument {
             throw new IllegalArgumentException("Tên CV không được để trống.");
         }
         this.fileName = newName;
+    }
+
+    public void updateThumbnail(String path) {
+        this.thumbnailPath = path;
     }
 
     public void updateRawText(String rawText) {

@@ -19,6 +19,7 @@
     "axios": "^1.16.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.20",
+    "dom-to-image-more": "^3.10.0",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

@@ -156,4 +156,14 @@ public class CandidateController {
             @Valid @RequestBody GeneratedCvRequest request) { // Dùng lại DTO GeneratedCvRequest
         return ApiResponse.success(candidateService.updateGeneratedCv(userId, cvId, request.getRawText()), "Cập nhật CV thành công");
     }
+
+    @PostMapping(value = "/{userId}/cvs/{cvId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Tải lên ảnh thu nhỏ (Thumbnail) của CV")
+    public ApiResponse<CvDocumentResponse> uploadCvThumbnail(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        return ApiResponse.success(candidateService.uploadCvThumbnail(userId, cvId, file), "Lưu ảnh thu nhỏ thành công");
+    }
 }

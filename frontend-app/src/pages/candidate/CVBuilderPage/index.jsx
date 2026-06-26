@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Palette, LayoutList, LayoutTemplate, Loader } from "lucide-react";
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import html2pdf from 'html2pdf.js';
+import domtoimage from 'dom-to-image-more';
 
 import TabPanel from "../../../components/cv-builder/sidebar/TabPanel";
 import SimpleTemplate from "../../../components/cv-builder/templates/SimpleTemplate";
@@ -180,128 +180,37 @@ const CVBuilderPage = () => {
         savedCvId = res.data.id;
       }
 
-      // --- PHA 2: XUẤT GIAO DIỆN THÀNH PDF VÀ UPLOAD ---
-      const element = paperRef.current;
+      // --- PHA 2: CHỤP ẢNH CV ĐỂ LÀM HÌNH THU NHỎ (THUMBNAIL) ---
+      try {
+        const element = paperRef.current;
 
-      // Map màu oklch sang rgb tương đương (Tailwind v4 default palette)
-      const oklchToRgbMap = {
-        // Slate
-        'oklch(0.984 0.003 247.858)': '#f8fafc',
-        'oklch(0.968 0.007 247.896)': '#f1f5f9',
-        'oklch(0.929 0.013 255.508)': '#e2e8f0',
-        'oklch(0.869 0.022 252.894)': '#cbd5e1',
-        'oklch(0.704 0.04 256.788)': '#94a3b8',
-        'oklch(0.554 0.046 257.417)': '#64748b',
-        'oklch(0.446 0.043 257.281)': '#475569',
-        'oklch(0.372 0.044 257.287)': '#334155',
-        'oklch(0.279 0.041 260.031)': '#1e293b',
-        'oklch(0.208 0.042 265.755)': '#0f172a',
-        // Gray
-        'oklch(0.985 0 0)': '#f9fafb',
-        'oklch(0.961 0 0)': '#f3f4f6',
-        'oklch(0.922 0 0)': '#e5e7eb',
-        'oklch(0.87 0 0)': '#d1d5db',
-        'oklch(0.707 0 0)': '#9ca3af',
-        'oklch(0.551 0 0)': '#6b7280',
-        'oklch(0.446 0 0)': '#4b5563',
-        'oklch(0.373 0 0)': '#374151',
-        'oklch(0.269 0 0)': '#1f2937',
-        'oklch(0.21 0 0)': '#111827',
-        // White/Black
-        'oklch(1 0 0)': '#ffffff',
-        'oklch(0 0 0)': '#000000',
-        // Green (Tailwind)
-        'oklch(0.962 0.044 156.743)': '#dcfce7',
-        'oklch(0.905 0.093 162.15)': '#bbf7d0',
-        'oklch(0.792 0.154 160.703)': '#86efac',
-        'oklch(0.696 0.17 162.48)': '#4ade80',
-        'oklch(0.627 0.194 149.579)': '#22c55e',
-        'oklch(0.527 0.154 150.069)': '#16a34a',
-        'oklch(0.448 0.119 151.328)': '#15803d',
-        'oklch(0.393 0.095 152.535)': '#166534',
-        // Blue
-        'oklch(0.97 0.014 254.604)': '#eff6ff',
-        'oklch(0.882 0.059 254.128)': '#dbeafe',
-        'oklch(0.707 0.165 254.624)': '#60a5fa',
-        'oklch(0.546 0.245 262.881)': '#3b82f6',
-        'oklch(0.488 0.243 264.376)': '#2563eb',
-        // Red
-        'oklch(0.971 0.013 17.38)': '#fef2f2',
-        'oklch(0.637 0.237 25.331)': '#ef4444',
-        'oklch(0.577 0.245 27.325)': '#dc2626',
-        // Yellow/Amber
-        'oklch(0.968 0.07 89.873)': '#fefce8',
-        'oklch(0.795 0.184 86.047)': '#facc15',
-        'oklch(0.666 0.179 58.318)': '#f59e0b',
-      };
+        // Chụp ảnh bằng dom-to-image-more (hỗ trợ oklch, không bị lỗi Tailwind v4)
+        const blob = await domtoimage.toBlob(element, {
+          quality: 0.85,
+          bgcolor: '#ffffff',
+          width: element.offsetWidth,
+          height: element.offsetHeight,
+        });
 
-      const replaceOklch = (str) => {
-        if (!str || !str.includes('oklch')) return str;
-        // Thay thế theo map trước
-        let result = str;
-        for (const [oklch, rgb] of Object.entries(oklchToRgbMap)) {
-          result = result.replaceAll(oklch, rgb);
-        }
-        // Fallback: xóa oklch còn lại
-        result = result.replace(/oklch\([^)]+\)/g, 'transparent');
-        return result;
-      };
+        const thumbnailFile = new File([blob], `cv_thumbnail_${savedCvId}.jpg`, { type: 'image/jpeg' });
 
-      const opt = {
-        margin:       0,
-        filename:     `CV_Worklify_${Date.now()}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { 
-          scale: 2, 
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          onclone: (clonedDoc) => {
-            // 1. Patch tất cả <style> tags trong clone
-            clonedDoc.querySelectorAll('style').forEach(styleEl => {
-              styleEl.textContent = replaceOklch(styleEl.textContent);
-            });
+        // Gọi API Upload Ảnh Thumbnail
+        await candidateService.uploadCvThumbnail(currentUser.userId, savedCvId, thumbnailFile);
 
-            // 2. Patch tất cả inline style attributes
-            clonedDoc.querySelectorAll('[style]').forEach(el => {
-              const s = el.getAttribute('style');
-              if (s && s.includes('oklch')) {
-                el.setAttribute('style', replaceOklch(s));
-              }
-            });
+        alert("Lưu CV và tạo ảnh thu nhỏ thành công!");
 
-            // 3. Inject override style an toàn
-            const safeStyle = clonedDoc.createElement('style');
-            safeStyle.textContent = `
-              :root {
-                --tw-ring-color: rgba(59,130,246,0.5);
-                --tw-shadow-color: rgba(0,0,0,0.1);
-                --tw-ring-offset-color: #ffffff;
-                color-scheme: light only;
-              }
-              * { border-color: inherit !important; }
-            `;
-            clonedDoc.head.appendChild(safeStyle);
-          }
-        },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      };
+      } catch (imageError) {
+        console.error("Lỗi khi chụp ảnh CV:", imageError);
+        alert("Đã lưu dữ liệu CV, nhưng không tạo được ảnh thu nhỏ.");
+      }
 
-      // Gọi html2pdf để sinh file dạng Blob dưới nền
-      const pdfBlob = await html2pdf().set(opt).from(element).output('blob');
-      
-      // Đóng gói Blob thành file và gọi API Upload CV của bạn
-      const pdfFile = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-      await candidateService.uploadCv(currentUser.userId, pdfFile);
-
-      alert("Lưu dữ liệu và tải bản PDF lên hệ thống thành công!");
-      
+      // Chuyển hướng nếu là tạo CV mới
       if (!cvId) {
         navigate(`/candidate/cv-builder/${savedCvId}`, { replace: true });
       }
+
     } catch (error) {
-      document.getElementById('__pdf_oklch_fix__')?.remove();
-      console.error("Lỗi khi lưu CV:", error);
+      console.error("Lỗi khi kết nối với máy chủ:", error);
       alert("Đã xảy ra lỗi khi lưu CV. Vui lòng thử lại!");
     } finally {
       setUiState(prev => ({ ...prev, isSaving: false }));

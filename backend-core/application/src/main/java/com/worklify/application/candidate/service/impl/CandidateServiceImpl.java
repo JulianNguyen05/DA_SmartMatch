@@ -6,7 +6,6 @@ import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.common.port.FileStoragePort;
-import com.worklify.domain.auth.repository.UserRepository;
 import com.worklify.domain.candidate.model.CandidateProfile;
 import com.worklify.domain.candidate.model.CandidateSkill;
 import com.worklify.domain.candidate.model.CvDocument;
@@ -25,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -375,6 +373,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .candidateId(cv.getCandidateId())
                 .filePath(cv.getFilePath())
                 .fileName(finalFileName)
+                .thumbnailPath(cv.getThumbnailPath())
                 .rawText(cv.getRawText()) // <--- DÒNG CỰC KỲ QUAN TRỌNG ĐỂ FRONTEND CÓ THỂ ĐỌC ĐƯỢC JSON
                 .isGenerated(cv.getIsGenerated())
                 .createdAt(cv.getCreatedAt())
@@ -411,6 +410,26 @@ public class CandidateServiceImpl implements CandidateService {
         }
 
         cv.updateRawText(rawText);
+        return mapToCvResponse(cvDocumentRepository.save(cv));
+    }
+
+    @Override
+    public CvDocumentResponse uploadCvThumbnail(Long userId, Long cvId, MultipartFile file) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        CvDocument cv = cvDocumentRepository.findById(cvId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy CV."));
+
+        if (!cv.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa CV này.");
+        }
+
+        // Lưu ảnh thumbnail vào thư mục uploads/cv_thumbnails/candidate_{id}/
+        String savedRelativePath = fileStoragePort.storeFile(file, "cv_thumbnails", String.valueOf(userId));
+        String thumbnailPath = "/uploads/" + savedRelativePath;
+
+        cv.updateThumbnail(thumbnailPath); // Gọi hàm ở bước 1.2
         return mapToCvResponse(cvDocumentRepository.save(cv));
     }
 }

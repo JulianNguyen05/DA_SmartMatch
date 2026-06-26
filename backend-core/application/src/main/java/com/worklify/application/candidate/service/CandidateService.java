@@ -28,4 +28,6 @@ public interface CandidateService {
     PageResponse<CandidateProfileResponse> searchCandidates(String keyword, DomainPageable pageable);
     CvDocumentResponse getCvDetail(Long userId, Long cvId);
     CvDocumentResponse updateGeneratedCv(Long userId, Long cvId, String rawText);
+
+    CvDocumentResponse uploadCvThumbnail(Long userId, Long cvId, MultipartFile file);
 }
