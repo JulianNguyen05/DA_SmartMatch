@@ -152,10 +152,23 @@ const TabPanel = ({
           )}
 
           {activeTab === 'template' && (
-            <div className="animate-fadeIn">
+            <div className="animate-fadeIn space-y-3">
+              {/* Mẫu Tiêu Chuẩn */}
               <button onClick={() => setCvData({...cvData, settings: {...cvData.settings, template: 'simple'}})} className={`block w-full p-4 rounded-lg font-medium border-2 transition-all text-left ${cvData.settings.template === 'simple' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-700 hover:border-[#00b14f]'}`}>
                 <div className="font-bold mb-1 text-sm">Mẫu Tiêu Chuẩn</div>
                 <div className="text-[11px] text-gray-500 font-normal">Thiết kế tối giản, chuyên nghiệp.</div>
+              </button>
+
+              {/* Mẫu Harvard */}
+              <button onClick={() => setCvData({...cvData, settings: {...cvData.settings, template: 'harvard'}})} className={`block w-full p-4 rounded-lg font-medium border-2 transition-all text-left ${cvData.settings.template === 'harvard' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-700 hover:border-[#00b14f]'}`}>
+                <div className="font-bold mb-1 text-sm">Mẫu Harvard</div>
+                <div className="text-[11px] text-gray-500 font-normal">Phong cách học thuật, thanh lịch và truyền thống.</div>
+              </button>
+
+              {/* Mẫu Professional (Chuyên nghiệp) */}
+              <button onClick={() => setCvData({...cvData, settings: {...cvData.settings, template: 'professional'}})} className={`block w-full p-4 rounded-lg font-medium border-2 transition-all text-left ${cvData.settings.template === 'professional' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-700 hover:border-[#00b14f]'}`}>
+                <div className="font-bold mb-1 text-sm">Mẫu Chuyên Nghiệp</div>
+                <div className="text-[11px] text-gray-500 font-normal">Thiết kế hiện đại, tinh tế cho môi trường doanh nghiệp.</div>
               </button>
             </div>
           )}
