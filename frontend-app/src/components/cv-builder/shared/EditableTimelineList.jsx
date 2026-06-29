@@ -60,18 +60,18 @@ const EditableTimelineList = ({ items, sectionId, primaryColor, onUpdateItems, e
             </div>
 
             <div className="w-1/4 flex-shrink-0">
-              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'date')} className={`text-xs font-semibold italic ${editableClasses}`} style={{ color: primaryColor }} data-placeholder="Bắt đầu - Kết thúc" dangerouslySetInnerHTML={{ __html: item.date || '' }} />
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'date')} className={`text-[0.85em] font-semibold italic ${editableClasses}`} style={{ color: primaryColor }} data-placeholder="Bắt đầu - Kết thúc" dangerouslySetInnerHTML={{ __html: item.date || '' }} />
             </div>
             <div className="flex-1 w-3/4">
               <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'title')} className={`font-semibold text-gray-900 mb-0.5 ${editableClasses}`} data-placeholder="Tiêu đề chính..." dangerouslySetInnerHTML={{ __html: item.title || '' }} />
-              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'subtitle')} className={`text-sm text-gray-600 mb-2 ${editableClasses}`} data-placeholder="Tiêu đề phụ / Vị trí..." dangerouslySetInnerHTML={{ __html: item.subtitle || '' }} />
-              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'description')} className={`text-sm text-gray-700 whitespace-pre-wrap min-h-[20px] ${editableClasses}`} data-placeholder="Mô tả chi tiết..." dangerouslySetInnerHTML={{ __html: item.description || '' }} />
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'subtitle')} className={`text-[1em] text-gray-600 mb-2 ${editableClasses}`} data-placeholder="Tiêu đề phụ / Vị trí..." dangerouslySetInnerHTML={{ __html: item.subtitle || '' }} />
+              <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'description')} className={`text-[1em] text-gray-700 whitespace-pre-wrap min-h-[20px] ${editableClasses}`} data-placeholder="Mô tả chi tiết..." dangerouslySetInnerHTML={{ __html: item.description || '' }} />
             </div>
           </div>
         ))}
 
         {items.length === 0 && (
-          <div className="flex items-center gap-1 text-sm italic py-2 cursor-pointer w-fit" style={{ color: primaryColor }} onClick={handleAddFirst}>
+          <div className="flex items-center gap-1 text-[1em] italic py-2 cursor-pointer w-fit" style={{ color: primaryColor }} onClick={handleAddFirst}>
             <Plus size={14} /> Thêm mục mới
           </div>
         )}

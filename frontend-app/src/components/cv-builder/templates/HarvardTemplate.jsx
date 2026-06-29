@@ -16,6 +16,36 @@ import {
 } from './cvTemplateCore';
 
 // ─────────────────────────────────────────────
+// DEFAULT LAYOUT — Harvard template tự quản lý bố cục mặc định của mình.
+// index.jsx sẽ import và dùng khi user chọn template "harvard".
+//
+// Thiết kế chuẩn Harvard: 1 cột, không avatar, header căn giữa,
+// education lên đầu, rồi experience, activities, skills, awards, ...
+// ─────────────────────────────────────────────
+
+export const DEFAULT_LAYOUT = {
+  activeRows: [
+    {
+      id: 'row-1',
+      ratio: '10-0',
+      leftItems: ['personalInfo', 'contactInfo'],
+      rightItems: [],
+    },
+    {
+      id: 'row-2',
+      ratio: '10-0',
+      leftItems: [
+        'education', 'experience', 'activities', 'skills',
+        'awards', 'certifications', 'projects', 'references', 'hobbies', 'objective',
+      ],
+      rightItems: [],
+    },
+  ],
+  // Harvard không dùng avatar theo chuẩn — đẩy vào unused
+  unusedItems: ['avatar', 'customSection'],
+};
+
+// ─────────────────────────────────────────────
 // Harvard-specific: Contact inline (không cần label đậm, chỉ cần value)
 // ─────────────────────────────────────────────
 
@@ -391,7 +421,7 @@ const HarvardTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
       className="w-full h-fit min-h-[1123px] bg-white text-gray-900 relative z-10"
       style={{
         fontFamily: `${settings?.font || 'Georgia'}, 'Times New Roman', serif`,
-        padding: '50px 60px', // lề trái-phải rộng hơn một chút cho cảm giác academic
+        padding: '50px 60px',
         fontSize: '13px',
         lineHeight: '1.5',
       }}

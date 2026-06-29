@@ -91,7 +91,7 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
               contentEditable
               suppressContentEditableWarning
               onBlur={(e) => handleHTMLBlur(e, index, "description")}
-              className={`text-sm text-gray-700 whitespace-pre-wrap min-h-[40px] leading-relaxed ${editableClasses}`}
+              className={`text-[1em] text-gray-700 whitespace-pre-wrap min-h-[40px] leading-relaxed ${editableClasses}`}
               data-placeholder="Nhập nội dung đoạn văn tự do..."
               dangerouslySetInnerHTML={{ __html: item.description || "" }}
             />
@@ -100,7 +100,7 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
 
         {items.length === 0 && (
           <div
-            className="flex items-center gap-1 text-sm italic py-2 cursor-pointer w-fit"
+            className="flex items-center gap-1 text-[1em] italic py-2 cursor-pointer w-fit"
             style={{ color: primaryColor }}
             onClick={handleAddFirst}
           >

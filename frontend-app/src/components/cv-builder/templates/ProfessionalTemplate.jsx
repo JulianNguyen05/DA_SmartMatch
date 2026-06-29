@@ -15,16 +15,37 @@ import {
 } from './cvTemplateCore';
 
 // ─────────────────────────────────────────────
+// DEFAULT LAYOUT — Professional template tự quản lý bố cục mặc định của mình.
+// index.jsx sẽ import và dùng khi user chọn template "professional".
+//
+// Thiết kế 2 cột: cột trái (sidebar màu) chứa avatar + personalInfo + contactInfo + skills + hobbies,
+// cột phải (main) chứa objective + experience + education + projects + activities + ...
+// ─────────────────────────────────────────────
+
+export const DEFAULT_LAYOUT = {
+  activeRows: [
+    {
+      id: 'row-1',
+      ratio: '30-70',
+      leftItems: ['avatar', 'personalInfo', 'contactInfo', 'skills', 'hobbies'],
+      rightItems: ['objective', 'experience', 'education', 'projects', 'activities'],
+    },
+    {
+      id: 'row-2',
+      ratio: '10-0',
+      leftItems: ['certifications', 'awards', 'references'],
+      rightItems: [],
+    },
+  ],
+  unusedItems: ['customSection'],
+};
+
+// ─────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────
 
-/** Màu sidebar — đọc từ settings.color hoặc fallback Worklify blue */
-const getSidebarColor = (settings) => settings?.color || '#1e3a8a';
+const getSidebarColor = (settings) => settings?.primaryColor || '#1e3a8a';
 
-/**
- * Trả về màu chữ trên sidebar: nếu sidebar sáng → black, tối → white.
- * Đơn giản hóa: threshold luminance ~128.
- */
 const getSidebarTextColor = (hex) => {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -33,9 +54,8 @@ const getSidebarTextColor = (hex) => {
   return lum > 150 ? '#111827' : '#ffffff';
 };
 
-
 // ─────────────────────────────────────────────
-// Professional Contact List (cho sidebar)
+// Professional Contact List (Thiết kế lại có viền đứt đoạn)
 // ─────────────────────────────────────────────
 
 const ProContactList = ({ items, sectionId, textColor, onUpdateItems }) => {
@@ -68,9 +88,9 @@ const ProContactList = ({ items, sectionId, textColor, onUpdateItems }) => {
   };
 
   return (
-    <div className="space-y-2 mt-2">
+    <div className="space-y-3 mt-5 py-5 border-y border-dashed" style={{ borderColor: 'rgba(255,255,255,0.25)' }}>
       {items.map((item, index) => (
-        <div key={index} className="relative group/item">
+        <div key={index} className="relative group/item flex flex-col gap-0.5">
           {/* Mini toolbar */}
           <div
             className="absolute right-0 -top-8 flex-row gap-1 bg-gray-100 shadow-md border border-gray-200 rounded p-1 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex"
@@ -82,24 +102,24 @@ const ProContactList = ({ items, sectionId, textColor, onUpdateItems }) => {
             <button onClick={() => handleAdd(index)} className="px-2 py-1 bg-[#00b14f] hover:bg-green-600 text-white rounded text-xs flex items-center gap-1"><Plus size={12}/>Thêm</button>
           </div>
 
-          {/* Label */}
-          <div
-            contentEditable suppressContentEditableWarning
-            onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))}
-            className="font-semibold text-[11px] uppercase tracking-wider opacity-70 outline-none cursor-text"
-            style={{ color: textColor }}
-            data-placeholder="Tiêu đề"
-            dangerouslySetInnerHTML={{ __html: item.label }}
-          />
-          {/* Value */}
-          <div
-            contentEditable suppressContentEditableWarning
-            onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))}
-            className={`text-[12px] mt-0.5 break-all ${contactEditableClass}`}
-            style={{ color: textColor }}
-            data-placeholder={item.placeholder || 'Nhập nội dung...'}
-            dangerouslySetInnerHTML={{ __html: item.value }}
-          />
+          <div className="flex items-start gap-2">
+            <div
+              contentEditable suppressContentEditableWarning
+              onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))}
+              className="font-semibold text-[11px] uppercase tracking-wider opacity-60 outline-none cursor-text min-w-[70px]"
+              style={{ color: textColor }}
+              data-placeholder="Tiêu đề"
+              dangerouslySetInnerHTML={{ __html: item.label }}
+            />
+            <div
+              contentEditable suppressContentEditableWarning
+              onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))}
+              className={`text-[12px] font-medium break-all flex-1 ${contactEditableClass}`}
+              style={{ color: textColor }}
+              data-placeholder={item.placeholder || 'Nhập nội dung...'}
+              dangerouslySetInnerHTML={{ __html: item.value }}
+            />
+          </div>
         </div>
       ))}
     </div>
@@ -108,35 +128,35 @@ const ProContactList = ({ items, sectionId, textColor, onUpdateItems }) => {
 
 
 // ─────────────────────────────────────────────
-// Section Title variants
+// Section Title variants (Thiết kế Bo tròn - Pill Shape)
 // ─────────────────────────────────────────────
 
-/** Section title cho cột trái (sidebar) */
+/** Section title cho cột trái (sidebar) - Bo tròn viên thuốc có nền làm mờ */
 const SidebarSectionTitle = ({ sectionId, defaultTitle, sectionTitle, allSectionTitles, textColor, onUpdateSectionData }) => (
-  <div className="mb-3">
+  <div className="mb-4 w-full text-center">
     <h3
       contentEditable suppressContentEditableWarning
       onBlur={(e) => handleHTMLBlur(e, sectionId, (f, v) => onUpdateSectionData('sectionTitles', { ...allSectionTitles, [f]: v }))}
-      className={`font-bold text-[12px] uppercase tracking-widest inline-block ${commonEditableClass}`}
-      style={{ color: textColor }}
+      className={`font-bold text-[13px] uppercase tracking-wider px-5 py-1.5 rounded-full inline-block ${commonEditableClass}`}
+      style={{ color: textColor, backgroundColor: 'rgba(255,255,255,0.15)' }}
       data-placeholder={defaultTitle}
       dangerouslySetInnerHTML={{ __html: sectionTitle ?? defaultTitle }}
     />
-    <div className="mt-0.5 h-[1.5px] w-full opacity-40" style={{ backgroundColor: textColor }} />
   </div>
 );
 
-/** Section title cho cột phải (main content) */
+/** Section title cho cột phải (main content) - Nền màu chủ đạo bo tròn + đường kẻ ngang */
 const MainSectionTitle = ({ sectionId, defaultTitle, sectionTitle, allSectionTitles, primaryColor, onUpdateSectionData }) => (
-  <div className="mb-3">
+  <div className="mb-4 flex items-center w-full">
     <h3
       contentEditable suppressContentEditableWarning
       onBlur={(e) => handleHTMLBlur(e, sectionId, (f, v) => onUpdateSectionData('sectionTitles', { ...allSectionTitles, [f]: v }))}
-      className={`font-bold text-[14px] uppercase tracking-wide pb-1 inline-block ${commonEditableClass}`}
-      style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
+      className={`font-bold text-[14px] uppercase tracking-wide px-5 py-1.5 rounded-full inline-block whitespace-nowrap z-10 ${commonEditableClass}`}
+      style={{ backgroundColor: primaryColor, color: '#ffffff' }}
       data-placeholder={defaultTitle}
       dangerouslySetInnerHTML={{ __html: sectionTitle ?? defaultTitle }}
     />
+    <div className="flex-1 h-[2px] ml-[-10px] z-0 opacity-20" style={{ backgroundColor: primaryColor }}></div>
   </div>
 );
 
@@ -157,18 +177,14 @@ const renderDynamicList = (layoutType, props) => {
 
 
 // ─────────────────────────────────────────────
-// SECTION RENDERERS — 2 variants: sidebar & main
-// Mỗi section cần biết nó thuộc cột nào.
-// Convention: Professional dùng layout.activeRows bình thường,
-// nhưng bọc toàn bộ canvas trong layout 2 cột cứng (sidebar 30% / main 70%).
-// Các section trong leftItems → dùng sidebar variant.
-// Các section trong rightItems → dùng main variant.
+// SECTION RENDERERS — CỘT TRÁI (SIDEBAR)
 // ─────────────────────────────────────────────
 
 const SIDEBAR_RENDERER = {
   avatar: ({ data, settings, sectionId, onUpdateSectionData, isHighlighted }) => {
     const fileInputRef = useRef(null);
-    const size = settings?.avatarSize || 100;
+    const size = settings?.avatarSize || 130;
+    const isCircle = settings?.avatarShape === 'circle';
 
     const handleImageChange = (e) => {
       const file = e.target.files[0];
@@ -179,23 +195,25 @@ const SIDEBAR_RENDERER = {
       }
     };
 
+    const imgStyle = {
+      width: `${size}px`,
+      height: isCircle ? `${size}px` : `${size * 1.33}px`,
+      borderRadius: isCircle ? '50%' : '12px',
+      border: '4px solid rgba(255,255,255,0.3)',
+    };
+
     return (
       <div
-        className={`mb-5 flex justify-center cursor-pointer transition-all relative group ${highlightClass(isHighlighted)}`}
+        className={`mb-4 flex justify-center items-start cursor-pointer transition-all relative group ${highlightClass(isHighlighted)}`}
         onClick={() => fileInputRef.current?.click()}
       >
         <img
           src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'}
           alt="Avatar"
           className="object-cover"
-          style={{
-            width: `${size}px`,
-            height: `${size}px`,
-            borderRadius: '50%',
-            border: '3px solid rgba(255,255,255,0.5)',
-          }}
+          style={imgStyle}
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full" style={{ width: `${size}px`, height: `${size}px`, margin: 'auto' }}>
+        <div className="absolute flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity" style={imgStyle}>
           <span className="text-white text-xs font-semibold">Đổi ảnh</span>
         </div>
         <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
@@ -204,11 +222,11 @@ const SIDEBAR_RENDERER = {
   },
 
   personalInfo: ({ data, sectionId, onUpdateSectionData, isHighlighted, textColor }) => (
-    <div className={`mb-4 text-center cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+    <div className={`mb-6 text-center cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
       <h1
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-[17px] font-bold leading-tight min-w-[80px] ${commonEditableClass}`}
+        className={`text-[22px] font-bold tracking-wide min-w-[80px] ${commonEditableClass}`}
         style={{ color: textColor }}
         data-placeholder="HỌ VÀ TÊN"
         dangerouslySetInnerHTML={{ __html: data?.fullName || '' }}
@@ -216,7 +234,7 @@ const SIDEBAR_RENDERER = {
       <div
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'jobTitle', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-[12px] font-medium mt-1 opacity-80 ${commonEditableClass}`}
+        className={`text-[14px] italic mt-1 opacity-80 ${commonEditableClass}`}
         style={{ color: textColor }}
         data-placeholder="Vị trí ứng tuyển"
         dangerouslySetInnerHTML={{ __html: data?.jobTitle || '' }}
@@ -226,20 +244,16 @@ const SIDEBAR_RENDERER = {
 
   contactInfo: ({ data, sectionId, onUpdateSectionData, isHighlighted, settings, textColor }) => {
     const defaultItems = [
-      { label: 'Ngày sinh',    value: '', placeholder: 'DD/MM/YYYY' },
-      { label: 'Giới tính',    value: '', placeholder: 'Nam / Nữ' },
       { label: 'Điện thoại',  value: '', placeholder: '0123 456 789' },
       { label: 'Email',        value: '', placeholder: 'email@example.com' },
-      { label: 'LinkedIn',     value: '', placeholder: 'linkedin.com/in/...' },
-      { label: 'Địa chỉ',     value: '', placeholder: 'Quận A, TP. Hồ Chí Minh' },
+      { label: 'Website',      value: '', placeholder: 'facebook.com/TopCV.vn' },
+      { label: 'Địa chỉ',     value: '', placeholder: 'Quận A, TP. Hà Nội' },
     ];
-    const items =
-      Array.isArray(data) && data.length > 0
+    const items = Array.isArray(data) && data.length > 0
         ? data.map((d) => ({ ...d, placeholder: d.placeholder || defaultItems.find((x) => x.label === d.label)?.placeholder || 'Nhập...' }))
         : defaultItems;
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
-        <SidebarSectionTitle sectionId={sectionId} defaultTitle="LIÊN HỆ" sectionTitle={data?.sectionTitle} allSectionTitles={{}} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
+      <div className={`mb-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <ProContactList items={items} sectionId={sectionId} textColor={textColor} onUpdateItems={onUpdateSectionData} />
       </div>
     );
@@ -248,14 +262,9 @@ const SIDEBAR_RENDERER = {
   skills: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, textColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <SidebarSectionTitle sectionId={sectionId} defaultTitle="KỸ NĂNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'skills'),
-          sectionId, primaryColor: textColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'skills')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'skills'), sectionId, primaryColor: textColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'skills')) })}
       </div>
     );
   },
@@ -263,14 +272,9 @@ const SIDEBAR_RENDERER = {
   hobbies: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, textColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <SidebarSectionTitle sectionId={sectionId} defaultTitle="SỞ THÍCH" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'hobbies'),
-          sectionId, primaryColor: textColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'hobbies')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'hobbies'), sectionId, primaryColor: textColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'hobbies')) })}
       </div>
     );
   },
@@ -278,14 +282,9 @@ const SIDEBAR_RENDERER = {
   references: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, textColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <SidebarSectionTitle sectionId={sectionId} defaultTitle="NGƯỜI THAM CHIẾU" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'references'),
-          sectionId, primaryColor: textColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'references')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'references'), sectionId, primaryColor: textColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'references')) })}
       </div>
     );
   },
@@ -293,14 +292,9 @@ const SIDEBAR_RENDERER = {
   certifications: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, textColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <SidebarSectionTitle sectionId={sectionId} defaultTitle="CHỨNG CHỈ" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'certifications'),
-          sectionId, primaryColor: textColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'certifications')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'certifications'), sectionId, primaryColor: textColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'certifications')) })}
       </div>
     );
   },
@@ -308,52 +302,44 @@ const SIDEBAR_RENDERER = {
   awards: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, textColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <SidebarSectionTitle sectionId={sectionId} defaultTitle="GIẢI THƯỞNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'awards'),
-          sectionId, primaryColor: textColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'awards')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'awards'), sectionId, primaryColor: textColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'awards')) })}
       </div>
     );
   },
 
   customSectionRenderer: ({ data, sectionId, onUpdateSectionData, isHighlighted, textColor }) => (
-    <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
-      <div className="mb-3">
-        <h3
-          contentEditable suppressContentEditableWarning
-          onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`font-bold text-[12px] uppercase tracking-widest inline-block ${commonEditableClass}`}
-          style={{ color: textColor }}
-          data-placeholder="Tên mục"
-          dangerouslySetInnerHTML={{ __html: data?.title || 'Thông tin thêm' }}
-        />
-        <div className="mt-0.5 h-[1.5px] w-full opacity-40" style={{ backgroundColor: textColor }} />
-      </div>
+    <div className={`mb-6 mt-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <SidebarSectionTitle sectionId={sectionId} defaultTitle="THÔNG TIN THÊM" sectionTitle={data?.title} allSectionTitles={{}} textColor={textColor} onUpdateSectionData={onUpdateSectionData} />
       <div
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'content', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-[12px] leading-relaxed whitespace-pre-wrap min-h-[30px] w-full ${commonEditableClass}`}
+        className={`text-[13px] leading-relaxed whitespace-pre-wrap min-h-[30px] w-full ${commonEditableClass}`}
         style={{ color: textColor }}
         data-placeholder="Nội dung..."
         dangerouslySetInnerHTML={{ __html: data?.content || '' }}
       />
     </div>
   ),
+
+  // Các section này KHÔNG render trong sidebar — nhường cho MAIN_RENDERER
+  avatar: () => null,
+  contactInfo: () => null,
 };
 
-// ─── Fallback: section nào sidebar không có → dùng main renderer ───
+
+// ─────────────────────────────────────────────
+// SECTION RENDERERS — CỘT PHẢI (MAIN CONTENT)
+// ─────────────────────────────────────────────
+
 const MAIN_RENDERER = {
-  // personalInfo trong main column (khi layout bố trí personalInfo ở cột phải)
   personalInfo: ({ data, sectionId, onUpdateSectionData, isHighlighted, primaryColor }) => (
-    <div className={`mb-4 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+    <div className={`mb-6 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
       <h1
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-[26px] font-extrabold tracking-tight min-w-[200px] ${commonEditableClass}`}
+        className={`text-[28px] font-bold tracking-tight min-w-[200px] ${commonEditableClass}`}
         style={{ color: primaryColor }}
         data-placeholder="HỌ VÀ TÊN"
         dangerouslySetInnerHTML={{ __html: data?.fullName || '' }}
@@ -361,7 +347,7 @@ const MAIN_RENDERER = {
       <div
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'jobTitle', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-[14px] font-medium mt-1 text-gray-500 ${commonEditableClass}`}
+        className={`text-[15px] font-medium mt-1 text-gray-500 ${commonEditableClass}`}
         data-placeholder="Vị trí ứng tuyển"
         dangerouslySetInnerHTML={{ __html: data?.jobTitle || '' }}
       />
@@ -372,13 +358,9 @@ const MAIN_RENDERER = {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'paragraph';
     const items = Array.isArray(data) ? data : data ? [{ description: data }] : [];
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="MỤC TIÊU NGHỀ NGHIỆP" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items, sectionId, primaryColor,
-          emptyItemTemplate: { description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, updated),
-        })}
+        {renderDynamicList(layoutType, { items, sectionId, primaryColor, emptyItemTemplate: { description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, updated) })}
       </div>
     );
   },
@@ -386,14 +368,9 @@ const MAIN_RENDERER = {
   experience: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="KINH NGHIỆM LÀM VIỆC" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'experience'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'experience')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'experience'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'experience')) })}
       </div>
     );
   },
@@ -401,14 +378,9 @@ const MAIN_RENDERER = {
   education: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="HỌC VẤN" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'education'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'education')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'education'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'education')) })}
       </div>
     );
   },
@@ -416,14 +388,9 @@ const MAIN_RENDERER = {
   projects: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="DỰ ÁN" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'projects'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'projects')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'projects'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'projects')) })}
       </div>
     );
   },
@@ -431,14 +398,9 @@ const MAIN_RENDERER = {
   activities: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'timeline';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="HOẠT ĐỘNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'activities'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'activities')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'activities'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'activities')) })}
       </div>
     );
   },
@@ -446,14 +408,9 @@ const MAIN_RENDERER = {
   skills: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="KỸ NĂNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'skills'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'skills')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'skills'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'skills')) })}
       </div>
     );
   },
@@ -461,14 +418,9 @@ const MAIN_RENDERER = {
   hobbies: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'tags';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="SỞ THÍCH" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'hobbies'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'hobbies')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'hobbies'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'hobbies')) })}
       </div>
     );
   },
@@ -476,14 +428,9 @@ const MAIN_RENDERER = {
   certifications: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="CHỨNG CHỈ" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'certifications'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'certifications')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'certifications'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'certifications')) })}
       </div>
     );
   },
@@ -491,14 +438,9 @@ const MAIN_RENDERER = {
   awards: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="GIẢI THƯỞNG" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'awards'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'awards')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'awards'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'awards')) })}
       </div>
     );
   },
@@ -506,41 +448,26 @@ const MAIN_RENDERER = {
   references: ({ data, sectionId, onUpdateSectionData, isHighlighted, sectionTitle, allSectionTitles, settings, primaryColor }) => {
     const layoutType = settings?.sectionLayouts?.[sectionId] || 'row';
     return (
-      <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
         <MainSectionTitle sectionId={sectionId} defaultTitle="NGƯỜI THAM CHIẾU" sectionTitle={sectionTitle} allSectionTitles={allSectionTitles} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
-        {renderDynamicList(layoutType, {
-          items: adaptDataForList(data, 'references'),
-          sectionId, primaryColor,
-          emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' },
-          onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'references')),
-        })}
+        {renderDynamicList(layoutType, { items: adaptDataForList(data, 'references'), sectionId, primaryColor, emptyItemTemplate: { date: '', title: '', subtitle: '', description: '' }, onUpdateItems: (id, updated) => onUpdateSectionData(id, revertDataFromList(updated, 'references')) })}
       </div>
     );
   },
 
   customSectionRenderer: ({ data, sectionId, onUpdateSectionData, isHighlighted, primaryColor }) => (
-    <div className={`mb-5 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
-      <div className="mb-3">
-        <h3
-          contentEditable suppressContentEditableWarning
-          onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`font-bold text-[14px] uppercase tracking-wide pb-1 inline-block ${commonEditableClass}`}
-          style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
-          data-placeholder="Tên mục"
-          dangerouslySetInnerHTML={{ __html: data?.title || 'Thông tin thêm' }}
-        />
-      </div>
+    <div className={`mb-8 cursor-pointer transition-all ${highlightClass(isHighlighted)}`}>
+      <MainSectionTitle sectionId={sectionId} defaultTitle="THÔNG TIN THÊM" sectionTitle={data?.title} allSectionTitles={{}} primaryColor={primaryColor} onUpdateSectionData={onUpdateSectionData} />
       <div
         contentEditable suppressContentEditableWarning
         onBlur={(e) => handleHTMLBlur(e, 'content', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-        className={`text-sm text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[40px] w-full ${commonEditableClass}`}
+        className={`text-[13px] text-gray-700 leading-relaxed whitespace-pre-wrap min-h-[40px] w-full ${commonEditableClass}`}
         data-placeholder="Nội dung..."
         dangerouslySetInnerHTML={{ __html: data?.content || '' }}
       />
     </div>
   ),
 
-  // avatar không hiển thị ở cột main
   avatar: () => null,
   contactInfo: () => null,
 };
@@ -550,21 +477,6 @@ const MAIN_RENDERER = {
 // PROFESSIONAL TEMPLATE COMPONENT
 // ─────────────────────────────────────────────
 
-/**
- * ProfessionalTemplate
- *
- * Bố cục 2 cột cứng:
- *   - Cột trái (sidebar) ~30% width: nền màu (primaryColor/settings.color),
- *     chứa avatar, tên, contact, kỹ năng, sở thích, chứng chỉ, tham chiếu, v.v.
- *   - Cột phải (main) ~70% width: nền trắng,
- *     chứa objective, kinh nghiệm, học vấn, dự án, hoạt động, v.v.
- *
- * Template đọc layout.activeRows bình thường từ cvData:
- *   - Các section trong row.leftItems → SIDEBAR_RENDERER
- *   - Các section trong row.rightItems → MAIN_RENDERER
- *
- * settings.color: màu nền sidebar (hex).
- */
 const ProfessionalTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
   const { layout, data, settings } = cvData;
   const [highlightedSection, setHighlightedSection] = useState(null);
@@ -574,7 +486,6 @@ const ProfessionalTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) =
   const sidebarTextColor = getSidebarTextColor(sidebarColor);
   const primaryColor = settings?.primaryColor || sidebarColor;
 
-  // Pagination: chia trang cho nội dung dài
   useEffect(() => setupPagination(containerRef), [cvData.layout, cvData.data]);
 
   const handleSectionClick = (sectionId) => {
@@ -588,7 +499,7 @@ const ProfessionalTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) =
       const SectionComponent = isCustomSection
         ? SIDEBAR_RENDERER.customSectionRenderer
         : SIDEBAR_RENDERER[itemId];
-      // Nếu sidebar không có renderer → fallback main renderer
+      
       const FallbackComponent = isCustomSection
         ? MAIN_RENDERER.customSectionRenderer
         : MAIN_RENDERER[itemId];
@@ -637,37 +548,38 @@ const ProfessionalTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) =
   return (
     <div
       ref={containerRef}
-      className="w-full h-fit min-h-[1123px] bg-white relative z-10 flex"
+      className="w-full h-fit min-h-[1123px] bg-white relative z-10 flex flex-col"
       style={{ fontFamily: `${settings?.font || 'Inter'}, sans-serif`, fontSize: '13px' }}
     >
-      {layout.activeRows.map((row) => (
-        // Mỗi row vẫn render độc lập, nhưng trong ProfessionalTemplate
-        // row luôn là full-width (10-0) hoặc 3-7 / 4-6 tùy layout người dùng chọn.
-        // Ta bọc sidebar + main riêng dựa trên leftItems / rightItems của row.
-        <div key={row.id} className="w-full flex">
-          {/* SIDEBAR */}
-          {row.leftItems && row.leftItems.length > 0 && (
+      {layout.activeRows.map((row) => {
+        const isFullWidth = row.ratio === '10-0' || row.ratio === '100-0';
+
+        return (
+          <div key={row.id} className="w-full flex">
+            {/* CỘT TRÁI (SIDEBAR) */}
             <div
-              className="flex-shrink-0 p-8"
+              className="flex-shrink-0"
               style={{
-                width: '30%',
+                width: '35%',
                 backgroundColor: sidebarColor,
-                minHeight: '100%',
               }}
             >
-              {renderSidebarItems(row.leftItems)}
+              {!isFullWidth && row.leftItems && row.leftItems.length > 0 && (
+                <div className="px-6 py-10">
+                  {renderSidebarItems(row.leftItems)}
+                </div>
+              )}
             </div>
-          )}
 
-          {/* MAIN CONTENT */}
-          <div className="flex-1 p-8 bg-white">
-            {/* Nếu row chỉ có leftItems (ratio 10-0) → render tất cả leftItems vào main với main renderer */}
-            {(!row.rightItems || row.rightItems.length === 0) && row.leftItems && row.leftItems.length > 0
-              ? renderMainItems(row.leftItems)
-              : renderMainItems(row.rightItems || [])}
+            {/* CỘT PHẢI (MAIN CONTENT) */}
+            <div className="flex-1 px-8 py-10 bg-white">
+              {isFullWidth
+                ? renderMainItems(row.leftItems || [])
+                : renderMainItems(row.rightItems || [])}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

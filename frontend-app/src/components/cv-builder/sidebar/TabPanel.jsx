@@ -1,8 +1,8 @@
 import React from 'react';
-// Import thêm AlignLeft cho nút Đoạn văn tự do
 import { X, Square, Circle, List, Clock, LayoutGrid, AlignLeft } from 'lucide-react';
 import LayoutSidebar from './LayoutSidebar';
 import TextFormatToolbar from './TextFormatToolbar';
+import { CV_FONT_SIZES } from '../templates/cvTemplateCore';
 
 const FONT_OPTIONS = ['Roboto', 'Arial', 'Times New Roman', 'Georgia', 'Courier New'];
 const COLOR_THEMES = [
@@ -13,7 +13,6 @@ const COLOR_THEMES = [
   { name: 'Cam đen', primary: '#ea580c', accent: '#fffbeb' },
 ];
 
-// BẢNG DỊCH TÊN MỤC SANG TIẾNG VIỆT
 const SECTION_NAMES = {
   avatar: 'Ảnh đại diện',
   contactInfo: 'Danh thiếp',
@@ -77,7 +76,6 @@ const TabPanel = ({
                     Bố cục: <span className="text-[#00b14f] uppercase">{SECTION_NAMES[selectedSection] || selectedSection}</span>
                   </label>
                   
-                  {/* Chia grid 2 cột cho 4 nút nhìn gọn gàng hơn */}
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => handleSectionLayoutChange('timeline')}
@@ -124,11 +122,35 @@ const TabPanel = ({
                 </div>
               )}
 
+              {/* Phần Font chữ và Kích cỡ toàn CV */}
               <div className="mb-6 pt-5 border-t border-gray-100">
                 <label className="block font-semibold text-sm text-gray-700 mb-3">Font chữ toàn CV</label>
-                <select value={cvData.settings.font} onChange={(e) => handleFontChange(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white text-sm focus:ring-1 focus:ring-[#00b14f] outline-none">
+                <select value={cvData.settings.font} onChange={(e) => handleFontChange(e.target.value)} className="w-full p-2.5 border rounded-lg bg-white text-sm focus:ring-1 focus:ring-[#00b14f] outline-none mb-4">
                   {FONT_OPTIONS.map(font => <option key={font} value={font}>{font}</option>)}
                 </select>
+
+                <label className="block font-semibold text-sm text-gray-700 mb-3">Kích cỡ toàn CV</label>
+                <div className="flex gap-2">
+                  {CV_FONT_SIZES.map(size => {
+                    // Fallback mặc định là 'medium' nếu chưa có dữ liệu lưu
+                    const currentSize = cvData.settings.fontSize || 'medium';
+                    const isActive = currentSize === size.value;
+                    
+                    return (
+                      <button
+                        key={size.value}
+                        onClick={() => handleSettingChange('fontSize', size.value)}
+                        className={`flex-1 py-1.5 text-[11px] font-medium border rounded transition-all ${
+                          isActive 
+                            ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' 
+                            : 'border-gray-200 text-gray-600 bg-white hover:bg-gray-50'
+                        }`}
+                      >
+                        {size.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div>
@@ -165,7 +187,7 @@ const TabPanel = ({
                 <div className="text-[11px] text-gray-500 font-normal">Phong cách học thuật, thanh lịch và truyền thống.</div>
               </button>
 
-              {/* Mẫu Professional (Chuyên nghiệp) */}
+              {/* Mẫu Professional */}
               <button onClick={() => setCvData({...cvData, settings: {...cvData.settings, template: 'professional'}})} className={`block w-full p-4 rounded-lg font-medium border-2 transition-all text-left ${cvData.settings.template === 'professional' ? 'border-[#00b14f] bg-[#e8f7ee] text-[#00b14f]' : 'border-gray-200 text-gray-700 hover:border-[#00b14f]'}`}>
                 <div className="font-bold mb-1 text-sm">Mẫu Chuyên Nghiệp</div>
                 <div className="text-[11px] text-gray-500 font-normal">Thiết kế hiện đại, tinh tế cho môi trường doanh nghiệp.</div>

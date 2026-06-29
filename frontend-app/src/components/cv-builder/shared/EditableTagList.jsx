@@ -108,7 +108,7 @@ const EditableTagList = ({
             </div>
 
             <div
-              className="px-3 py-1.5 rounded border text-sm font-medium focus-within:ring-2 transition-colors inline-flex items-center min-w-[50px] justify-center"
+              className="px-3 py-1.5 rounded border text-[1em] font-medium focus-within:ring-2 transition-colors inline-flex items-center min-w-[50px] justify-center"
               style={{
                 backgroundColor: tagBgColor,
                 borderColor: primaryColor,

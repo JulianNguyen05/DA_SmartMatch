@@ -6,20 +6,19 @@ import { arrayMove } from "@dnd-kit/sortable";
 import domtoimage from 'dom-to-image-more';
 
 import TabPanel from "../../../components/cv-builder/sidebar/TabPanel";
-import SimpleTemplate from "../../../components/cv-builder/templates/SimpleTemplate";
 import DraggableItem from "../../../components/cv-builder/sidebar/DraggableItem";
-
-// Import các service gọi API
 import authService from "../../../features/auth/authService";
 import candidateService from "../../../features/candidate/candidateService";
 
-const TEMPLATE_COMPONENTS = { simple: SimpleTemplate };
+import SimpleTemplate, { SIMPLE_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/SimpleTemplate";
+// import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
+// import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
 
-const SECTION_ORDER = [
-  "avatar", "contactInfo", "personalInfo", "objective", "education",
-  "experience", "activities", "certifications", "awards", "skills",
-  "references", "hobbies", "projects", "customSection",
-];
+const TEMPLATE_REGISTRY = {
+  simple: { component: SimpleTemplate, config: SIMPLE_TEMPLATE_CONFIG },
+  // harvard: { component: HarvardTemplate, config: HARVARD_TEMPLATE_CONFIG },
+  // professional: { component: ProfessionalTemplate, config: PROFESSIONAL_TEMPLATE_CONFIG },
+};
 
 const CVBuilderPage = () => {
   const { id: cvId } = useParams();
@@ -29,13 +28,18 @@ const CVBuilderPage = () => {
   const [activeDragId, setActiveDragId] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
   
-  // Trạng thái load dữ liệu từ API
   const [uiState, setUiState] = useState({ isLoading: false, isSaving: false });
-
   const [totalPages, setTotalPages] = useState(1);
   const paperRef = useRef(null);
 
-  // Quan sát chiều cao để tính toán số trang
+  const defaultTemplateConfig = TEMPLATE_REGISTRY.simple.config;
+  
+  const [cvData, setCvData] = useState({
+    settings: defaultTemplateConfig.defaultSettings,
+    layout: defaultTemplateConfig.defaultLayout,
+    data: defaultTemplateConfig.defaultData,
+  });
+
   useEffect(() => {
     if (!paperRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -49,56 +53,9 @@ const CVBuilderPage = () => {
     return () => observer.disconnect();
   }, []);
 
-  // State lưu trữ dữ liệu CV
-  const [cvData, setCvData] = useState({
-    settings: {
-      template: "simple", 
-      font: "Roboto", 
-      primaryColor: "#00b14f", 
-      accentColor: "#e8f7ee",
-      avatarShape: "square",
-      avatarSize: 120,
-    },
-    layout: {
-      activeRows: [
-        {
-          id: "row-1",
-          ratio: "30-70", 
-          leftItems: ["avatar"],
-          rightItems: ["personalInfo", "contactInfo"],
-        },
-        {
-          id: "row-2",
-          ratio: "10-0", 
-          leftItems: ["objective", "education", "experience", "activities", "certifications", "awards", "skills", "references", "hobbies", "projects"],
-          rightItems: [],
-        },
-      ],
-      unusedItems: ["customSection"],
-    },
-    data: {
-      sectionTitles: {},
-      avatar: { url: "http://localhost:8080/uploads/logos/user.jpg" },
-      personalInfo: { fullName: "", jobTitle: "" },
-      contactInfo: [
-        { label: "Ngày sinh", value: "DD/MM/YYYY" },
-        { label: "Giới tính", value: "Nam/Nữ" },
-        { label: "Số điện thoại", value: "0123 456 789" },
-        { label: "Email", value: "huutrong.160705@gmail.com" },
-        { label: "Website", value: "facebook.com/TopCV.vn" },
-        { label: "Địa chỉ", value: "Quận A, thành phố Hà Nội" },
-      ],
-      objective: [], experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
-    },
-  });
-
-// ==============================================================
-  // 1. LUỒNG LẤY DỮ LIỆU TỪ BACKEND KHI LOAD TRANG
-  // ==============================================================
   useEffect(() => {
     const fetchCvData = async () => {
-      if (!cvId) return; // Nếu không có ID (tạo mới) thì dùng state mặc định
-
+      if (!cvId) return;
       const currentUser = authService.getCurrentUser();
       if (!currentUser?.userId) return;
 
@@ -107,40 +64,15 @@ const CVBuilderPage = () => {
         const response = await candidateService.getCvDetail(currentUser.userId, cvId);
         const fetchedCv = response.data;
         
-        // Nạp chuỗi JSON rawText vào State nếu có
         if (fetchedCv && fetchedCv.rawText) {
           const parsedData = JSON.parse(fetchedCv.rawText);
+          const templateName = parsedData.settings?.template || 'simple';
+          const tplConfig = TEMPLATE_REGISTRY[templateName]?.config || TEMPLATE_REGISTRY.simple.config;
 
-          // TẠO CẤU TRÚC MẶC ĐỊNH ĐỂ CHỐNG LỖI (FALLBACK)
-          const defaultLayout = {
-            activeRows: [
-              { id: "row-1", ratio: "30-70", leftItems: ["avatar"], rightItems: ["personalInfo", "contactInfo"] },
-              { id: "row-2", ratio: "10-0", leftItems: ["objective", "education", "experience", "activities", "certifications", "awards", "skills", "references", "hobbies", "projects"], rightItems: [] },
-            ],
-            unusedItems: ["customSection"],
-          };
-          
-          const defaultData = {
-            sectionTitles: {},
-            avatar: { url: "http://localhost:8080/uploads/logos/user.jpg" },
-            personalInfo: { fullName: "", jobTitle: "" },
-            contactInfo: [
-              { label: "Ngày sinh", value: "DD/MM/YYYY" }, { label: "Giới tính", value: "Nam/Nữ" },
-              { label: "Số điện thoại", value: "" }, { label: "Email", value: "" },
-              { label: "Website", value: "" }, { label: "Địa chỉ", value: "" },
-            ],
-            objective: [], experience: [], education: [], activities: [], skills: [], hobbies: [], awards: [], certifications: [], projects: [], references: [],
-          };
-
-          const defaultSettings = {
-            template: "simple", font: "Roboto", primaryColor: "#00b14f", accentColor: "#e8f7ee", avatarShape: "square", avatarSize: 120,
-          };
-
-          // MERGE DỮ LIỆU: Nếu DB thiếu thì đắp dữ liệu mặc định vào để không bị sập UI
           setCvData({
-            settings: { ...defaultSettings, ...(parsedData.settings || {}) },
-            layout: parsedData.layout || defaultLayout, 
-            data: { ...defaultData, ...(parsedData.data || parsedData) } 
+            settings: { ...tplConfig.defaultSettings, ...(parsedData.settings || {}) },
+            layout: parsedData.layout || tplConfig.defaultLayout,
+            data: { ...tplConfig.defaultData, ...(parsedData.data || parsedData) },
           });
         }
       } catch (error) {
@@ -150,13 +82,9 @@ const CVBuilderPage = () => {
         setUiState(prev => ({ ...prev, isLoading: false }));
       }
     };
-
     fetchCvData();
   }, [cvId]); 
 
-  // ==============================================================
-  // 2. LUỒNG GỬI DỮ LIỆU XUỐNG BACKEND KHI BẤM LƯU
-  // ==============================================================
   const handleSaveCv = async () => {
     const currentUser = authService.getCurrentUser();
     if (!currentUser?.userId) {
@@ -166,7 +94,6 @@ const CVBuilderPage = () => {
 
     setUiState(prev => ({ ...prev, isSaving: true }));
     try {
-      // --- PHA 1: LƯU CẤU TRÚC JSON ---
       const payload = {
         title: "CV_Tu_Tao",
         rawText: JSON.stringify(cvData)
@@ -180,11 +107,8 @@ const CVBuilderPage = () => {
         savedCvId = res.data.id;
       }
 
-      // --- PHA 2: CHỤP ẢNH CV ĐỂ LÀM HÌNH THU NHỎ (THUMBNAIL) ---
       try {
         const element = paperRef.current;
-
-        // Chụp ảnh bằng dom-to-image-more (hỗ trợ oklch, không bị lỗi Tailwind v4)
         const blob = await domtoimage.toBlob(element, {
           quality: 0.85,
           bgcolor: '#ffffff',
@@ -193,10 +117,7 @@ const CVBuilderPage = () => {
         });
 
         const thumbnailFile = new File([blob], `cv_thumbnail_${savedCvId}.jpg`, { type: 'image/jpeg' });
-
-        // Gọi API Upload Ảnh Thumbnail
         await candidateService.uploadCvThumbnail(currentUser.userId, savedCvId, thumbnailFile);
-
         alert("Lưu CV và tạo ảnh thu nhỏ thành công!");
 
       } catch (imageError) {
@@ -204,7 +125,6 @@ const CVBuilderPage = () => {
         alert("Đã lưu dữ liệu CV, nhưng không tạo được ảnh thu nhỏ.");
       }
 
-      // Chuyển hướng nếu là tạo CV mới
       if (!cvId) {
         navigate(`/candidate/cv-builder/${savedCvId}`, { replace: true });
       }
@@ -217,15 +137,28 @@ const CVBuilderPage = () => {
     }
   };
 
-
-  // Các hàm xử lý giao diện (Kéo thả, đổi ratio, cấu hình...) giữ nguyên
   const updateLayout = (newLayout) => setCvData((prev) => ({ ...prev, layout: newLayout }));
 
   const handleSettingChange = (key, value) => {
+    setCvData((prev) => ({ ...prev, settings: { ...prev.settings, [key]: value } }));
+  };
+
+  const handleTemplateChange = (templateName) => {
+    const entry = TEMPLATE_REGISTRY[templateName];
+    if (!entry) return;
+
     setCvData((prev) => ({
-      ...prev,
-      settings: { ...prev.settings, [key]: value }
+      settings: { ...entry.config.defaultSettings, ...prev.settings, template: templateName },
+      layout: entry.config.defaultLayout,
+      data: prev.data,
     }));
+  };
+
+  const getSectionSortIndex = (id) => {
+    const currentTemplate = cvData.settings.template;
+    const orderArray = TEMPLATE_REGISTRY[currentTemplate]?.config.sectionOrder || TEMPLATE_REGISTRY.simple.config.sectionOrder;
+    const idx = orderArray.indexOf(id);
+    return idx === -1 ? 99 : idx;
   };
 
   const handleAddRow = () => {
@@ -240,7 +173,7 @@ const CVBuilderPage = () => {
     if (!rowToDelete) return;
     const itemsToRecover = [...rowToDelete.leftItems, ...rowToDelete.rightItems];
     newLayout.unusedItems = [...newLayout.unusedItems, ...itemsToRecover];
-    newLayout.unusedItems.sort((a, b) => (SECTION_ORDER.indexOf(a) === -1 ? 99 : SECTION_ORDER.indexOf(a)) - (SECTION_ORDER.indexOf(b) === -1 ? 99 : SECTION_ORDER.indexOf(b)));
+    newLayout.unusedItems.sort((a, b) => getSectionSortIndex(a) - getSectionSortIndex(b));
     newLayout.activeRows = newLayout.activeRows.filter((r) => r.id !== rowId);
     updateLayout(newLayout);
   };
@@ -252,6 +185,19 @@ const CVBuilderPage = () => {
     else if (direction === "down" && index < rows.length - 1) [rows[index + 1], rows[index]] = [rows[index], rows[index + 1]];
     updateLayout(newLayout);
   };
+
+  const handleFontChange = (font) => handleSettingChange("font", font);
+
+  const handleColorChange = (primaryColor, accentColor) => {
+    handleSettingChange("primaryColor", primaryColor);
+    handleSettingChange("accentColor", accentColor);
+  };
+
+  const handleUpdateSectionData = (sectionId, updatedData) =>
+    setCvData((prevCvData) => ({
+      ...prevCvData,
+      data: { ...prevCvData.data, [sectionId]: updatedData }
+    }));
 
   const handleDragStart = (event) => setActiveDragId(event.active.id);
 
@@ -314,7 +260,7 @@ const CVBuilderPage = () => {
 
     if (dest.index === -1) dest.list.push(itemToMove); else dest.list.splice(dest.index, 0, itemToMove);
 
-    newLayout.unusedItems.sort((a, b) => (SECTION_ORDER.indexOf(a) === -1 ? 99 : SECTION_ORDER.indexOf(a)) - (SECTION_ORDER.indexOf(b) === -1 ? 99 : SECTION_ORDER.indexOf(b)));
+    newLayout.unusedItems.sort((a, b) => getSectionSortIndex(a) - getSectionSortIndex(b));
     updateLayout(newLayout);
   };
 
@@ -335,15 +281,7 @@ const CVBuilderPage = () => {
     updateLayout(newLayout);
   };
 
-  const handleFontChange = (font) => handleSettingChange("font", font);
-  const handleColorChange = (primaryColor, accentColor) => {
-    handleSettingChange("primaryColor", primaryColor);
-    handleSettingChange("accentColor", accentColor);
-  };
-
-  const handleUpdateSectionData = (sectionId, updatedData) => setCvData((prevCvData) => ({ ...prevCvData, data: { ...prevCvData.data, [sectionId]: updatedData } }));
-
-  const SelectedTemplate = TEMPLATE_COMPONENTS[cvData.settings.template] || SimpleTemplate;
+  const SelectedTemplate = TEMPLATE_REGISTRY[cvData.settings.template]?.component ?? SimpleTemplate;
 
   const renderDragOverlay = () => {
     if (!activeDragId) return null;
@@ -351,7 +289,6 @@ const CVBuilderPage = () => {
     return <DraggableItem id="overlay" itemId={rawId} primaryColor={cvData.settings.primaryColor} isOverlay={true} />;
   };
 
-  // Màn hình Loading
   if (uiState.isLoading) {
     return (
       <div className="flex h-screen items-center justify-center space-x-2 bg-[#f3f4f6]">
@@ -385,8 +322,12 @@ const CVBuilderPage = () => {
         <DndContext collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <TabPanel 
             activeTab={activeTab} isPanelOpen={isPanelOpen} setIsPanelOpen={setIsPanelOpen} 
-            cvData={cvData} setCvData={setCvData} handleFontChange={handleFontChange} handleColorChange={handleColorChange} 
-            handleDragEnd={handleDragEnd} handleChangeRatio={handleChangeRatio} handleAddRow={handleAddRow} handleDeleteRow={handleDeleteRow} handleMoveRow={handleMoveRow}
+            cvData={cvData} setCvData={setCvData}
+            handleFontChange={handleFontChange}
+            handleColorChange={handleColorChange}
+            handleTemplateChange={handleTemplateChange}
+            handleDragEnd={handleDragEnd} handleChangeRatio={handleChangeRatio}
+            handleAddRow={handleAddRow} handleDeleteRow={handleDeleteRow} handleMoveRow={handleMoveRow}
             handleSettingChange={handleSettingChange}
             selectedSection={selectedSection}
           />
