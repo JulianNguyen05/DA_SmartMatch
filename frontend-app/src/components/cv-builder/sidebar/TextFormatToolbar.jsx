@@ -15,6 +15,7 @@ import { CV_FONT_SIZES } from "../templates/cvTemplateCore";
 const TextFormatToolbar = () => {
   // Hàm gọi API lõi của trình duyệt để định dạng chữ
   const formatText = (command, value = null) => {
+    document.execCommand('styleWithCSS', false, true); 
     document.execCommand(command, false, value);
   };
 
