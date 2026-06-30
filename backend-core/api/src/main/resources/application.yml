@@ -42,3 +42,16 @@ logging:
   level:
     com.worklify: DEBUG
     org.hibernate.SQL: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html       # Đường dẫn truy cập UI
+    tags-sorter: alpha           # BẮT BUỘC: Sắp xếp các Tag (1, 2, 3...) theo thứ tự A-Z
+    operations-sorter: method    # Sắp xếp các API trong 1 Tag theo thứ tự: DELETE, GET, POST, PUT
+    doc-expansion: none          # Thu gọn tất cả các API khi mới tải trang (giúp trang không bị rối mắt)
+    filter: true                 # Bật thanh Search để tìm kiếm API nhanh chóng
+    display-request-duration: true # Hiển thị thời gian phản hồi (ms) khi test API
+    syntax-highlight:
+      theme: agate               # Đổi theme highlight cho các JSON response trông "ngầu" hơn

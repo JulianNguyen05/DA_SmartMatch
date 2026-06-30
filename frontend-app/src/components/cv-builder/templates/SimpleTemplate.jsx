@@ -10,7 +10,6 @@ import {
   adaptDataForList,
   revertDataFromList,
   getGridClasses,
-  setupPagination,
   TemplateContext,
   useTemplateContext
 } from './cvTemplateCore';
@@ -100,8 +99,6 @@ export const SIMPLE_TEMPLATE_CONFIG = {
 // ─────────────────────────────────────────────────────────────────────────────
 const THEME = {
   primary: '#2563EB',
-  primaryLight: '#3B82F6',
-  primaryLightest: '#DBEAFE',
   danger: '#EF4444',
   success: '#10B981',
 };
@@ -114,13 +111,17 @@ const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-2 focus:r
 // FIX: Sử dụng box-shadow inset thay vì outline + padding để tránh nhảy layout
 const sectionWrapClass = (isHighlighted) => `mb-6 cursor-pointer transition-all duration-200 ${isHighlighted ? 'rounded-lg' : ''}`;
 
-const highlightStyle = (isHighlighted) => isHighlighted ? {
-  boxShadow: `inset 0 0 0 2px ${THEME.primary}, inset 0 0 0 3px ${THEME.primaryLightest}`,
+const highlightStyle = (isHighlighted, primaryColor = THEME.primary) => isHighlighted ? {
+  outline: `2px dashed ${primaryColor}`,
+  outlineOffset: '4px',
   backgroundColor: 'rgba(37, 99, 235, 0.02)',
-  borderRadius: '0.5rem',
-  boxSizing: 'border-box',  // ← Padding không push content ra ngoài col-span-10
-  padding: '0.5rem'
-} : {};
+  borderRadius: '4px',
+  padding: '6px',
+} : {
+  outline: '2px dashed transparent',
+  outlineOffset: '4px',
+  borderRadius: '4px',
+};
 
 const EMPTY_ITEM = { date: '', title: '', subtitle: '', description: '' };
 
@@ -163,7 +164,7 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
               <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển lên"><ArrowUp size={13} /></button>
               <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển xuống"><ArrowDown size={13} /></button>
               <button onClick={() => handleDelete(index)} className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm">Xóa</button>
-              <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" style={{ backgroundColor: THEME.primary }}><Plus size={13} /> Thêm</button>
+              <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" style={{ backgroundColor: primaryColor || THEME.primary }}><Plus size={13} /> Thêm</button>
             </div>
 
             <div contentEditable suppressContentEditableWarning
@@ -359,15 +360,19 @@ const SECTION_RENDERER = {
     );
 
     return (
-      <div
-        ref={outerRef}
-        className="mb-4 flex justify-start transition-all"
-        style={isHighlighted ? {
-          outline: '2px dashed #facc15',
-          outlineOffset: '6px',
-          borderRadius: '4px',
-        } : {}}
-      >
+    <div
+            ref={outerRef}
+            className="mb-4 flex justify-center transition-all"
+            style={isHighlighted ? {
+              outline: `2px dashed ${pc}`, // Đổi sang màu theme động theo primaryColor
+              outlineOffset: '6px',
+              borderRadius: '4px',
+            } : {
+              outline: '2px dashed transparent', // Giữ chỗ outline
+              outlineOffset: '6px',
+              borderRadius: '4px',
+            }}
+          >
         <div
           className="relative"
           style={{ width: `${displayW}px`, height: `${displayH}px`, flexShrink: 0 }}
@@ -426,7 +431,7 @@ const SECTION_RENDERER = {
   personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
     const config = useTemplateContext();
     return (
-      <div style={highlightStyle(isHighlighted)} className={`${sectionWrapClass(isHighlighted)} mb-2 text-left`}>
+      <div style={highlightStyle(isHighlighted, primaryColor)} className={`${sectionWrapClass(isHighlighted)} mb-2 text-left`}>
         <h1 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
           className={`text-[2em] font-extrabold tracking-tight min-w-[200px] ${commonEditableClass}`} style={{ color: primaryColor }}
@@ -443,13 +448,13 @@ const SECTION_RENDERER = {
   },
 
   contactInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div style={highlightStyle(isHighlighted)} className={sectionWrapClass(isHighlighted)}>
+    <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
       <EditableContactList items={Array.isArray(data) ? data : []} sectionId={sectionId} primaryColor={primaryColor} onUpdateItems={onUpdateSectionData} />
     </div>
   ),
 
   objective: (props) => (
-    <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}>
+    <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}>
       <EditableSectionTitle {...props} />
       {renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'paragraph', {
         items: Array.isArray(props.data) ? props.data : props.data ? [{ description: props.data }] : [],
@@ -462,7 +467,7 @@ const SECTION_RENDERER = {
   customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
     const config = useTemplateContext();
     return (
-      <div style={highlightStyle(isHighlighted)} className={sectionWrapClass(isHighlighted)}>
+      <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
         <h3 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
           className={`font-bold text-[1.1em] uppercase mb-3 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`}
@@ -479,15 +484,15 @@ const SECTION_RENDERER = {
   },
 
   // Map cho các sections còn lại
-  skills: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('skills', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  hobbies: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('hobbies', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  experience: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('experience', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  education: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('education', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  activities: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('activities', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  projects: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('projects', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  certifications: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('certifications', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  awards: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('awards', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  references: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('references', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  skills: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('skills', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  hobbies: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('hobbies', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  experience: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('experience', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  education: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('education', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  activities: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('activities', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  projects: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('projects', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  certifications: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('certifications', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  awards: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('awards', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  references: (props) => <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('references', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
 };
 
 const getFontSizeStyle = (sizeValue) => {
@@ -511,7 +516,7 @@ const SimpleTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
   const [highlightedSection, setHighlightedSection] = useState(null);
   const containerRef = useRef(null);
 
-  useEffect(() => setupPagination(containerRef), [cvData.layout, cvData.data]);
+  // Cơ chế phân trang A4 đã bị xóa - hiện tại là layout linh hoạt 1 trang dài
 
   const handleSectionClick = (sectionId) => {
     setHighlightedSection(sectionId);
