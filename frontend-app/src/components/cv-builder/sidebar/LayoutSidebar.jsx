@@ -23,7 +23,7 @@ const LayoutSidebar = ({ layout, onChangeRatio, primaryColor, onAddRow, onDelete
   return (
     <div className="p-5">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-lg text-gray-800">Tùy chỉnh bố cục</h3>
+        <h3 className="font-bold text-lg text-slate-800">Tùy chỉnh bố cục</h3>
       </div>
       
       <div className="space-y-4 mb-6">
@@ -45,7 +45,7 @@ const LayoutSidebar = ({ layout, onChangeRatio, primaryColor, onAddRow, onDelete
       <div className="flex justify-center mb-8">
         <button 
           onClick={onAddRow}
-          className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-lg transition-all hover:bg-gray-50"
+          className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-xl transition-all hover:shadow-sm"
           style={{ borderColor: primaryColor, color: primaryColor }}
         >
           <Plus size={16} /> 
@@ -63,17 +63,17 @@ const RowBlock = ({ row, rowIndex, isLastRow, onChangeRatio, primaryColor, onDel
   const widths = getColumnWidths(row.ratio);
 
   return (
-    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-sm">
-      <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-200">
+    <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl shadow-sm">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
         
         {/* TÊN HÀNG & THANH CÔNG CỤ (Lên/Xuống/Xóa) */}
         <div className="flex items-center gap-3">
-          <span className="font-bold text-sm text-gray-700">Hàng {rowIndex + 1}</span>
-          <div className="flex bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
+          <span className="font-bold text-sm text-slate-700">Hàng {rowIndex + 1}</span>
+          <div className="flex bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
             <button 
               onClick={() => onMoveRow(rowIndex, 'up')} 
               disabled={rowIndex === 0} 
-              className="p-1 hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:hover:bg-white transition-colors border-r border-gray-200"
+              className="p-1 hover:bg-[#EFF6FF] hover:text-[#2563EB] text-slate-500 disabled:opacity-30 disabled:hover:bg-white transition-colors border-r border-slate-200"
               title="Di chuyển lên"
             >
               <ArrowUp size={13}/>
@@ -81,7 +81,7 @@ const RowBlock = ({ row, rowIndex, isLastRow, onChangeRatio, primaryColor, onDel
             <button 
               onClick={() => onMoveRow(rowIndex, 'down')} 
               disabled={isLastRow} 
-              className="p-1 hover:bg-gray-100 text-gray-600 disabled:opacity-30 disabled:hover:bg-white transition-colors border-r border-gray-200"
+              className="p-1 hover:bg-[#EFF6FF] hover:text-[#2563EB] text-slate-500 disabled:opacity-30 disabled:hover:bg-white transition-colors border-r border-slate-200"
               title="Di chuyển xuống"
             >
               <ArrowDown size={13}/>
@@ -99,7 +99,7 @@ const RowBlock = ({ row, rowIndex, isLastRow, onChangeRatio, primaryColor, onDel
         <select 
           value={row.ratio}
           onChange={(e) => onChangeRatio(row.id, e.target.value)}
-          className="text-xs border border-gray-300 p-1.5 rounded bg-white text-gray-700 outline-none focus:ring-1 focus:ring-green-400 cursor-pointer"
+          className="text-xs border border-slate-300 p-1.5 rounded-md bg-white text-slate-700 outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] cursor-pointer transition-all"
         >
           <option value="10-0">1 cột (100%)</option>
           <option value="30-70">2 cột (30-70)</option>
@@ -129,16 +129,16 @@ const DroppableColumn = ({ rowId, column, items, primaryColor, label, width }) =
   return (
     <div
       ref={setNodeRef}
-      className={`min-w-0 min-h-[120px] p-2 border-2 rounded-lg transition-all duration-300 ${isOver ? 'border-dashed' : 'border-gray-200'} bg-white`}
+      className={`min-w-0 min-h-[120px] p-2 border-2 rounded-xl transition-all duration-300 ${isOver ? 'border-dashed' : 'border-slate-200'} bg-white`}
       style={{ width: width, borderColor: isOver ? primaryColor : '#e5e7eb', backgroundColor: isOver ? `${primaryColor}08` : '#ffffff' }}
     >
-      <div className="text-[10px] font-semibold text-gray-400 mb-2 uppercase text-center truncate">{label}</div>
+      <div className="text-[10px] font-semibold text-slate-400 mb-2 uppercase text-center truncate">{label}</div>
       <SortableContext items={sortableItems} strategy={verticalListSortingStrategy}>
         <div className="space-y-2">
           {items.length > 0 ? (
             items.map(itemId => <DraggableItem key={itemId} id={`item-${itemId}`} itemId={itemId} primaryColor={primaryColor} />)
           ) : (
-            <div className="text-[10px] text-gray-400 italic py-6 text-center">Kéo thả vào đây</div>
+            <div className="text-[10px] text-slate-400 italic py-6 text-center">Kéo thả vào đây</div>
           )}
         </div>
       </SortableContext>
@@ -151,11 +151,11 @@ const UnusedItemsPool = ({ items, primaryColor }) => {
   const sortableItems = items.map(id => `unused-${id}`);
 
   return (
-    <div className="mt-4 pt-6 border-t border-dashed border-gray-300">
-      <h4 className="font-bold text-sm text-gray-500 mb-3 uppercase">Mục chưa sử dụng</h4>
+    <div className="mt-4 pt-6 border-t border-dashed border-slate-300">
+      <h4 className="font-bold text-sm text-slate-500 mb-3 uppercase">Mục chưa sử dụng</h4>
       <div
         ref={setNodeRef}
-        className={`p-3 min-h-[100px] border-2 rounded-lg transition-all ${isOver ? 'border-dashed' : 'border-gray-200'} bg-white`}
+        className={`p-3 min-h-[100px] border-2 rounded-xl transition-all ${isOver ? 'border-dashed' : 'border-slate-200'} bg-white`}
         style={{ borderColor: isOver ? primaryColor : '#e5e7eb', backgroundColor: isOver ? `${primaryColor}08` : '#ffffff' }}
       >
         <SortableContext items={sortableItems} strategy={rectSortingStrategy}>
@@ -163,7 +163,7 @@ const UnusedItemsPool = ({ items, primaryColor }) => {
             {items.length > 0 ? (
               items.map(itemId => <DraggableItem key={itemId} id={`unused-${itemId}`} itemId={itemId} primaryColor={primaryColor} variant="unused" />)
             ) : (
-              <div className="text-xs text-gray-400 italic w-full text-center py-4">Tất cả mục đều đang sử dụng</div>
+              <div className="text-xs text-slate-400 italic w-full text-center py-4">Tất cả mục đều đang sử dụng</div>
             )}
           </div>
         </SortableContext>

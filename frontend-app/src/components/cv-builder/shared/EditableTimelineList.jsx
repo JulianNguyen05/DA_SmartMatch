@@ -49,7 +49,7 @@ const EditableTimelineList = ({ items, sectionId, primaryColor, onUpdateItems, e
     <div className="w-full relative group/section">
       <div className="space-y-1 relative">
         {items.map((item, index) => (
-          <div key={index} className="relative flex gap-4 pb-4 border-b border-gray-100 last:border-0 group/item transition-all pl-3" style={{ borderLeft: `2px solid ${primaryColor}` }}>
+          <div key={index} className="relative flex gap-1 pb-4 border-b border-gray-100 last:border-0 group/item transition-all pl-3" style={{ borderLeft: `2px solid ${primaryColor}` }}>
             <div className="absolute left-0 -top-8 flex-row gap-1 bg-gray-50/90 shadow-sm border rounded-md p-1 z-10 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
               <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"><ArrowUp size={14} /></button>
               <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"><ArrowDown size={14} /></button>
@@ -59,7 +59,7 @@ const EditableTimelineList = ({ items, sectionId, primaryColor, onUpdateItems, e
               <button onClick={() => handleDelete(index)} className="p-1 hover:bg-red-100 rounded text-red-500 transition-colors"><Trash2 size={14} /></button>
             </div>
 
-            <div className="w-1/4 flex-shrink-0">
+            <div className="w-1/5 flex-shrink-0">
               <div contentEditable suppressContentEditableWarning onBlur={(e) => handleHTMLBlur(e, index, 'date')} className={`text-[0.85em] font-semibold italic ${editableClasses}`} style={{ color: primaryColor }} data-placeholder="Bắt đầu - Kết thúc" dangerouslySetInnerHTML={{ __html: item.date || '' }} />
             </div>
             <div className="flex-1 w-3/4">

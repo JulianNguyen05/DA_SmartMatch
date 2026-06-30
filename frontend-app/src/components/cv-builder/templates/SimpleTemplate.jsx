@@ -33,8 +33,8 @@ export const SIMPLE_TEMPLATE_CONFIG = {
     template: "simple",
     font: "Roboto",
     fontSize: "medium",
-    primaryColor: "#00b14f",
-    accentColor: "#e8f7ee",
+    primaryColor: "#2563EB",
+    accentColor: "#06B6D4",
     avatarShape: "square",
     avatarSize: 120,
   },
@@ -96,10 +96,32 @@ export const SIMPLE_TEMPLATE_CONFIG = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
+// THEME COLORS - Dùng #2563EB làm gốc cho UI elements (không ảnh hưởng primaryColor)
+// ─────────────────────────────────────────────────────────────────────────────
+const THEME = {
+  primary: '#2563EB',
+  primaryLight: '#3B82F6',
+  primaryLightest: '#DBEAFE',
+  danger: '#EF4444',
+  success: '#10B981',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 // PRIVATE CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
-const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded px-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-red-400 empty:bg-red-50/20 min-w-[40px] inline-block';
-const sectionWrapClass = (isHighlighted) => `mb-6 cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`;
+const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 rounded px-2 py-0.5 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-blue-300 empty:bg-blue-50/40 min-w-[40px] inline-block';
+
+// FIX: Sử dụng box-shadow inset thay vì outline + padding để tránh nhảy layout
+const sectionWrapClass = (isHighlighted) => `mb-6 cursor-pointer transition-all duration-200 ${isHighlighted ? 'rounded-lg' : ''}`;
+
+const highlightStyle = (isHighlighted) => isHighlighted ? {
+  boxShadow: `inset 0 0 0 2px ${THEME.primary}, inset 0 0 0 3px ${THEME.primaryLightest}`,
+  backgroundColor: 'rgba(37, 99, 235, 0.02)',
+  borderRadius: '0.5rem',
+  boxSizing: 'border-box',  // ← Padding không push content ra ngoài col-span-10
+  padding: '0.5rem'
+} : {};
+
 const EMPTY_ITEM = { date: '', title: '', subtitle: '', description: '' };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -137,11 +159,11 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
       <div className="space-y-1 relative">
         {items.map((item, index) => (
           <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 p-1 -ml-1 rounded">
-            <div className="absolute right-0 -top-8 flex-row gap-1 bg-gray-100 shadow-md border border-gray-200 rounded p-1 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
-              <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowUp size={12} /></button>
-              <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1 hover:bg-gray-300 rounded text-gray-600 disabled:opacity-30"><ArrowDown size={12} /></button>
-              <button onClick={() => handleDelete(index)} className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs flex items-center gap-1">Xóa</button>
-              <button onClick={() => handleAdd(index)} className="px-2 py-1 bg-[#00b14f] hover:bg-green-600 text-white rounded text-xs flex items-center gap-1"><Plus size={12} /> Thêm</button>
+    <div className="absolute right-0 -top-8 flex-row gap-1 bg-white shadow-lg border border-gray-200 rounded-lg p-2 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
+              <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển lên"><ArrowUp size={13} /></button>
+              <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển xuống"><ArrowDown size={13} /></button>
+              <button onClick={() => handleDelete(index)} className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm">Xóa</button>
+              <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" style={{ backgroundColor: THEME.primary }}><Plus size={13} /> Thêm</button>
             </div>
 
             <div contentEditable suppressContentEditableWarning
@@ -197,30 +219,214 @@ const listProps = (dataType, data, sectionId, primaryColor, onUpdateSectionData)
 // ─────────────────────────────────────────────────────────────────────────────
 const SECTION_RENDERER = {
   avatar: ({ data, primaryColor, settings, isHighlighted, sectionId, onUpdateSectionData }) => {
-    const size = settings?.avatarSize || 120;
+    const defaultW = settings?.avatarSize || 120;
+    const defaultH = settings?.avatarShape === 'circle'
+      ? (settings?.avatarSize || 120)
+      : (settings?.avatarSize || 120) * 1.33;
+
+    const [dims, setDims] = useState({
+      w: data?.customW || defaultW,
+      h: data?.customH || defaultH,
+    });
+    const [isHovered, setIsHovered] = useState(false);
+
+    const outerRef = useRef(null);
+    // Lưu maxW hiện tại để dùng trong resize handler
+    const maxWRef = useRef(400);
+
+    // Sync từ data bên ngoài (Undo/Redo)
+    useEffect(() => {
+      if (data?.customW || data?.customH) {
+        setDims({ w: data.customW || defaultW, h: data.customH || defaultH });
+      }
+    }, [data?.customW, data?.customH]);
+
+    // ResizeObserver: theo dõi khi cột cha thay đổi kích thước
+    useEffect(() => {
+      const el = outerRef.current;
+      if (!el) return;
+
+      const getColEl = () => el.parentElement; // div.cv-section trong cột grid
+
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const colW = entry.contentRect.width;
+          const newMaxW = Math.max(60, colW - 16); // trừ padding nhỏ
+          maxWRef.current = newMaxW;
+
+          // Clamp dims nếu ảnh đang rộng hơn cột mới
+          setDims((prev) => {
+            const clampedW = Math.min(prev.w, newMaxW);
+            if (clampedW !== prev.w) {
+              // Cập nhật data để persist
+              // dùng setTimeout tránh setState trong ResizeObserver callback
+              setTimeout(() => {
+                onUpdateSectionData(sectionId, {
+                  ...data,
+                  customW: clampedW,
+                  customH: prev.h,
+                });
+              }, 0);
+              return { ...prev, w: clampedW };
+            }
+            return prev;
+          });
+        }
+      });
+
+      const colEl = getColEl();
+      if (colEl) observer.observe(colEl);
+
+      return () => observer.disconnect();
+    }, [sectionId, data, onUpdateSectionData]);
+
     const isCircle = settings?.avatarShape === 'circle';
     const fileInputRef = useRef(null);
+    const pc = primaryColor || '#2563EB';
+
     const handleImageChange = (e) => {
-      const file = e.target.files[0]; if (!file) return;
+      const file = e.target.files[0];
+      if (!file) return;
       const reader = new FileReader();
       reader.onloadend = () => onUpdateSectionData(sectionId, { ...data, url: reader.result });
       reader.readAsDataURL(file);
     };
-    const imgStyle = { width: `${size}px`, height: isCircle ? `${size}px` : `${size * 1.33}px`, borderRadius: isCircle ? '50%' : '8px', border: `3px solid ${primaryColor}` };
+
+    const handleResizeMouseDown = (e, dirX, dirY) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startW = dims.w;
+      const startH = dims.h;
+
+      // Dùng maxWRef đã được ResizeObserver cập nhật
+      const maxW = maxWRef.current;
+      const maxH = 500;
+
+      const onMouseMove = (moveEvent) => {
+        const dx = (moveEvent.clientX - startX) * dirX;
+        const dy = (moveEvent.clientY - startY) * dirY;
+        setDims({
+          w: dirX !== 0 ? Math.max(60, Math.min(maxW, startW + dx)) : startW,
+          h: dirY !== 0 ? Math.max(60, Math.min(maxH, startH + dy)) : startH,
+        });
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+        setDims((final) => {
+          onUpdateSectionData(sectionId, { ...data, customW: final.w, customH: final.h });
+          return final;
+        });
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const displayW = dims.w;
+    const displayH = isCircle ? dims.w : dims.h;
+    const borderRadius = isCircle ? '50%' : '6px';
+
+    const handles = [
+      { dirX: -1, dirY: -1, cursor: 'nwse-resize', style: { top: -10, left: -10 },             rotate: 0   },
+      { dirX:  1, dirY: -1, cursor: 'nesw-resize', style: { top: -10, right: -10 },            rotate: 90  },
+      { dirX:  1, dirY:  1, cursor: 'nwse-resize', style: { bottom: -10, right: -10 },         rotate: 180 },
+      { dirX: -1, dirY:  1, cursor: 'nesw-resize', style: { bottom: -10, left: -10 },          rotate: 270 },
+      { dirX:  0, dirY: -1, cursor: 'ns-resize',   style: { top: -10, left: '50%', transform: 'translateX(-50%)' },    rotate: 0,   straight: true },
+      { dirX:  0, dirY:  1, cursor: 'ns-resize',   style: { bottom: -10, left: '50%', transform: 'translateX(-50%)' }, rotate: 180, straight: true },
+      { dirX: -1, dirY:  0, cursor: 'ew-resize',   style: { left: -10, top: '50%', transform: 'translateY(-50%)' },    rotate: 270, straight: true },
+      { dirX:  1, dirY:  0, cursor: 'ew-resize',   style: { right: -10, top: '50%', transform: 'translateY(-50%)' },   rotate: 90,  straight: true },
+    ];
+
+    const activeHandles = isCircle
+      ? handles.slice(0, 4).map(h => ({ ...h, dirY: h.dirX }))
+      : handles;
+
+    const ArrowCorner = ({ color }) => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M2 2h6M2 2v6" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M2 2l5 5" stroke={color} strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+      </svg>
+    );
+
+    const ArrowStraight = ({ color }) => (
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M9 3v-2M9 1l-2.5 3M9 1l2.5 3" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    );
 
     return (
-      <div className={`mb-4 flex justify-start cursor-pointer transition-all relative group ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`} onClick={() => fileInputRef.current?.click()}>
-        <img src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'} alt="Avatar" className="bg-gray-200 object-cover" style={imgStyle} />
-        <div className="absolute flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity" style={imgStyle}><span className="text-white text-xs font-semibold">Đổi ảnh</span></div>
-        <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+      <div
+        ref={outerRef}
+        className="mb-4 flex justify-start transition-all"
+        style={isHighlighted ? {
+          outline: '2px dashed #facc15',
+          outlineOffset: '6px',
+          borderRadius: '4px',
+        } : {}}
+      >
+        <div
+          className="relative"
+          style={{ width: `${displayW}px`, height: `${displayH}px`, flexShrink: 0 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          <img
+            src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'}
+            alt="Avatar"
+            style={{
+              width: '100%', height: '100%',
+              objectFit: 'cover', objectPosition: 'center top',
+              borderRadius, display: 'block',
+            }}
+          />
+
+          {isHovered && (
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ borderRadius, border: `2px dashed ${pc}`, boxSizing: 'border-box' }}
+            />
+          )}
+
+          {isHovered && (
+            <button
+              onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+              className="absolute bottom-3 text-white px-3.5 py-1.5 rounded-full flex items-center justify-center gap-1.5 text-xs font-medium z-10 shadow w-max cursor-pointer"
+              style={{ background: pc, left: '50%', transform: 'translateX(-50%)' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+              </svg>
+              Sửa ảnh
+            </button>
+          )}
+
+          {isHovered && activeHandles.map((h, i) => (
+            <div key={i}
+              onMouseDown={(e) => handleResizeMouseDown(e, h.dirX, h.dirY)}
+              style={{
+                position: 'absolute', cursor: h.cursor, zIndex: 30, padding: '2px',
+                ...h.style,
+                transform: [h.style.transform || '', `rotate(${h.rotate}deg)`].filter(Boolean).join(' '),
+              }}
+            >
+              {h.straight ? <ArrowStraight color={pc} /> : <ArrowCorner color={pc} />}
+            </div>
+          ))}
+
+          <input type="file" ref={fileInputRef} onChange={handleImageChange} accept="image/*" className="hidden" />
+        </div>
       </div>
     );
   },
 
-personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
+  personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
     const config = useTemplateContext();
     return (
-      <div className={`mb-2 text-left cursor-pointer transition-all ${isHighlighted ? 'outline outline-2 outline-dashed outline-yellow-400 p-2 rounded' : ''}`}>
+      <div style={highlightStyle(isHighlighted)} className={`${sectionWrapClass(isHighlighted)} mb-2 text-left`}>
         <h1 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
           className={`text-[2em] font-extrabold tracking-tight min-w-[200px] ${commonEditableClass}`} style={{ color: primaryColor }}
@@ -237,13 +443,13 @@ personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlight
   },
 
   contactInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => (
-    <div className={sectionWrapClass(isHighlighted)}>
+    <div style={highlightStyle(isHighlighted)} className={sectionWrapClass(isHighlighted)}>
       <EditableContactList items={Array.isArray(data) ? data : []} sectionId={sectionId} primaryColor={primaryColor} onUpdateItems={onUpdateSectionData} />
     </div>
   ),
 
   objective: (props) => (
-    <div className={sectionWrapClass(props.isHighlighted)}>
+    <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}>
       <EditableSectionTitle {...props} />
       {renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'paragraph', {
         items: Array.isArray(props.data) ? props.data : props.data ? [{ description: props.data }] : [],
@@ -256,7 +462,7 @@ personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlight
   customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
     const config = useTemplateContext();
     return (
-      <div className={sectionWrapClass(isHighlighted)}>
+      <div style={highlightStyle(isHighlighted)} className={sectionWrapClass(isHighlighted)}>
         <h3 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
           className={`font-bold text-[1.1em] uppercase mb-3 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`}
@@ -273,24 +479,25 @@ personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlight
   },
 
   // Map cho các sections còn lại
-  skills: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('skills', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  hobbies: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('hobbies', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  experience: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('experience', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  education: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('education', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  activities: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('activities', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  projects: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('projects', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  certifications: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('certifications', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  awards: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('awards', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
-  references: (props) => <div className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('references', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  skills: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('skills', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  hobbies: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'tags', listProps('hobbies', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  experience: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('experience', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  education: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'timeline', listProps('education', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  activities: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('activities', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  projects: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('projects', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  certifications: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('certifications', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  awards: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('awards', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
+  references: (props) => <div style={highlightStyle(props.isHighlighted)} className={sectionWrapClass(props.isHighlighted)}><EditableSectionTitle {...props} />{renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'row', listProps('references', props.data, props.sectionId, props.primaryColor, props.onUpdateSectionData))}</div>,
 };
 
-const getFontSizeClass = (size) => {
-  switch (String(size)) {
-    case '3': return 'text-[12px]'; // Nhỏ
-    case '4': return 'text-[14px]'; // Vừa (Mặc định)
-    case '6': return 'text-[16px]'; // Lớn
-    case '7': return 'text-[18px]'; // Rất lớn
-    default: return 'text-[14px]';
+const getFontSizeStyle = (sizeValue) => {
+  // sizeValue khớp với CV_FONT_SIZES[i].value ('small'|'medium'|'large'|'xlarge')
+  switch (sizeValue) {
+    case 'small':  return '16px';
+    case 'medium': return '20px';
+    case 'large':  return '24px';
+    case 'xlarge': return '28px';
+    default:       return '20px';
   }
 };
 
@@ -333,19 +540,19 @@ const SimpleTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
       );
     });
 
-  const baseFontSizeClass = getFontSizeClass(settings.fontSize);
-
-  return (
+return (
     <TemplateContext.Provider value={SIMPLE_TEMPLATE_CONFIG}>
       <div
         ref={containerRef}
-        className={`w-full h-fit min-h-[1123px] bg-white p-[50px] text-gray-800 relative z-10 ${baseFontSizeClass}`} 
-        style={{ fontFamily: `${settings.font}, sans-serif` }}
+        // Thêm padding p-10 (hoặc p-8) để tạo lề cho A4, bg-white để nổi bật
+        className="bg-white mx-auto p-10 box-border" 
+        style={{ fontFamily: `${settings.font}, sans-serif`, fontSize: getFontSizeStyle(settings.fontSize) }}
       >
         {layout.activeRows.map((row) => {
           const { left, right } = getGridClasses(row.ratio);
           return (
-            <div key={row.id} className="grid grid-cols-10 gap-x-8 gap-y-4 mb-4">
+            // Tăng gap-x lên 10 và gap-y lên 8 để các cột/hàng có không gian thở
+            <div key={row.id} className="grid grid-cols-10 gap-x-10 gap-y-8 mb-6">
               <div className={left}>{renderItems(row.leftItems)}</div>
               {row.ratio !== '10-0' && row.ratio !== '100-0' && (
                 <div className={right}>{renderItems(row.rightItems)}</div>

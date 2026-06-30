@@ -46,7 +46,7 @@ const DraggableItem = ({ id, itemId, primaryColor, variant = 'default', isOverla
           backgroundColor: `${primaryColor}15`, 
           borderColor: primaryColor 
         }}
-        className="flex items-center gap-2 p-2.5 rounded-lg border-2 border-dashed opacity-50"
+        className="flex items-center gap-2 p-2.5 rounded-xl border-2 border-dashed opacity-50"
       >
         {/* Render nội dung ẩn để giữ đúng kích thước của item gốc */}
         <GripVertical size={14} className="opacity-0 flex-shrink-0" />
@@ -64,21 +64,21 @@ const DraggableItem = ({ id, itemId, primaryColor, variant = 'default', isOverla
       {...listeners}
       {...attributes}
       className={`
-        flex items-center gap-2 p-2.5 rounded-lg cursor-grab active:cursor-grabbing
-        border transition-colors select-none
-        ${isOverlay ? 'shadow-xl scale-105 rotate-2 text-white' : 'hover:shadow-md text-gray-700'}
-        ${variant === 'unused' && !isOverlay ? 'bg-gray-100 border-gray-200 hover:border-gray-400' : ''}
+        flex items-center gap-2 p-2.5 rounded-xl cursor-grab active:cursor-grabbing
+        border transition-all duration-200 select-none
+        ${isOverlay ? 'shadow-xl scale-105 rotate-2 text-white' : 'hover:shadow-md hover:-translate-y-0.5 text-slate-700'}
+        ${variant === 'unused' && !isOverlay ? 'bg-slate-50 border-slate-200 hover:border-[#2563EB]' : ''}
       `}
       style={{
         ...style,
         // Nếu là Overlay -> Đổ full nền màu xanh. Nếu bình thường -> Nền trắng/xám
-        backgroundColor: isOverlay ? primaryColor : (variant === 'unused' ? '#f3f4f6' : '#ffffff'),
-        borderColor: isOverlay ? primaryColor : '#e5e7eb',
+        backgroundColor: isOverlay ? primaryColor : (variant === 'unused' ? '#F8FAFC' : '#ffffff'),
+        borderColor: isOverlay ? primaryColor : '#E2E8F0',
       }}
     >
       <GripVertical 
         size={14} 
-        className={`flex-shrink-0 ${isOverlay ? 'text-white' : 'text-gray-400'}`} 
+        className={`flex-shrink-0 ${isOverlay ? 'text-white' : 'text-slate-400'}`} 
       />
       <span className="text-sm font-medium flex-1 truncate">
         {displayName}

@@ -4,10 +4,10 @@
 import { createContext, useContext } from 'react';
 
 export const CV_FONT_SIZES = [
-  { label: 'Nhỏ', value: '12px' },
-  { label: 'Vừa', value: '14px' },
-  { label: 'Lớn', value: '16px' },
-  { label: 'Rất lớn', value: '18px' }
+  { label: 'Nhỏ',     value: 'small',  px: '16px' },
+  { label: 'Vừa',     value: 'medium', px: '20px' },
+  { label: 'Lớn',     value: 'large',  px: '24px' },
+  { label: 'Rất lớn', value: 'xlarge', px: '28px' },
 ];
 
 // 1. TẠO CONTEXT CHO TEMPLATE
