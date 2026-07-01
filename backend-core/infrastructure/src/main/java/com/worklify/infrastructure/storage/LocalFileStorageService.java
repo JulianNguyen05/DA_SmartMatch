@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -65,6 +66,31 @@ public class LocalFileStorageService implements FileStoragePort {
     }
 
     @Override
+    public String storeFile(MultipartFile file, String category, String subFolder, String customFileName) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Không thể lưu file rỗng.");
+        }
+
+        try {
+            // Tạo thư mục phân cấp (VD: uploads/cv_thumbnails/11)
+            Path targetLocation = this.rootLocation.resolve(category).resolve(subFolder);
+            Files.createDirectories(targetLocation);
+
+            // Ghép tên file (VD: 38.jpg)
+            Path targetFile = targetLocation.resolve(customFileName);
+
+            // StandardCopyOption.REPLACE_EXISTING giúp ghi đè nếu user bấm xem trước nhiều lần
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("Lưu file thành công theo cấu trúc phân cấp: {}", targetFile);
+
+            return category + "/" + subFolder + "/" + customFileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Không thể lưu trữ file. Lỗi: " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
     public byte[] readFile(String filePath) {
         try {
             Path file = this.rootLocation.resolve(filePath).normalize();
@@ -89,6 +115,23 @@ public class LocalFileStorageService implements FileStoragePort {
         } catch (IOException ex) {
             log.error("Không thể xóa file: {}", filePath, ex);
             throw new RuntimeException("Lỗi khi xóa file: " + filePath, ex);
+        }
+    }
+
+    @Override
+    public void deleteUserFolder(String category, String subFolder) {
+        try {
+            // Xác định thư mục cần xóa (VD: uploads/cv_thumbnails/11)
+            Path folderPath = this.rootLocation.resolve(category).resolve(subFolder).normalize();
+
+            // Nếu thư mục tồn tại thì xóa sạch file bên trong và xóa luôn thư mục đó
+            if (Files.exists(folderPath)) {
+                FileSystemUtils.deleteRecursively(folderPath);
+                log.info("Đã dọn dẹp toàn bộ thư mục: {}", folderPath);
+            }
+        } catch (IOException ex) {
+            log.error("Không thể dọn dẹp thư mục: {}", subFolder, ex);
+            throw new RuntimeException("Lỗi khi xóa thư mục: " + subFolder, ex);
         }
     }
 

@@ -425,11 +425,14 @@ public class CandidateServiceImpl implements CandidateService {
             throw new IllegalArgumentException("Bạn không có quyền sửa CV này.");
         }
 
-        // Lưu ảnh thumbnail vào thư mục uploads/cv_thumbnails/candidate_{id}/
-        String savedRelativePath = fileStoragePort.storeFile(file, "cv_thumbnails", String.valueOf(userId));
+        // Tạo tên file đúng bằng ID của CV
+        String customFileName = cvId + ".jpg";
+
+        // YÊU CẦU: Bạn cần cập nhật hàm storeFile trong LocalFileStorageService để nhận thêm tham số tên file này
+        String savedRelativePath = fileStoragePort.storeFile(file, "cv_thumbnails", String.valueOf(userId), customFileName);
         String thumbnailPath = "/uploads/" + savedRelativePath;
 
-        cv.updateThumbnail(thumbnailPath); // Gọi hàm ở bước 1.2
+        cv.updateThumbnail(thumbnailPath);
         return mapToCvResponse(cvDocumentRepository.save(cv));
     }
 }

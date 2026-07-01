@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
+import Modal from '../../../components/common/Modal';
 import { useParams, useNavigate } from "react-router-dom";
-// Nhập thêm ArrowLeft
 import {
   Palette,
+  Eye,
   LayoutList,
   LayoutTemplate,
   Loader,
@@ -108,6 +109,7 @@ const CVBuilderPage = () => {
   const [uiState, setUiState] = useState({ isLoading: false, isSaving: false });
   const [totalPages, setTotalPages] = useState(1);
   const paperRef = useRef(null);
+  const isSectionClicked = useRef(false);
 
   // State quản lý Tên CV và Trạng thái thông báo
   const [cvTitle, setCvTitle] = useState("CV chưa có tên");
@@ -126,6 +128,12 @@ const CVBuilderPage = () => {
     layout: defaultTemplateConfig.defaultLayout,
     data: defaultTemplateConfig.defaultData,
   });
+
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [thumbnailPath, setThumbnailPath] = useState(null);
+  const thumbnailUrl = thumbnailPath 
+    ? `http://localhost:8080${thumbnailPath}?t=${Date.now()}` 
+    : null;
 
   useEffect(() => {
     if (!paperRef.current) return;
@@ -163,6 +171,7 @@ const CVBuilderPage = () => {
         const fetchedCv = response.data;
 
         if (fetchedCv && fetchedCv.rawText) {
+          setThumbnailPath(fetchedCv.thumbnailPath);
           const parsedData = JSON.parse(fetchedCv.rawText);
           const templateName = parsedData.settings?.template || "simple";
           const tplConfig =
@@ -249,6 +258,9 @@ const CVBuilderPage = () => {
       showToastMsg("Vui lòng đăng nhập để lưu CV.", "error");
       return;
     }
+
+    setSelectedSection(null);
+    await new Promise(resolve => setTimeout(resolve, 150));
 
     setUiState((prev) => ({ ...prev, isSaving: true }));
     try {
@@ -619,6 +631,7 @@ const CVBuilderPage = () => {
 
       {/* Header */}
       <header className="wl-builder-header h-14 flex items-center justify-between px-4 shadow-sm z-20">
+        {/* === CỤM BÊN TRÁI: Nút Back & Đổi tên CV === */}
         <div className="flex items-center gap-4">
           <button
             onClick={handleGoBack}
@@ -644,20 +657,32 @@ const CVBuilderPage = () => {
             )}
           </div>
         </div>
-        <button
-          onClick={handleSaveCv}
-          disabled={uiState.isSaving || (!isDirty && !!cvId)}
-          className="wl-save-btn px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
-        >
-          {uiState.isSaving ? (
-            <Loader className="w-4 h-4 animate-spin" />
-          ) : null}
-          {uiState.isSaving
-            ? "Đang lưu..."
-            : isDirty
-              ? "Lưu thay đổi"
-              : "Đã lưu"}
-        </button>
+
+        {/* === CỤM BÊN PHẢI: Nút Xem trước & Nút Lưu === */}
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsPreviewOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
+          >
+            <Eye size={18} />
+            Xem trước
+          </button>
+
+          <button
+            onClick={handleSaveCv}
+            disabled={uiState.isSaving || (!isDirty && !!cvId)}
+            className="wl-save-btn px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+          >
+            {uiState.isSaving && (
+              <Loader className="w-4 h-4 animate-spin" />
+            )}
+            {uiState.isSaving
+              ? "Đang lưu..."
+              : isDirty
+                ? "Lưu thay đổi"
+                : "Đã lưu"}
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden relative">
@@ -725,6 +750,15 @@ const CVBuilderPage = () => {
         <div
           className="wl-canvas flex-1 overflow-y-auto relative flex justify-center py-10 transition-all"
           style={{ marginLeft: isPanelOpen ? "10px" : "0" }}
+          onClick={() => {
+            // Dùng setTimeout để đợi xem có Section nào được click không
+            setTimeout(() => {
+              if (!isSectionClicked.current) {
+                setSelectedSection(null); // Tắt viền nếu click ra ngoài
+              }
+              isSectionClicked.current = false; // Reset lại cờ
+            }, 0);
+          }}
         >
           <div
             ref={paperRef}
@@ -756,6 +790,7 @@ const CVBuilderPage = () => {
               cvData={cvData}
               onUpdateSectionData={handleUpdateSectionData}
               onSectionClick={(id) => {
+
                 setSelectedSection(id);
                 setActiveTab("design");
                 setIsPanelOpen(true);
@@ -764,6 +799,37 @@ const CVBuilderPage = () => {
           </div>
         </div>
       </div>
+      <Modal 
+        isOpen={isPreviewOpen} 
+        onClose={() => setIsPreviewOpen(false)} 
+        title="Bản xem trước CV"
+      >
+        {/* Container cho phép cuộn dọc (overflow-y-auto), giới hạn chiều cao 85vh */}
+        <div 
+          className="bg-gray-200 overflow-y-auto flex justify-center p-4 sm:p-8" 
+          style={{ maxHeight: '85vh', width: '100%', minWidth: 'min(850px, 95vw)' }}
+        >
+          {/* Khung giới hạn chiều rộng của CV (chuẩn A4 ~ 794px) */}
+          <div className="w-full max-w-[794px] bg-white shadow-2xl rounded-sm">
+            {thumbnailUrl ? (
+              <img 
+                src={thumbnailUrl} 
+                alt="CV Preview" 
+                // Xóa object-contain, dùng w-full h-auto để ảnh to tràn viền khung 794px
+                className="w-full h-auto block rounded-sm"
+              />
+            ) : (
+              <div className="w-full h-96 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 bg-white m-4 rounded-lg">
+                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                  <Eye size={32} />
+                </div>
+                <p className="text-gray-600 font-medium">CV này chưa có bản xem trước</p>
+                <p className="text-sm text-gray-400 mt-1">Hãy nhấn "Lưu thay đổi" để hệ thống tạo ảnh nhé!</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
