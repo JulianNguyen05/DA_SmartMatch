@@ -109,7 +109,6 @@ const CVBuilderPage = () => {
   const [uiState, setUiState] = useState({ isLoading: false, isSaving: false });
   const [totalPages, setTotalPages] = useState(1);
   const paperRef = useRef(null);
-  const isSectionClicked = useRef(false);
 
   // State quản lý Tên CV và Trạng thái thông báo
   const [cvTitle, setCvTitle] = useState("CV chưa có tên");
@@ -751,13 +750,9 @@ const CVBuilderPage = () => {
           className="wl-canvas flex-1 overflow-y-auto relative flex justify-center py-10 transition-all"
           style={{ marginLeft: isPanelOpen ? "10px" : "0" }}
           onClick={() => {
-            // Dùng setTimeout để đợi xem có Section nào được click không
-            setTimeout(() => {
-              if (!isSectionClicked.current) {
-                setSelectedSection(null); // Tắt viền nếu click ra ngoài
-              }
-              isSectionClicked.current = false; // Reset lại cờ
-            }, 0);
+            // Section bên trong đã stopPropagation khi được click,
+            // nên nếu sự kiện lọt tới đây tức là người dùng click ra ngoài section.
+            setSelectedSection(null);
           }}
         >
           <div
@@ -788,9 +783,9 @@ const CVBuilderPage = () => {
 
             <SelectedTemplate
               cvData={cvData}
+              selectedSection={selectedSection}
               onUpdateSectionData={handleUpdateSectionData}
               onSectionClick={(id) => {
-
                 setSelectedSection(id);
                 setActiveTab("design");
                 setIsPanelOpen(true);

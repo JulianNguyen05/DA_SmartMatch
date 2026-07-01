@@ -511,15 +511,16 @@ const getFontSizeStyle = (sizeValue) => {
 // Bọc bằng TemplateContext.Provider để phát tán cấu hình xuống component con
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SimpleTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
+const SimpleTemplate = ({ cvData, selectedSection, onSectionClick, onUpdateSectionData }) => {
   const { layout, data, settings } = cvData;
-  const [highlightedSection, setHighlightedSection] = useState(null);
   const containerRef = useRef(null);
 
   // Cơ chế phân trang A4 đã bị xóa - hiện tại là layout linh hoạt 1 trang dài
 
-  const handleSectionClick = (sectionId) => {
-    setHighlightedSection(sectionId);
+  const handleSectionClick = (e, sectionId) => {
+    // Chặn sự kiện nổi bọt lên canvas cha, tránh bị hiểu nhầm là "click ra ngoài"
+    // và bị setSelectedSection(null) đè ngay sau đó.
+    e.stopPropagation();
     if (onSectionClick) onSectionClick(sectionId);
   };
 
@@ -530,14 +531,14 @@ const SimpleTemplate = ({ cvData, onSectionClick, onUpdateSectionData }) => {
       if (!SectionComponent) return null;
 
       return (
-        <div key={itemId} onClick={() => handleSectionClick(itemId)} className="transition-all cv-section">
+        <div key={itemId} onClick={(e) => handleSectionClick(e, itemId)} className="transition-all cv-section">
           <SectionComponent
             data={data[itemId]}
             sectionTitle={data.sectionTitles?.[itemId]}
             allSectionTitles={data.sectionTitles || {}}
             primaryColor={settings.primaryColor}
             settings={settings}
-            isHighlighted={highlightedSection === itemId}
+            isHighlighted={selectedSection === itemId}
             sectionId={itemId}
             onUpdateSectionData={onUpdateSectionData}
           />
