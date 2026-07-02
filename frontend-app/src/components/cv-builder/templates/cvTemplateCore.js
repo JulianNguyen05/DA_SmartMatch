@@ -10,6 +10,9 @@ export const CV_FONT_SIZES = [
   { label: 'Rất lớn', value: 'xlarge', px: '28px' },
 ];
 
+export const CV_PAGE_WIDTH_PX = 794;
+export const CV_PAGE_HEIGHT_PX = 1123;
+
 // 1. TẠO CONTEXT CHO TEMPLATE
 export const TemplateContext = createContext(null);
 export const useTemplateContext = () => useContext(TemplateContext);

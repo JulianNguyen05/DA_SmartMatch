@@ -156,7 +156,11 @@ const CVBuilderPage = () => {
     });
     observer.observe(paperRef.current);
     return () => observer.disconnect();
-  }, []);
+    // Gắn lại observer mỗi khi trạng thái loading đổi: paperRef bị unmount/mount lại
+    // thành DOM node MỚI sau khi màn hình loading tắt (do có early-return riêng cho
+    // isLoading), nên effect với deps [] chỉ chạy đúng 1 lần sẽ bị "hụt", không theo dõi
+    // được node mới -> totalPages bị kẹt cứng ở giá trị cũ (thường là 1).
+  }, [uiState.isLoading]);
 
   useEffect(() => {
     const fetchCvData = async () => {
@@ -803,28 +807,39 @@ const CVBuilderPage = () => {
       >
         {/* Container cho phép cuộn dọc (overflow-y-auto), giới hạn chiều cao 85vh */}
         <div 
-          className="bg-gray-200 overflow-y-auto flex justify-center p-4 sm:p-8" 
+          className="bg-gray-200 overflow-y-auto flex flex-col items-center gap-8 p-4 sm:p-8" 
           style={{ maxHeight: '85vh', width: '100%', minWidth: 'min(850px, 95vw)' }}
         >
-          {/* Khung giới hạn chiều rộng của CV (chuẩn A4 ~ 794px) */}
-          <div className="w-full max-w-[794px] bg-white shadow-2xl rounded-sm">
-            {thumbnailUrl ? (
-              <img 
-                src={thumbnailUrl} 
-                alt="CV Preview" 
-                // Xóa object-contain, dùng w-full h-auto để ảnh to tràn viền khung 794px
-                className="w-full h-auto block rounded-sm"
-              />
-            ) : (
-              <div className="w-full h-96 flex flex-col items-center justify-center border-2 border-dashed border-blue-200 bg-white m-4 rounded-lg">
-                <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
-                  <Eye size={32} />
-                </div>
-                <p className="text-gray-600 font-medium">CV này chưa có bản xem trước</p>
-                <p className="text-sm text-gray-400 mt-1">Hãy nhấn "Lưu thay đổi" để hệ thống tạo ảnh nhé!</p>
+          {/* Render lại CHÍNH XÁC nội dung CV đang chỉnh sửa (không phải ảnh chụp tĩnh),
+              tách thành từng khung trang A4 riêng biệt (1123px), có khoảng trắng ngăn cách
+              y như bản in thật. Mỗi khung trang dùng kỹ thuật "windowing": toàn bộ nội dung
+              CV được render đầy đủ bên trong, chỉ dịch (translateY) lên để lộ đúng phần
+              thuộc trang đó, phần overflow bị khung `overflow-hidden` cắt che đi. Nhờ vậy
+              không cần domtoimage/ảnh chụp, luôn khớp 100% với nội dung mới nhất, kể cả
+              khi chưa lưu. */}
+          {Array.from({ length: totalPages }).map((_, pageIndex) => (
+            <div
+              key={pageIndex}
+              className="relative bg-white shadow-2xl rounded-sm overflow-hidden shrink-0"
+              style={{ width: '794px', maxWidth: '100%', height: '1123px' }}
+            >
+              <div
+                className="absolute top-0 left-0 w-full pointer-events-none select-none"
+                style={{ transform: `translateY(-${pageIndex * 1123}px)` }}
+              >
+                <SelectedTemplate
+                  cvData={cvData}
+                  selectedSection={null}
+                  onSectionClick={() => {}}
+                  onUpdateSectionData={() => {}}
+                />
               </div>
-            )}
-          </div>
+
+              <span className="absolute bottom-2 right-3 text-[11px] text-gray-400 font-medium bg-white/80 px-1.5 py-0.5 rounded">
+                Trang {pageIndex + 1}/{totalPages}
+              </span>
+            </div>
+          ))}
         </div>
       </Modal>
     </div>
