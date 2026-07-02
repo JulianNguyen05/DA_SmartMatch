@@ -22,6 +22,7 @@ import candidateService from "../../../features/candidate/candidateService";
 import SimpleTemplate, {
   SIMPLE_TEMPLATE_CONFIG,
 } from "../../../components/cv-builder/templates/SimpleTemplate";
+import { CV_PAGE_WIDTH_PX, CV_PAGE_HEIGHT_PX } from "../../../components/cv-builder/templates/cvTemplateCore";
 // import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
 // import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
 
@@ -150,7 +151,7 @@ const CVBuilderPage = () => {
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {
         const height = entry.contentRect.height;
-        const pages = Math.max(1, Math.ceil((height - 5) / 1123));
+        const pages = Math.max(1, Math.ceil((height - 5) / CV_PAGE_HEIGHT_PX));
         setTotalPages(pages);
       }
     });
@@ -763,11 +764,13 @@ const CVBuilderPage = () => {
         >
           <div
             ref={paperRef}
-            className="cv-paper-root w-[794px] min-h-[1123px] h-fit bg-white shadow-xl relative rounded-sm"
+            className="cv-paper-root h-fit bg-white shadow-xl relative rounded-sm"
             style={{
+              width: `${CV_PAGE_WIDTH_PX}px`,
+              minHeight: `${CV_PAGE_HEIGHT_PX}px`,
               backgroundImage:
-                "repeating-linear-gradient(to bottom, transparent, transparent 1122px, #2563EB 1122px, #2563EB 1124px)",
-              backgroundSize: "100% 1123px",
+                `repeating-linear-gradient(to bottom, transparent, transparent ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX + 1}px)`,
+              backgroundSize: `100% ${CV_PAGE_HEIGHT_PX}px`,
             }}
           >
             {totalPages > 1 &&
@@ -778,7 +781,7 @@ const CVBuilderPage = () => {
                     key={pageIndex}
                     className="wl-page-tag absolute left-[-55px] text-[10px] px-2 py-1 rounded shadow-sm z-50 font-medium"
                     style={{
-                      top: `${pageIndex * 1123}px`,
+                      top: `${pageIndex * CV_PAGE_HEIGHT_PX}px`,
                       transform: "translateY(-50%)",
                     }}
                   >
@@ -821,11 +824,11 @@ const CVBuilderPage = () => {
             <div
               key={pageIndex}
               className="relative bg-white shadow-2xl rounded-sm overflow-hidden shrink-0"
-              style={{ width: '794px', maxWidth: '100%', height: '1123px' }}
+              style={{ width: `${CV_PAGE_WIDTH_PX}px`, maxWidth: '100%', height: `${CV_PAGE_HEIGHT_PX}px` }}
             >
               <div
                 className="absolute top-0 left-0 w-full pointer-events-none select-none"
-                style={{ transform: `translateY(-${pageIndex * 1123}px)` }}
+                style={{ transform: `translateY(-${pageIndex * CV_PAGE_HEIGHT_PX}px)` }}
               >
                 <SelectedTemplate
                   cvData={cvData}

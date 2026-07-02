@@ -16,8 +16,8 @@
  *     thumbnail, không đụng vào màn hình đang thiết kế trực tiếp.
  */
 import domtoimage from 'dom-to-image-more';
+import { CV_PAGE_HEIGHT_PX } from '../templates/cvTemplateCore';
 
-export const CV_PAGE_HEIGHT_PX = 1123; // chiều cao 1 trang A4 ở 96dpi
 const PAGE_TOP_PADDING_PX = 30;
 const PAGE_GAP_PX = 40; // khoảng trắng hiển thị giữa 2 trang trong ảnh thumbnail
 
