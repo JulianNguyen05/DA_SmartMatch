@@ -109,19 +109,19 @@ const THEME = {
 const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 rounded px-2 py-0.5 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-blue-300 empty:bg-blue-50/40 min-w-[40px] inline-block';
 
 // FIX: Sử dụng box-shadow inset thay vì outline + padding để tránh nhảy layout
-const sectionWrapClass = (isHighlighted) => `mb-6 cursor-pointer transition-all duration-200 ${isHighlighted ? 'rounded-lg' : ''}`;
+// flow-root: ép mỗi section tạo Block Formatting Context riêng, chặn tuyệt đối
+// hiện tượng margin-top của phần tử con "thoát" ra ngoài đè lên section phía trên.
+const sectionWrapClass = (isHighlighted) => `mb-1 flow-root cursor-pointer transition-all duration-200 ${isHighlighted ? 'rounded-lg' : ''}`;
 
-const highlightStyle = (isHighlighted, primaryColor = THEME.primary) => isHighlighted ? {
-  outline: `2px dashed ${primaryColor}`,
+const highlightStyle = (isHighlighted, primaryColor = THEME.primary) => ({
+  outline: isHighlighted ? `2px dashed ${primaryColor}` : '2px dashed transparent',
   outlineOffset: '4px',
-  backgroundColor: 'rgba(37, 99, 235, 0.02)',
+  backgroundColor: isHighlighted ? 'rgba(37, 99, 235, 0.02)' : 'transparent',
   borderRadius: '4px',
+  // Padding luôn giữ cố định 6px (không phụ thuộc isHighlighted) để việc bật/tắt viền
+  // KHÔNG làm thay đổi kích thước khối -> không gây nhảy layout / vỡ chữ khi chụp thumbnail.
   padding: '6px',
-} : {
-  outline: '2px dashed transparent',
-  outlineOffset: '4px',
-  borderRadius: '4px',
-};
+});
 
 const EMPTY_ITEM = { date: '', title: '', subtitle: '', description: '' };
 
@@ -431,7 +431,7 @@ const SECTION_RENDERER = {
   personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted }) => {
     const config = useTemplateContext();
     return (
-      <div style={highlightStyle(isHighlighted, primaryColor)} className={`${sectionWrapClass(isHighlighted)} mb-2 text-left`}>
+      <div style={highlightStyle(isHighlighted, primaryColor)} className={`${sectionWrapClass(isHighlighted)} text-left`}>
         <h1 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
           className={`text-[2em] font-extrabold tracking-tight min-w-[200px] ${commonEditableClass}`} style={{ color: primaryColor }}
@@ -531,7 +531,7 @@ const SimpleTemplate = ({ cvData, selectedSection, onSectionClick, onUpdateSecti
       if (!SectionComponent) return null;
 
       return (
-        <div key={itemId} onClick={(e) => handleSectionClick(e, itemId)} className="transition-all cv-section">
+        <div key={itemId} onClick={(e) => handleSectionClick(e, itemId)} className="transition-all cv-section flow-root">
           <SectionComponent
             data={data[itemId]}
             sectionTitle={data.sectionTitles?.[itemId]}

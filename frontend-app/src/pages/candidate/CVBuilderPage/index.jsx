@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import domtoimage from "dom-to-image-more";
+import { captureCvThumbnailAsFile } from "../../../components/cv-builder/shared/captureCvThumbnail";
 
 import TabPanel from "../../../components/cv-builder/sidebar/TabPanel";
 import DraggableItem from "../../../components/cv-builder/sidebar/DraggableItem";
@@ -36,6 +36,13 @@ const wlBuilderStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
   .wl-builder, .wl-builder * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+
+  /* Không cho font UI (Inter) của khung xây dựng "rò" vào vùng nội dung CV bên trong.
+     Nếu không có dòng này, mọi phần tử trong CV (h1, h2, span...) đều bị ép cứng về Inter
+     (vì selector .wl-builder * áp trực tiếp lên từng phần tử con, thắng cả inheritance),
+     khiến việc đổi "Font chữ toàn CV" (settings.font) không có tác dụng gì trên màn hình live.
+     unset -> quay về kế thừa bình thường từ style inline (fontFamily: settings.font). */
+  .wl-builder .cv-paper-root, .wl-builder .cv-paper-root * { font-family: unset; }
 
   .wl-builder-root { background: #F0F4FF; }
 
@@ -96,6 +103,10 @@ const wlBuilderStyles = `
   }
 
   .wl-toast { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border-radius: 12px; }
+
+  /* Dùng khi chụp thumbnail: tắt hẳn mọi transition để dom-to-image-more
+     không bao giờ bắt phải khung hình đang chuyển động dở dang. */
+  .wl-no-transition, .wl-no-transition * { transition: none !important; }
 `;
 
 const CVBuilderPage = () => {
@@ -284,18 +295,9 @@ const CVBuilderPage = () => {
       await candidateService.renameCv(currentUser.userId, savedCvId, cvTitle);
 
       try {
-        const element = paperRef.current;
-        const blob = await domtoimage.toBlob(element, {
-          quality: 0.85,
-          bgcolor: "#ffffff",
-          width: element.offsetWidth,
-          height: element.offsetHeight,
-        });
-
-        const thumbnailFile = new File(
-          [blob],
+        const thumbnailFile = await captureCvThumbnailAsFile(
+          paperRef.current,
           `cv_thumbnail_${savedCvId}.jpg`,
-          { type: "image/jpeg" },
         );
         await candidateService.uploadCvThumbnail(
           currentUser.userId,
@@ -757,7 +759,7 @@ const CVBuilderPage = () => {
         >
           <div
             ref={paperRef}
-            className="w-[794px] min-h-[1123px] h-fit bg-white shadow-xl relative rounded-sm"
+            className="cv-paper-root w-[794px] min-h-[1123px] h-fit bg-white shadow-xl relative rounded-sm"
             style={{
               backgroundImage:
                 "repeating-linear-gradient(to bottom, transparent, transparent 1122px, #2563EB 1122px, #2563EB 1124px)",
