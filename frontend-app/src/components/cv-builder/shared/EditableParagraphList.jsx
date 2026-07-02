@@ -44,36 +44,36 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
     onUpdateItems(sectionId, [{ ...emptyItemTemplate }]);
   };
 
-  const editableClasses = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded p-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text w-full";
+  const editableClasses = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded px-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text w-full";
 
   return (
     <div className="w-full relative group/section">
-      <div className="space-y-3 relative">
+      <div className="space-y-1 relative">
         {items.map((item, index) => (
           <div key={index} className="relative group/item transition-all">
             {/* Toolbar mini */}
             <div
-              className="absolute right-0 -top-6 flex-row gap-1 bg-gray-50/90 shadow-sm border rounded-md p-1 z-10 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex"
+              className="absolute right-0 -top-6 flex-row gap-1 bg-gray-50/90 shadow-sm border rounded-md px-1 z-10 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex"
               contentEditable="false"
             >
               <button
                 onClick={() => handleMoveUp(index)}
                 disabled={index === 0}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"
+                className="px-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"
               >
                 <ArrowUp size={14} />
               </button>
               <button
                 onClick={() => handleMoveDown(index)}
                 disabled={index === items.length - 1}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"
+                className="px-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30 transition-colors"
               >
                 <ArrowDown size={14} />
               </button>
               <div className="w-px h-4 bg-gray-300 self-center mx-1"></div>
               <button
                 onClick={() => handleAddAfter(index)}
-                className="p-1 hover:bg-green-100 rounded transition-colors"
+                className="px-1 hover:bg-green-100 rounded transition-colors"
                 style={{ color: primaryColor }}
               >
                 <Plus size={14} />
@@ -81,7 +81,7 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
               <div className="w-px h-4 bg-gray-300 self-center mx-1"></div>
               <button
                 onClick={() => handleDelete(index)}
-                className="p-1 hover:bg-red-100 rounded text-red-500 transition-colors"
+                className="px-1 hover:bg-red-100 rounded text-red-500 transition-colors"
               >
                 <Trash2 size={14} />
               </button>

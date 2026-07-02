@@ -11,8 +11,14 @@ import {
   Baseline,
 } from "lucide-react";
 
-// Khởi tạo danh sách kích thước chữ từ 10 đến 48
-const FONT_SIZE_OPTIONS = Array.from({ length: 21 }, (_, i) => 10 + i * 2);
+const FONT_SIZE_OPTIONS = [
+  ...Array.from({ length: 15 }, (_, i) => 10 + i),
+  26,
+  30,
+  32,
+  36,
+  48,
+];
 
 const TextFormatToolbar = () => {
   // State quản lý đóng/mở dropdown cỡ chữ

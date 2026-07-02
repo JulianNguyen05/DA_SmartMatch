@@ -16,45 +16,9 @@
  *     thumbnail, không đụng vào màn hình đang thiết kế trực tiếp.
  */
 import domtoimage from 'dom-to-image-more';
-import { CV_PAGE_HEIGHT_PX } from '../templates/cvTemplateCore';
+import { CV_PAGE_HEIGHT_PX, applyCvPageBreaks } from '../templates/cvTemplateCore';
 
-const PAGE_TOP_PADDING_PX = 30;
 const PAGE_GAP_PX = 40; // khoảng trắng hiển thị giữa 2 trang trong ảnh thumbnail
-
-/**
- * Tạm thời đẩy các .cv-section bị "cắt ngang" bởi biên trang xuống đầu trang kế tiếp
- * (gán margin-top), để khi chụp ảnh nhìn giống hệt các trang PDF thật, có khoảng trắng
- * tách trang rõ ràng.
- * @returns {() => void} hàm cleanup để khôi phục margin ban đầu sau khi chụp xong.
- */
-function applyPageBreaks(rootElement, pageHeight = CV_PAGE_HEIGHT_PX, gap = PAGE_GAP_PX) {
-  const sections = Array.from(rootElement.querySelectorAll('.cv-section'));
-  const originalMargins = sections.map((sec) => sec.style.marginTop);
-
-  // Reset trước để phép đo bên dưới không bị ảnh hưởng bởi lần ngắt trang trước đó
-  sections.forEach((sec) => { sec.style.marginTop = '0px'; });
-
-  // Xử lý tuần tự từ trên xuống: mỗi lần đẩy 1 section, các section sau đọc lại
-  // đúng vị trí mới (getBoundingClientRect luôn ép reflow đồng bộ) nên tính đúng dây chuyền.
-  sections.forEach((sec) => {
-    const canvasRect = rootElement.getBoundingClientRect();
-    const secRect = sec.getBoundingClientRect();
-    const top = secRect.top - canvasRect.top;
-    const height = secRect.height;
-    const bottom = top + height;
-    const currentPage = Math.floor(top / pageHeight);
-    const pageBottom = (currentPage + 1) * pageHeight;
-
-    // Chỉ ngắt nếu section bị biên trang cắt ngang, và bản thân nó không dài hơn 1 trang
-    if (bottom > pageBottom && height < pageHeight) {
-      sec.style.marginTop = `${pageBottom - top + PAGE_TOP_PADDING_PX + gap}px`;
-    }
-  });
-
-  return () => {
-    sections.forEach((sec, i) => { sec.style.marginTop = originalMargins[i]; });
-  };
-}
 
 /**
  * Chụp ảnh thumbnail từ khung giấy CV, có tách trang (page-break) giống bản in thật.
@@ -78,7 +42,9 @@ export async function captureCvThumbnail(rootElement, options = {}) {
   }
   await new Promise((resolve) => requestAnimationFrame(resolve));
 
-  const restorePageBreaks = withPageBreaks ? applyPageBreaks(rootElement) : null;
+  const restorePageBreaks = withPageBreaks
+    ? applyCvPageBreaks(rootElement, { pageGap: PAGE_GAP_PX }).restore
+    : null;
 
   // Đợi thêm 1 nhịp để marginTop vừa gán phản ánh đúng vào layout trước khi đo kích thước
   if (withPageBreaks) {

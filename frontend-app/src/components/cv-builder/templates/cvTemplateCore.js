@@ -4,12 +4,16 @@
 import { createContext, useContext } from 'react';
 
 export const CV_FONT_SIZES = [
-  { label: 'Nhỏ',     value: 'small',  px: '16px' },
-  { label: 'Vừa',     value: 'medium', px: '20px' },
-  { label: 'Lớn',     value: 'large',  px: '24px' },
-  { label: 'Rất lớn', value: 'xlarge', px: '28px' },
+  { label: 'Nhỏ',     value: 'small',  px: '13px' },
+  { label: 'Vừa',     value: 'medium', px: '16px' },
+  { label: 'Lớn',     value: 'large',  px: '20px' },
+  { label: 'Rất lớn', value: 'xlarge', px: '24px' },
 ];
 
+// Kích thước 1 trang A4 chuẩn ở 96dpi. Đây là NGUỒN DUY NHẤT cho kích thước trang
+// trong toàn bộ ứng dụng — mọi nơi cần tới (khung giấy live editor, khung phân trang
+// trong bản xem trước, mô phỏng ngắt trang khi chụp thumbnail...) đều import từ đây,
+// tránh lặp lại số "magic" 794/1123 ở nhiều chỗ rồi lệch nhau khi cần đổi khổ giấy.
 export const CV_PAGE_WIDTH_PX = 794;
 export const CV_PAGE_HEIGHT_PX = 1123;
 
@@ -96,36 +100,47 @@ export const revertDataFromList = (listData, type) => {
   });
 };
 
-// 5. PAGINATION HOOK
-export const setupPagination = (containerRef) => {
-  const container = containerRef.current;
-  if (!container) return;
-  const PAGE_HEIGHT = 1123;
-  const TOP_PADDING = 30;
+// 5. NGẮT TRANG (dùng chung cho: khung xem trước live trong Modal + ảnh thumbnail)
+// Đẩy nguyên khối .cv-section nào bị biên trang cắt ngang xuống đầu trang kế tiếp
+// (gán margin-top), để không bao giờ cắt dở dang giữa 1 đoạn văn/1 mục kinh nghiệm.
+// Trả về { height, restore } — height: chiều cao thật sau khi ngắt trang (dùng để tính
+// lại số trang chính xác); restore: hàm khôi phục margin ban đầu (gọi khi không cần nữa).
+export const applyCvPageBreaks = (rootElement, options = {}) => {
+  const {
+    pageHeight = CV_PAGE_HEIGHT_PX,
+    topPadding = 30,
+    pageGap = 40,
+  } = options;
 
-  const paginate = () => {
-    const sections = Array.from(container.querySelectorAll('.cv-section'));
-    sections.forEach((sec) => { sec.style.marginTop = '0px'; });
-    sections.forEach((sec) => {
-      const canvasRect = container.getBoundingClientRect();
-      const secRect = sec.getBoundingClientRect();
-      const top = secRect.top - canvasRect.top;
-      const height = secRect.height;
-      const bottom = top + height;
-      const currentPage = Math.floor(top / PAGE_HEIGHT);
-      const pageBottom = (currentPage + 1) * PAGE_HEIGHT;
-      if (bottom > pageBottom && height < PAGE_HEIGHT) {
-        sec.style.marginTop = `${pageBottom - top + TOP_PADDING}px`;
-      }
-    });
-  };
+  if (!rootElement) return { height: 0, restore: () => {} };
 
-  let timeout;
-  const observer = new MutationObserver(() => {
-    clearTimeout(timeout);
-    timeout = setTimeout(paginate, 100);
+  const sections = Array.from(rootElement.querySelectorAll('.cv-section'));
+  const originalMargins = sections.map((sec) => sec.style.marginTop);
+
+  // Reset trước để phép đo không bị ảnh hưởng bởi lần ngắt trang trước đó
+  sections.forEach((sec) => { sec.style.marginTop = '0px'; });
+
+  // Xử lý tuần tự từ trên xuống: mỗi lần đẩy 1 section, các section sau đọc lại đúng
+  // vị trí mới (getBoundingClientRect luôn ép reflow đồng bộ) nên tính đúng dây chuyền.
+  sections.forEach((sec) => {
+    const canvasRect = rootElement.getBoundingClientRect();
+    const secRect = sec.getBoundingClientRect();
+    const top = secRect.top - canvasRect.top;
+    const height = secRect.height;
+    const bottom = top + height;
+    const currentPage = Math.floor(top / pageHeight);
+    const pageBottom = (currentPage + 1) * pageHeight;
+
+    // Chỉ ngắt nếu section bị biên trang cắt ngang, và bản thân nó không dài hơn 1 trang
+    if (bottom > pageBottom && height < pageHeight) {
+      sec.style.marginTop = `${pageBottom - top + topPadding + pageGap}px`;
+    }
   });
-  observer.observe(container, { childList: true, subtree: true, characterData: true, attributes: false });
-  setTimeout(paginate, 100);
-  return () => { observer.disconnect(); clearTimeout(timeout); };
+
+  const height = rootElement.getBoundingClientRect().height;
+
+  return {
+    height,
+    restore: () => { sections.forEach((sec, i) => { sec.style.marginTop = originalMargins[i]; }); },
+  };
 };

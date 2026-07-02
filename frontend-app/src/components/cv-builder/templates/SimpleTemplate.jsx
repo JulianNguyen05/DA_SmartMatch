@@ -120,7 +120,7 @@ const highlightStyle = (isHighlighted, primaryColor = THEME.primary) => ({
   borderRadius: '4px',
   // Padding luôn giữ cố định 6px (không phụ thuộc isHighlighted) để việc bật/tắt viền
   // KHÔNG làm thay đổi kích thước khối -> không gây nhảy layout / vỡ chữ khi chụp thumbnail.
-  padding: '6px',
+  padding: '2px',
 });
 
 const EMPTY_ITEM = { date: '', title: '', subtitle: '', description: '' };
@@ -156,13 +156,13 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
   };
 
   return (
-    <div className="w-full relative group/section mt-3">
+    <div className="w-full relative group/section">
       <div className="space-y-1 relative">
         {items.map((item, index) => (
-          <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 p-1 -ml-1 rounded">
-    <div className="absolute right-0 -top-8 flex-row gap-1 bg-white shadow-lg border border-gray-200 rounded-lg p-2 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
-              <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển lên"><ArrowUp size={13} /></button>
-              <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="p-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển xuống"><ArrowDown size={13} /></button>
+          <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 px-1 rounded">
+            <div className="absolute right-0 -top-8 flex-row gap-1 bg-white shadow-lg border border-gray-200 rounded-lg px-2 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
+              <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="px-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển lên"><ArrowUp size={13} /></button>
+              <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="px-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển xuống"><ArrowDown size={13} /></button>
               <button onClick={() => handleDelete(index)} className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm">Xóa</button>
               <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" style={{ backgroundColor: primaryColor || THEME.primary }}><Plus size={13} /> Thêm</button>
             </div>
@@ -193,7 +193,7 @@ const EditableSectionTitle = ({ sectionId, sectionTitle, allSectionTitles, prima
   return (
     <h3 contentEditable suppressContentEditableWarning
       onBlur={(e) => handleHTMLBlur(e, sectionId, (f, v) => onUpdateSectionData('sectionTitles', { ...allSectionTitles, [f]: v }))}
-      className={`font-bold text-[1.1em] uppercase mb-3 pb-1.5 w-full ${commonEditableClass}`}
+      className={`font-bold text-[1.1em] uppercase mb-1 pb-1.5 w-full ${commonEditableClass}`}
       style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
       data-placeholder={defaultTitle}
       dangerouslySetInnerHTML={{ __html: sectionTitle ?? defaultTitle }}
@@ -470,7 +470,7 @@ const SECTION_RENDERER = {
       <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
         <h3 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`font-bold text-[1.1em] uppercase mb-3 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`}
+          className={`font-bold text-[1.1em] uppercase mb-2 pb-1.5 inline-block min-w-[150px] w-full ${commonEditableClass}`}
           style={{ color: primaryColor, borderBottom: `2px solid ${primaryColor}` }}
           data-placeholder="Tên mục"
           dangerouslySetInnerHTML={{ __html: data?.title || config.placeholders.sections.customSection }} />
@@ -550,8 +550,7 @@ return (
     <TemplateContext.Provider value={SIMPLE_TEMPLATE_CONFIG}>
       <div
         ref={containerRef}
-        // Thêm padding p-10 (hoặc p-8) để tạo lề cho A4, bg-white để nổi bật
-        className="bg-white mx-auto p-10 box-border" 
+        className="bg-white mx-auto p-3 box-border" 
         style={{ fontFamily: `${settings.font}, sans-serif`, fontSize: getFontSizeStyle(settings.fontSize) }}
       >
         {layout.activeRows.map((row) => {

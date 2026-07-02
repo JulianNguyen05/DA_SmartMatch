@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Modal from '../../../components/common/Modal';
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -22,7 +22,7 @@ import candidateService from "../../../features/candidate/candidateService";
 import SimpleTemplate, {
   SIMPLE_TEMPLATE_CONFIG,
 } from "../../../components/cv-builder/templates/SimpleTemplate";
-import { CV_PAGE_WIDTH_PX, CV_PAGE_HEIGHT_PX } from "../../../components/cv-builder/templates/cvTemplateCore";
+import { CV_PAGE_WIDTH_PX, CV_PAGE_HEIGHT_PX, applyCvPageBreaks } from "../../../components/cv-builder/templates/cvTemplateCore";
 // import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
 // import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
 
@@ -141,6 +141,8 @@ const CVBuilderPage = () => {
   });
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewPageCount, setPreviewPageCount] = useState(1);
+  const previewContentRefs = useRef([]);
   const [thumbnailPath, setThumbnailPath] = useState(null);
   const thumbnailUrl = thumbnailPath 
     ? `http://localhost:8080${thumbnailPath}?t=${Date.now()}` 
@@ -162,6 +164,35 @@ const CVBuilderPage = () => {
     // isLoading), nên effect với deps [] chỉ chạy đúng 1 lần sẽ bị "hụt", không theo dõi
     // được node mới -> totalPages bị kẹt cứng ở giá trị cũ (thường là 1).
   }, [uiState.isLoading]);
+
+  // Mỗi lần mở khung xem trước: lấy tạm totalPages (tính từ nội dung "thô", chưa ngắt
+  // trang) làm số trang khởi điểm. Effect bên dưới sẽ tự chỉnh lại cho chính xác sau khi
+  // áp ngắt trang thật (vì chèn khoảng trắng giữa các trang có thể đổi tổng chiều cao).
+  useEffect(() => {
+    if (isPreviewOpen) setPreviewPageCount(totalPages);
+  }, [isPreviewOpen, totalPages]);
+
+  // Áp ngắt trang (đẩy nguyên khối .cv-section bị cắt ngang xuống trang sau) cho TỪNG
+  // bản render trong khung xem trước, rồi đo lại chiều cao thật để tự sửa đúng số trang
+  // -> không còn hiện tượng nội dung bị cắt dở dang giữa chừng như trước.
+  useLayoutEffect(() => {
+    if (!isPreviewOpen) return;
+
+    const raf = requestAnimationFrame(() => {
+      let measuredHeight = 0;
+      previewContentRefs.current.forEach((el, idx) => {
+        if (!el) return;
+        const { height } = applyCvPageBreaks(el, { pageHeight: CV_PAGE_HEIGHT_PX });
+        if (idx === 0) measuredHeight = height;
+      });
+      if (measuredHeight > 0) {
+        const correctedCount = Math.max(1, Math.ceil(measuredHeight / CV_PAGE_HEIGHT_PX));
+        setPreviewPageCount((prev) => (prev === correctedCount ? prev : correctedCount));
+      }
+    });
+
+    return () => cancelAnimationFrame(raf);
+  }, [isPreviewOpen, cvData, previewPageCount]);
 
   useEffect(() => {
     const fetchCvData = async () => {
@@ -820,13 +851,14 @@ const CVBuilderPage = () => {
               thuộc trang đó, phần overflow bị khung `overflow-hidden` cắt che đi. Nhờ vậy
               không cần domtoimage/ảnh chụp, luôn khớp 100% với nội dung mới nhất, kể cả
               khi chưa lưu. */}
-          {Array.from({ length: totalPages }).map((_, pageIndex) => (
+          {Array.from({ length: previewPageCount }).map((_, pageIndex) => (
             <div
               key={pageIndex}
               className="relative bg-white shadow-2xl rounded-sm overflow-hidden shrink-0"
               style={{ width: `${CV_PAGE_WIDTH_PX}px`, maxWidth: '100%', height: `${CV_PAGE_HEIGHT_PX}px` }}
             >
               <div
+                ref={(el) => { previewContentRefs.current[pageIndex] = el; }}
                 className="absolute top-0 left-0 w-full pointer-events-none select-none"
                 style={{ transform: `translateY(-${pageIndex * CV_PAGE_HEIGHT_PX}px)` }}
               >
@@ -839,7 +871,7 @@ const CVBuilderPage = () => {
               </div>
 
               <span className="absolute bottom-2 right-3 text-[11px] text-gray-400 font-medium bg-white/80 px-1.5 py-0.5 rounded">
-                Trang {pageIndex + 1}/{totalPages}
+                Trang {pageIndex + 1}/{previewPageCount}
               </span>
             </div>
           ))}

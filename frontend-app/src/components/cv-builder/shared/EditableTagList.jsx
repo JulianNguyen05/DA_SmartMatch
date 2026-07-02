@@ -73,27 +73,27 @@ const EditableTagList = ({
             className="relative group/item transition-all flex items-center mt-2"
           >
             <div
-              className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex-row gap-1 bg-gray-50/90 shadow-sm border rounded-md p-1 z-10 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex"
+              className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex-row gap-1 bg-gray-50/90 shadow-sm border rounded-md px-1 z-10 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex"
               contentEditable="false"
             >
               <button
                 onClick={() => handleMoveLeft(index)}
                 disabled={index === 0}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30"
+                className="px-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30"
               >
                 <MoveLeft size={12} />
               </button>
               <button
                 onClick={() => handleMoveRight(index)}
                 disabled={index === items.length - 1}
-                className="p-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30"
+                className="px-1 hover:bg-gray-200 rounded text-gray-600 disabled:opacity-30"
               >
                 <MoveRight size={12} />
               </button>
               <div className="w-px h-3 bg-gray-300 self-center mx-0.5"></div>
               <button
                 onClick={() => handleAddAfter(index)}
-                className="p-1 hover:bg-green-100 rounded transition-colors"
+                className="px-1 hover:bg-green-100 rounded transition-colors"
                 style={{ color: primaryColor }}
               >
                 <Plus size={12} />
@@ -101,7 +101,7 @@ const EditableTagList = ({
               <div className="w-px h-3 bg-gray-300 self-center mx-0.5"></div>
               <button
                 onClick={() => handleDelete(index)}
-                className="p-1 hover:bg-red-100 rounded text-red-500"
+                className="px-1 hover:bg-red-100 rounded text-red-500"
               >
                 <Trash2 size={12} />
               </button>
