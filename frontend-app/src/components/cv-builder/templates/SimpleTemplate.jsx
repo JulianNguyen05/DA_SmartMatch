@@ -106,7 +106,7 @@ const THEME = {
 // ─────────────────────────────────────────────────────────────────────────────
 // PRIVATE CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
-const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 rounded px-2 py-0.5 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-blue-300 empty:bg-blue-50/40 min-w-[40px] inline-block';
+const contactEditableClass = 'outline-none focus:bg-blue-50 focus:ring-2 focus:ring-blue-400 rounded px-0.5 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text empty:border empty:border-dashed empty:border-blue-300 empty:bg-blue-50/40 min-w-[20px] inline-block';
 
 // FIX: Sử dụng box-shadow inset thay vì outline + padding để tránh nhảy layout
 // flow-root: ép mỗi section tạo Block Formatting Context riêng, chặn tuyệt đối
@@ -157,26 +157,26 @@ const EditableContactList = ({ items, sectionId, primaryColor, onUpdateItems }) 
 
   return (
     <div className="w-full relative group/section">
-      <div className="space-y-1 relative">
+      <div className="space-y-0.5 relative">
         {items.map((item, index) => (
-          <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 px-1 rounded">
-            <div className="absolute right-0 -top-8 flex-row gap-1 bg-white shadow-lg border border-gray-200 rounded-lg px-2 z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
+          <div key={index} className="relative flex flex-wrap items-start group/item transition-all border border-transparent hover:border-dashed hover:border-gray-300 rounded">
+            <div className="absolute right-0 -top-8 flex-row gap-0.5 bg-white shadow-lg border border-gray-200 rounded-lg z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex" contentEditable="false">
               <button onClick={() => handleMoveUp(index)} disabled={index === 0} className="px-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển lên"><ArrowUp size={13} /></button>
               <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className="px-1.5 hover:bg-blue-100 rounded-md text-blue-600 disabled:opacity-30 disabled:text-gray-300 transition-colors" title="Di chuyển xuống"><ArrowDown size={13} /></button>
-              <button onClick={() => handleDelete(index)} className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm">Xóa</button>
-              <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-1 transition-colors shadow-sm" style={{ backgroundColor: primaryColor || THEME.primary }}><Plus size={13} /> Thêm</button>
+              <button onClick={() => handleDelete(index)} className="px-2.5 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-md text-xs font-medium flex items-center gap-0.5 transition-colors shadow-sm">Xóa</button>
+              <button onClick={() => handleAdd(index)} className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium flex items-center gap-0.5 transition-colors shadow-sm" style={{ backgroundColor: primaryColor || THEME.primary }}><Plus size={13} /> Thêm</button>
             </div>
 
             <div contentEditable suppressContentEditableWarning
               onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))}
-              className={`font-bold text-[0.9em] mr-1 mt-0.5 ${contactEditableClass}`} style={{ color: primaryColor }}
+              className={`font-bold text-[0.9em] ${contactEditableClass}`} style={{ color: primaryColor }}
               data-placeholder={config.placeholders.contactInfo.title}
               dangerouslySetInnerHTML={{ __html: item.label }} />
-            <span className="font-bold text-[0.9em] mr-2 mt-0.5" style={{ color: primaryColor }}>:</span>
+            <span className="font-bold text-[0.9em]" style={{ color: primaryColor }}>:</span>
 
             <div contentEditable suppressContentEditableWarning
               onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))}
-              className={`text-gray-700 flex-1 text-[0.9em] mt-0.5 ${contactEditableClass}`}
+              className={`text-gray-700 flex-1 text-[0.9em] ${contactEditableClass}`}
               data-placeholder={item.placeholder || config.placeholders.contactInfo.value}
               dangerouslySetInnerHTML={{ __html: item.value }} />
           </div>
@@ -498,11 +498,11 @@ const SECTION_RENDERER = {
 const getFontSizeStyle = (sizeValue) => {
   // sizeValue khớp với CV_FONT_SIZES[i].value ('small'|'medium'|'large'|'xlarge')
   switch (sizeValue) {
-    case 'small':  return '16px';
-    case 'medium': return '20px';
-    case 'large':  return '24px';
-    case 'xlarge': return '28px';
-    default:       return '20px';
+    case 'small':  return '10px';
+    case 'medium': return '13px';
+    case 'large':  return '16px';
+    case 'xlarge': return '20px';
+    default:       return '13px';
   }
 };
 
@@ -557,7 +557,7 @@ return (
           const { left, right } = getGridClasses(row.ratio);
           return (
             // Tăng gap-x lên 10 và gap-y lên 8 để các cột/hàng có không gian thở
-            <div key={row.id} className="grid grid-cols-10 gap-x-10 gap-y-8 mb-6">
+            <div key={row.id} className="grid grid-cols-10 gap-x-10 gap-y-8">
               <div className={left}>{renderItems(row.leftItems)}</div>
               {row.ratio !== '10-0' && row.ratio !== '100-0' && (
                 <div className={right}>{renderItems(row.rightItems)}</div>

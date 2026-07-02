@@ -4,10 +4,10 @@
 import { createContext, useContext } from 'react';
 
 export const CV_FONT_SIZES = [
-  { label: 'Nhỏ',     value: 'small',  px: '13px' },
-  { label: 'Vừa',     value: 'medium', px: '16px' },
-  { label: 'Lớn',     value: 'large',  px: '20px' },
-  { label: 'Rất lớn', value: 'xlarge', px: '24px' },
+  { label: 'Nhỏ',     value: 'small',  px: '10px' },
+  { label: 'Vừa',     value: 'medium', px: '13px' },
+  { label: 'Lớn',     value: 'large',  px: '16px' },
+  { label: 'Rất lớn', value: 'xlarge', px: '20px' },
 ];
 
 // Kích thước 1 trang A4 chuẩn ở 96dpi. Đây là NGUỒN DUY NHẤT cho kích thước trang
@@ -45,14 +45,48 @@ export const highlightClass = (isHighlighted) =>
 
 export const getGridClasses = (ratio) => {
   switch (ratio) {
-    case '10-0': case '100-0': return { left: 'col-span-10', right: 'hidden' };
-    case '3-7': case '30-70': return { left: 'col-span-3', right: 'col-span-7' };
-    case '4-6': case '40-60': return { left: 'col-span-4', right: 'col-span-6' };
-    case '5-5': case '50-50': return { left: 'col-span-5', right: 'col-span-5' };
-    case '6-4': case '60-40': return { left: 'col-span-6', right: 'col-span-4' };
-    case '7-3': case '70-30': return { left: 'col-span-7', right: 'col-span-3' };
-    case '8-2': case '80-20': return { left: 'col-span-8', right: 'col-span-2' };
-    default: return { left: 'col-span-10', right: 'hidden' };
+    case '1-9':
+    case '10-90':
+      return { left: 'col-span-1', right: 'col-span-9' };
+
+    case '2-8':
+    case '20-80':
+      return { left: 'col-span-2', right: 'col-span-8' };
+
+    case '3-7':
+    case '30-70':
+      return { left: 'col-span-3', right: 'col-span-7' };
+
+    case '4-6':
+    case '40-60':
+      return { left: 'col-span-4', right: 'col-span-6' };
+
+    case '5-5':
+    case '50-50':
+      return { left: 'col-span-5', right: 'col-span-5' };
+
+    case '6-4':
+    case '60-40':
+      return { left: 'col-span-6', right: 'col-span-4' };
+
+    case '7-3':
+    case '70-30':
+      return { left: 'col-span-7', right: 'col-span-3' };
+
+    case '8-2':
+    case '80-20':
+      return { left: 'col-span-8', right: 'col-span-2' };
+
+    case '9-1':
+    case '90-10':
+      return { left: 'col-span-9', right: 'col-span-1' };
+
+    case '10-0':
+    case '100-0':
+      return { left: 'col-span-10', right: 'hidden' };
+
+    default:
+      return { left: 'col-span-10', right: 'hidden' };
   }
 };
 

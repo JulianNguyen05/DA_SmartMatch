@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
-import Modal from '../../../components/common/Modal';
+import Modal from "../../../components/common/Modal";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Palette,
@@ -22,7 +22,11 @@ import candidateService from "../../../features/candidate/candidateService";
 import SimpleTemplate, {
   SIMPLE_TEMPLATE_CONFIG,
 } from "../../../components/cv-builder/templates/SimpleTemplate";
-import { CV_PAGE_WIDTH_PX, CV_PAGE_HEIGHT_PX, applyCvPageBreaks } from "../../../components/cv-builder/templates/cvTemplateCore";
+import {
+  CV_PAGE_WIDTH_PX,
+  CV_PAGE_HEIGHT_PX,
+  applyCvPageBreaks,
+} from "../../../components/cv-builder/templates/cvTemplateCore";
 // import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
 // import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
 
@@ -32,7 +36,6 @@ const TEMPLATE_REGISTRY = {
   // professional: { component: ProfessionalTemplate, config: PROFESSIONAL_TEMPLATE_CONFIG },
 };
 
-// Bảng màu thống nhất với Worklify (đồng bộ với CVManagerPage): gốc #2563EB + teal #14B8A6
 const wlBuilderStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -122,7 +125,6 @@ const CVBuilderPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const paperRef = useRef(null);
 
-  // State quản lý Tên CV và Trạng thái thông báo
   const [cvTitle, setCvTitle] = useState("CV chưa có tên");
   const [initialDataStr, setInitialDataStr] = useState("");
   const [isDirty, setIsDirty] = useState(false);
@@ -144,8 +146,8 @@ const CVBuilderPage = () => {
   const [previewPageCount, setPreviewPageCount] = useState(1);
   const previewContentRefs = useRef([]);
   const [thumbnailPath, setThumbnailPath] = useState(null);
-  const thumbnailUrl = thumbnailPath 
-    ? `http://localhost:8080${thumbnailPath}?t=${Date.now()}` 
+  const thumbnailUrl = thumbnailPath
+    ? `http://localhost:8080${thumbnailPath}?t=${Date.now()}`
     : null;
 
   useEffect(() => {
@@ -159,22 +161,12 @@ const CVBuilderPage = () => {
     });
     observer.observe(paperRef.current);
     return () => observer.disconnect();
-    // Gắn lại observer mỗi khi trạng thái loading đổi: paperRef bị unmount/mount lại
-    // thành DOM node MỚI sau khi màn hình loading tắt (do có early-return riêng cho
-    // isLoading), nên effect với deps [] chỉ chạy đúng 1 lần sẽ bị "hụt", không theo dõi
-    // được node mới -> totalPages bị kẹt cứng ở giá trị cũ (thường là 1).
   }, [uiState.isLoading]);
 
-  // Mỗi lần mở khung xem trước: lấy tạm totalPages (tính từ nội dung "thô", chưa ngắt
-  // trang) làm số trang khởi điểm. Effect bên dưới sẽ tự chỉnh lại cho chính xác sau khi
-  // áp ngắt trang thật (vì chèn khoảng trắng giữa các trang có thể đổi tổng chiều cao).
   useEffect(() => {
     if (isPreviewOpen) setPreviewPageCount(totalPages);
   }, [isPreviewOpen, totalPages]);
 
-  // Áp ngắt trang (đẩy nguyên khối .cv-section bị cắt ngang xuống trang sau) cho TỪNG
-  // bản render trong khung xem trước, rồi đo lại chiều cao thật để tự sửa đúng số trang
-  // -> không còn hiện tượng nội dung bị cắt dở dang giữa chừng như trước.
   useLayoutEffect(() => {
     if (!isPreviewOpen) return;
 
@@ -182,12 +174,19 @@ const CVBuilderPage = () => {
       let measuredHeight = 0;
       previewContentRefs.current.forEach((el, idx) => {
         if (!el) return;
-        const { height } = applyCvPageBreaks(el, { pageHeight: CV_PAGE_HEIGHT_PX });
+        const { height } = applyCvPageBreaks(el, {
+          pageHeight: CV_PAGE_HEIGHT_PX,
+        });
         if (idx === 0) measuredHeight = height;
       });
       if (measuredHeight > 0) {
-        const correctedCount = Math.max(1, Math.ceil(measuredHeight / CV_PAGE_HEIGHT_PX));
-        setPreviewPageCount((prev) => (prev === correctedCount ? prev : correctedCount));
+        const correctedCount = Math.max(
+          1,
+          Math.ceil(measuredHeight / CV_PAGE_HEIGHT_PX),
+        );
+        setPreviewPageCount((prev) =>
+          prev === correctedCount ? prev : correctedCount,
+        );
       }
     });
 
@@ -236,7 +235,6 @@ const CVBuilderPage = () => {
             },
           };
 
-          // Lấy đúng tên CV từ BE
           const actualTitle =
             fetchedCv.title ||
             fetchedCv.name ||
@@ -287,7 +285,6 @@ const CVBuilderPage = () => {
     );
   };
 
-  // Hàm xử lý nút Quay Lại
   const handleGoBack = () => {
     if (isDirty) {
       const confirmLeave = window.confirm(
@@ -306,7 +303,7 @@ const CVBuilderPage = () => {
     }
 
     setSelectedSection(null);
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     setUiState((prev) => ({ ...prev, isSaving: true }));
     try {
@@ -327,7 +324,6 @@ const CVBuilderPage = () => {
         savedCvId = res.data.id;
       }
 
-      // Cập nhật tên CV
       await candidateService.renameCv(currentUser.userId, savedCvId, cvTitle);
 
       try {
@@ -354,7 +350,6 @@ const CVBuilderPage = () => {
         );
       }
 
-      // Thay đổi: Chuyển hướng về trang CV Manager sau khi lưu (cả khi update hoặc tạo mới)
       setTimeout(() => {
         navigate("/candidate/cv-manager");
       }, 500);
@@ -666,9 +661,7 @@ const CVBuilderPage = () => {
         </div>
       )}
 
-      {/* Header */}
       <header className="wl-builder-header h-14 flex items-center justify-between px-4 shadow-sm z-20">
-        {/* === CỤM BÊN TRÁI: Nút Back & Đổi tên CV === */}
         <div className="flex items-center gap-4">
           <button
             onClick={handleGoBack}
@@ -695,9 +688,8 @@ const CVBuilderPage = () => {
           </div>
         </div>
 
-        {/* === CỤM BÊN PHẢI: Nút Xem trước & Nút Lưu === */}
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => setIsPreviewOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
           >
@@ -710,9 +702,7 @@ const CVBuilderPage = () => {
             disabled={uiState.isSaving || (!isDirty && !!cvId)}
             className="wl-save-btn px-5 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
           >
-            {uiState.isSaving && (
-              <Loader className="w-4 h-4 animate-spin" />
-            )}
+            {uiState.isSaving && <Loader className="w-4 h-4 animate-spin" />}
             {uiState.isSaving
               ? "Đang lưu..."
               : isDirty
@@ -733,7 +723,9 @@ const CVBuilderPage = () => {
           >
             <span className="wl-tab-dot" />
             <Palette size={20} />
-            <span className="text-[10px] mt-1 font-medium text-center">Thiết kế</span>
+            <span className="text-[10px] mt-1 font-medium text-center">
+              Thiết kế
+            </span>
           </button>
           <button
             onClick={() => {
@@ -755,7 +747,9 @@ const CVBuilderPage = () => {
           >
             <span className="wl-tab-dot" />
             <LayoutTemplate size={20} />
-            <span className="text-[10px] mt-1 font-medium text-center">Mẫu CV</span>
+            <span className="text-[10px] mt-1 font-medium text-center">
+              Mẫu CV
+            </span>
           </button>
         </div>
 
@@ -788,8 +782,6 @@ const CVBuilderPage = () => {
           className="wl-canvas flex-1 overflow-y-auto relative flex justify-center py-10 transition-all"
           style={{ marginLeft: isPanelOpen ? "10px" : "0" }}
           onClick={() => {
-            // Section bên trong đã stopPropagation khi được click,
-            // nên nếu sự kiện lọt tới đây tức là người dùng click ra ngoài section.
             setSelectedSection(null);
           }}
         >
@@ -799,8 +791,7 @@ const CVBuilderPage = () => {
             style={{
               width: `${CV_PAGE_WIDTH_PX}px`,
               minHeight: `${CV_PAGE_HEIGHT_PX}px`,
-              backgroundImage:
-                `repeating-linear-gradient(to bottom, transparent, transparent ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX + 1}px)`,
+              backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX - 1}px, #2563EB ${CV_PAGE_HEIGHT_PX + 1}px)`,
               backgroundSize: `100% ${CV_PAGE_HEIGHT_PX}px`,
             }}
           >
@@ -834,33 +825,37 @@ const CVBuilderPage = () => {
           </div>
         </div>
       </div>
-      <Modal 
-        isOpen={isPreviewOpen} 
-        onClose={() => setIsPreviewOpen(false)} 
+      <Modal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
         title="Bản xem trước CV"
       >
-        {/* Container cho phép cuộn dọc (overflow-y-auto), giới hạn chiều cao 85vh */}
-        <div 
-          className="bg-gray-200 overflow-y-auto flex flex-col items-center gap-8 p-4 sm:p-8" 
-          style={{ maxHeight: '85vh', width: '100%', minWidth: 'min(850px, 95vw)' }}
+        <div
+          className="bg-gray-200 overflow-y-auto flex flex-col items-center gap-8 p-4 sm:p-8"
+          style={{
+            maxHeight: "85vh",
+            width: "100%",
+            minWidth: "min(850px, 95vw)",
+          }}
         >
-          {/* Render lại CHÍNH XÁC nội dung CV đang chỉnh sửa (không phải ảnh chụp tĩnh),
-              tách thành từng khung trang A4 riêng biệt (1123px), có khoảng trắng ngăn cách
-              y như bản in thật. Mỗi khung trang dùng kỹ thuật "windowing": toàn bộ nội dung
-              CV được render đầy đủ bên trong, chỉ dịch (translateY) lên để lộ đúng phần
-              thuộc trang đó, phần overflow bị khung `overflow-hidden` cắt che đi. Nhờ vậy
-              không cần domtoimage/ảnh chụp, luôn khớp 100% với nội dung mới nhất, kể cả
-              khi chưa lưu. */}
           {Array.from({ length: previewPageCount }).map((_, pageIndex) => (
             <div
               key={pageIndex}
               className="relative bg-white shadow-2xl rounded-sm overflow-hidden shrink-0"
-              style={{ width: `${CV_PAGE_WIDTH_PX}px`, maxWidth: '100%', height: `${CV_PAGE_HEIGHT_PX}px` }}
+              style={{
+                width: `${CV_PAGE_WIDTH_PX}px`,
+                maxWidth: "100%",
+                height: `${CV_PAGE_HEIGHT_PX}px`,
+              }}
             >
               <div
-                ref={(el) => { previewContentRefs.current[pageIndex] = el; }}
+                ref={(el) => {
+                  previewContentRefs.current[pageIndex] = el;
+                }}
                 className="absolute top-0 left-0 w-full pointer-events-none select-none"
-                style={{ transform: `translateY(-${pageIndex * CV_PAGE_HEIGHT_PX}px)` }}
+                style={{
+                  transform: `translateY(-${pageIndex * CV_PAGE_HEIGHT_PX}px)`,
+                }}
               >
                 <SelectedTemplate
                   cvData={cvData}

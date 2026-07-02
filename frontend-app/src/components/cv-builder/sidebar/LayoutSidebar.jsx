@@ -6,14 +6,48 @@ import DraggableItem from './DraggableItem';
 
 const getColumnWidths = (ratio) => {
   switch (ratio) {
-    case '10-0': case '100-0': return { left: '100%', right: '0%' };
-    case '3-7': case '30-70': return { left: '30%', right: '70%' };
-    case '4-6': case '40-60': return { left: '40%', right: '60%' };
-    case '5-5': case '50-50': return { left: '50%', right: '50%' };
-    case '6-4': case '60-40': return { left: '60%', right: '40%' };
-    case '7-3': case '70-30': return { left: '70%', right: '30%' };
-    case '8-2': case '80-20': return { left: '80%', right: '20%' };
-    default: return { left: '100%', right: '0%' };
+    case '1-9':
+    case '10-90':
+      return { left: '10%', right: '90%' };
+
+    case '2-8':
+    case '20-80':
+      return { left: '20%', right: '80%' };
+
+    case '3-7':
+    case '30-70':
+      return { left: '30%', right: '70%' };
+
+    case '4-6':
+    case '40-60':
+      return { left: '40%', right: '60%' };
+
+    case '5-5':
+    case '50-50':
+      return { left: '50%', right: '50%' };
+
+    case '6-4':
+    case '60-40':
+      return { left: '60%', right: '40%' };
+
+    case '7-3':
+    case '70-30':
+      return { left: '70%', right: '30%' };
+
+    case '8-2':
+    case '80-20':
+      return { left: '80%', right: '20%' };
+
+    case '9-1':
+    case '90-10':
+      return { left: '90%', right: '10%' };
+
+    case '10-0':
+    case '100-0':
+      return { left: '100%', right: '0%' };
+
+    default:
+      return { left: '100%', right: '0%' };
   }
 };
 
@@ -101,13 +135,16 @@ const RowBlock = ({ row, rowIndex, isLastRow, onChangeRatio, primaryColor, onDel
           onChange={(e) => onChangeRatio(row.id, e.target.value)}
           className="text-xs border border-slate-300 p-1.5 rounded-md bg-white text-slate-700 outline-none focus:ring-2 focus:ring-[#2563EB]/40 focus:border-[#2563EB] cursor-pointer transition-all"
         >
-          <option value="10-0">1 cột (100%)</option>
+          <option value="10-90">2 cột (10-90)</option>
+          <option value="20-80">2 cột (20-80)</option>
           <option value="30-70">2 cột (30-70)</option>
           <option value="40-60">2 cột (40-60)</option>
           <option value="50-50">2 cột (50-50)</option>
           <option value="60-40">2 cột (60-40)</option>
           <option value="70-30">2 cột (70-30)</option>
           <option value="80-20">2 cột (80-20)</option>
+          <option value="90-10">2 cột (90-10)</option>
+          <option value="100-0">1 cột (100%)</option>
         </select>
       </div>
 

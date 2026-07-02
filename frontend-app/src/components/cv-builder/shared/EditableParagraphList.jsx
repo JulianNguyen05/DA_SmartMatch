@@ -1,7 +1,13 @@
-import React from 'react';
-import { ArrowUp, ArrowDown, Trash2, Plus } from 'lucide-react';
+import React from "react";
+import { ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 
-const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, emptyItemTemplate }) => {
+const EditableParagraphList = ({
+  items,
+  sectionId,
+  primaryColor,
+  onUpdateItems,
+  emptyItemTemplate,
+}) => {
   const handleTextChange = (index, field, newText) => {
     const updatedItems = [...items];
     updatedItems[index] = { ...updatedItems[index], [field]: newText };
@@ -10,21 +16,27 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
 
   const handleHTMLBlur = (e, index, field) => {
     let val = e.currentTarget.innerHTML.trim();
-    if (val === '<br>') val = '';
+    if (val === "<br>") val = "";
     handleTextChange(index, field, val);
   };
 
   const handleMoveUp = (index) => {
     if (index === 0) return;
     const updatedItems = [...items];
-    [updatedItems[index - 1], updatedItems[index]] = [updatedItems[index], updatedItems[index - 1]];
+    [updatedItems[index - 1], updatedItems[index]] = [
+      updatedItems[index],
+      updatedItems[index - 1],
+    ];
     onUpdateItems(sectionId, updatedItems);
   };
 
   const handleMoveDown = (index) => {
     if (index === items.length - 1) return;
     const updatedItems = [...items];
-    [updatedItems[index + 1], updatedItems[index]] = [updatedItems[index], updatedItems[index + 1]];
+    [updatedItems[index + 1], updatedItems[index]] = [
+      updatedItems[index],
+      updatedItems[index + 1],
+    ];
     onUpdateItems(sectionId, updatedItems);
   };
 
@@ -44,7 +56,8 @@ const EditableParagraphList = ({ items, sectionId, primaryColor, onUpdateItems, 
     onUpdateItems(sectionId, [{ ...emptyItemTemplate }]);
   };
 
-  const editableClasses = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded px-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text w-full";
+  const editableClasses =
+    "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded px-1 transition-all empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block cursor-text w-full";
 
   return (
     <div className="w-full relative group/section">
