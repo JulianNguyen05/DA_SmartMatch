@@ -1,7 +1,13 @@
 import axiosClient from '../../services/axiosClient';
 
 const candidateService = {
-  // ─── 1. QUẢN LÝ CV (Trọng tâm Demo) ──────────────────────────────────
+  // ─── QUẢN LÝ CV ───────────────────────
+
+  createCv: async (userId, payload) => {
+    const response = await axiosClient.post(`/candidates/${userId}/cvs/generated`, payload);
+    return response.data;
+  },
+
   uploadCv: async (userId, file) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -10,6 +16,10 @@ const candidateService = {
     });
     return response.data;
   },
+
+  // ==========================================
+  // [ R ] READ - Đọc/Lấy dữ liệu
+  // ==========================================
 
   getCvs: async (userId) => {
     const response = await axiosClient.get(`/candidates/${userId}/cvs`);
@@ -26,10 +36,9 @@ const candidateService = {
     return response.data;
   },
 
-  createCv: async (userId, payload) => {
-    const response = await axiosClient.post(`/candidates/${userId}/cvs/generated`, payload);
-    return response.data;
-  },
+  // ==========================================
+  // [ U ] UPDATE - Cập nhật dữ liệu
+  // ==========================================
 
   updateCv: async (userId, cvId, payload) => {
     const response = await axiosClient.put(`/candidates/${userId}/cvs/generated/${cvId}`, payload);
@@ -51,6 +60,10 @@ const candidateService = {
     });
     return response.data;
   },
+
+  // ==========================================
+  // [ D ] DELETE - Xóa dữ liệu
+  // ==========================================
 
   deleteCv: async (userId, cvId) => {
     const response = await axiosClient.delete(`/candidates/${userId}/cvs/${cvId}`);
