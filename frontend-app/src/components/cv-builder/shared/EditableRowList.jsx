@@ -64,6 +64,7 @@ const EditableRowList = ({
         {items.map((item, index) => (
           <div
             key={index}
+            data-cv-pagebreak-item=""
             className="relative pb-1 border-b border-gray-100 last:border-0 group/item transition-all"
           >
             <div

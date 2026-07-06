@@ -64,6 +64,7 @@ const EditableTimelineList = ({
         {items.map((item, index) => (
           <div
             key={index}
+            data-cv-pagebreak-item=""
             className="relative flex gap-1 pb-1 border-b border-gray-100 last:border-0 group/item transition-all pl-3"
             style={{ borderLeft: `2px solid ${primaryColor}` }}
           >
@@ -102,7 +103,7 @@ const EditableTimelineList = ({
               </button>
             </div>
 
-            <div className="w-1/10 flex-shrink-0">
+            <div className="w-1/8 flex-shrink-0">
               <div
                 contentEditable
                 suppressContentEditableWarning

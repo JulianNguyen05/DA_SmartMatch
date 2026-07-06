@@ -139,6 +139,10 @@ export const revertDataFromList = (listData, type) => {
 // (gán margin-top), để không bao giờ cắt dở dang giữa 1 đoạn văn/1 mục kinh nghiệm.
 // Trả về { height, restore } — height: chiều cao thật sau khi ngắt trang (dùng để tính
 // lại số trang chính xác); restore: hàm khôi phục margin ban đầu (gọi khi không cần nữa).
+// Selector đánh dấu 1 "mục" có title bên trong section (vd: từng dòng kinh nghiệm,
+// học vấn... trong EditableRowList / EditableTimelineList). Xem ghi chú bên dưới.
+const PAGEBREAK_ITEM_SELECTOR = '[data-cv-pagebreak-item]';
+
 export const applyCvPageBreaks = (rootElement, options = {}) => {
   const {
     pageHeight = CV_PAGE_HEIGHT_PX,
@@ -149,25 +153,45 @@ export const applyCvPageBreaks = (rootElement, options = {}) => {
   if (!rootElement) return { height: 0, restore: () => {} };
 
   const sections = Array.from(rootElement.querySelectorAll('.cv-section'));
-  const originalMargins = sections.map((sec) => sec.style.marginTop);
+
+  // Xây danh sách các "đơn vị ngắt trang" (breakable units) theo đúng thứ tự xuất
+  // hiện trong DOM (từ trên xuống):
+  //  - Nếu 1 section CÓ các item con được đánh dấu data-cv-pagebreak-item (mỗi item
+  //    ứng với 1 "title" — 1 dòng kinh nghiệm/học vấn/hoạt động...), ngắt trang ở
+  //    CẤP ITEM: chỉ item nào bị biên trang cắt ngang mới bị đẩy xuống, các item
+  //    trước đó (title 1, title 2...) đã nằm trọn trong trang thì giữ nguyên vị trí.
+  //  - Nếu section KHÔNG có item con đánh dấu (vd: mục tiêu nghề nghiệp dạng đoạn
+  //    văn, section 1 khối...), vẫn ngắt ở CẤP SECTION như trước.
+  const units = [];
+  sections.forEach((sec) => {
+    const items = Array.from(sec.querySelectorAll(PAGEBREAK_ITEM_SELECTOR));
+    if (items.length > 0) {
+      items.forEach((item) => units.push(item));
+    } else {
+      units.push(sec);
+    }
+  });
+
+  const originalMargins = units.map((el) => el.style.marginTop);
 
   // Reset trước để phép đo không bị ảnh hưởng bởi lần ngắt trang trước đó
-  sections.forEach((sec) => { sec.style.marginTop = '0px'; });
+  units.forEach((el) => { el.style.marginTop = '0px'; });
 
-  // Xử lý tuần tự từ trên xuống: mỗi lần đẩy 1 section, các section sau đọc lại đúng
-  // vị trí mới (getBoundingClientRect luôn ép reflow đồng bộ) nên tính đúng dây chuyền.
-  sections.forEach((sec) => {
+  // Xử lý tuần tự từ trên xuống: mỗi lần đẩy 1 đơn vị (section hoặc item), các đơn vị
+  // sau đọc lại đúng vị trí mới (getBoundingClientRect luôn ép reflow đồng bộ) nên
+  // tính đúng dây chuyền — kể cả các item còn lại cùng section với item vừa bị đẩy.
+  units.forEach((el) => {
     const canvasRect = rootElement.getBoundingClientRect();
-    const secRect = sec.getBoundingClientRect();
-    const top = secRect.top - canvasRect.top;
-    const height = secRect.height;
+    const elRect = el.getBoundingClientRect();
+    const top = elRect.top - canvasRect.top;
+    const height = elRect.height;
     const bottom = top + height;
     const currentPage = Math.floor(top / pageHeight);
     const pageBottom = (currentPage + 1) * pageHeight;
 
-    // Chỉ ngắt nếu section bị biên trang cắt ngang, và bản thân nó không dài hơn 1 trang
+    // Chỉ ngắt nếu đơn vị bị biên trang cắt ngang, và bản thân nó không dài hơn 1 trang
     if (bottom > pageBottom && height < pageHeight) {
-      sec.style.marginTop = `${pageBottom - top + topPadding + pageGap}px`;
+      el.style.marginTop = `${pageBottom - top + topPadding + pageGap}px`;
     }
   });
 
@@ -175,6 +199,6 @@ export const applyCvPageBreaks = (rootElement, options = {}) => {
 
   return {
     height,
-    restore: () => { sections.forEach((sec, i) => { sec.style.marginTop = originalMargins[i]; }); },
+    restore: () => { units.forEach((el, i) => { el.style.marginTop = originalMargins[i]; }); },
   };
 };

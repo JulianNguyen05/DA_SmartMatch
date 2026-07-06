@@ -362,7 +362,7 @@ const SECTION_RENDERER = {
     return (
     <div
             ref={outerRef}
-            className="mb-4 flex justify-center transition-all"
+            className="flex justify-center transition-all"
             style={isHighlighted ? {
               outline: `2px dashed ${pc}`, // Đổi sang màu theme động theo primaryColor
               outlineOffset: '6px',
@@ -556,8 +556,7 @@ return (
         {layout.activeRows.map((row) => {
           const { left, right } = getGridClasses(row.ratio);
           return (
-            // Tăng gap-x lên 10 và gap-y lên 8 để các cột/hàng có không gian thở
-            <div key={row.id} className="grid grid-cols-10 gap-x-10 gap-y-8">
+            <div key={row.id} className="grid grid-cols-10 gap-x-3">
               <div className={left}>{renderItems(row.leftItems)}</div>
               {row.ratio !== '10-0' && row.ratio !== '100-0' && (
                 <div className={right}>{renderItems(row.rightItems)}</div>
