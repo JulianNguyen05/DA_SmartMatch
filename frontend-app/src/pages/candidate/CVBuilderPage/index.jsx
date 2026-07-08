@@ -27,13 +27,13 @@ import {
   CV_PAGE_HEIGHT_PX,
   applyCvPageBreaks,
 } from "../../../components/cv-builder/templates/cvTemplateCore";
-// import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
-// import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
+import HarvardTemplate, { HARVARD_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/HarvardTemplate";
+import ProfessionalTemplate, { PROFESSIONAL_TEMPLATE_CONFIG } from "../../../components/cv-builder/templates/ProfessionalTemplate";
 
 const TEMPLATE_REGISTRY = {
   simple: { component: SimpleTemplate, config: SIMPLE_TEMPLATE_CONFIG },
-  // harvard: { component: HarvardTemplate, config: HARVARD_TEMPLATE_CONFIG },
-  // professional: { component: ProfessionalTemplate, config: PROFESSIONAL_TEMPLATE_CONFIG },
+  harvard: { component: HarvardTemplate, config: HARVARD_TEMPLATE_CONFIG },
+  professional: { component: ProfessionalTemplate, config: PROFESSIONAL_TEMPLATE_CONFIG },
 };
 
 const wlBuilderStyles = `

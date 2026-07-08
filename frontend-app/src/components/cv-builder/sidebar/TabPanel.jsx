@@ -19,12 +19,16 @@ const FONT_OPTIONS = [
   "Georgia",
   "Courier New",
 ];
+// Mỗi theme giờ là 1 CỤM MÀU (màu chính + màu phụ thật sự, không còn là màu chính +
+// 1 bản nhạt của chính nó) — primary dùng cho tiêu đề/viền/nền đậm, accent dùng cho
+// các điểm nhấn phụ (icon danh thiếp, viền ảnh đại diện, đường kẻ nối tiêu đề...).
+// Đã bỏ 2 theme "Đỏ" / "Cam" vì trùng ngữ nghĩa màu cảnh báo (warning) và nguy hiểm
+// (danger/error) thường dùng cho thông báo lỗi trong hệ thống, dễ gây hiểu lầm khi
+// dùng làm màu thương hiệu trên CV.
 const COLOR_THEMES = [
-  { name: "Xanh dương Worklify", primary: "#2563EB", accent: "#EFF6FF" },
-  { name: "Xanh ngọc", primary: "#14B8A6", accent: "#ECFDF5" },
-  { name: "Tím", primary: "#7c3aed", accent: "#f3e8ff" },
-  { name: "Đỏ", primary: "#dc2626", accent: "#fee2e2" },
-  { name: "Cam", primary: "#ea580c", accent: "#fff7ed" },
+  { name: "Xanh dương Worklify", primary: "#2563EB", accent: "#38BDF8" },
+  { name: "Xanh ngọc",           primary: "#0F766E", accent: "#5EEAD4" },
+  { name: "Tím",                 primary: "#7C3AED", accent: "#C4B5FD" },
 ];
 
 const SECTION_NAMES = {
@@ -52,6 +56,7 @@ const TabPanel = ({
   setCvData,
   handleFontChange,
   handleColorChange,
+  handleTemplateChange,
   handleChangeRatio,
   handleAddRow,
   handleDeleteRow,
@@ -252,9 +257,12 @@ const TabPanel = ({
                       className={`w-full flex items-center gap-3 p-2.5 border rounded-xl transition-all hover:shadow-sm ${cvData.settings.primaryColor === theme.primary ? "border-[#2563EB] bg-[#EFF6FF] ring-1 ring-[#2563EB]" : "border-gray-200 hover:border-gray-300 bg-white"}`}
                     >
                       <div
-                        className="w-5 h-5 rounded-full shadow-sm"
-                        style={{ backgroundColor: theme.primary }}
-                      />
+                        className="w-5 h-5 rounded-full shadow-sm overflow-hidden flex"
+                        title={`${theme.primary} + ${theme.accent}`}
+                      >
+                        <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary }} />
+                        <div className="w-1/2 h-full" style={{ backgroundColor: theme.accent }} />
+                      </div>
                       <span className="text-sm font-medium text-gray-700">
                         {theme.name}
                       </span>
@@ -282,12 +290,7 @@ const TabPanel = ({
             <div className="animate-fadeIn space-y-3">
               {/* Mẫu Tiêu Chuẩn */}
               <button
-                onClick={() =>
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "simple" },
-                  })
-                }
+                onClick={() => handleTemplateChange("simple")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "simple" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Tiêu Chuẩn</div>
@@ -298,12 +301,7 @@ const TabPanel = ({
 
               {/* Mẫu Harvard */}
               <button
-                onClick={() =>
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "harvard" },
-                  })
-                }
+                onClick={() => handleTemplateChange("harvard")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "harvard" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Harvard</div>
@@ -314,12 +312,7 @@ const TabPanel = ({
 
               {/* Mẫu Professional */}
               <button
-                onClick={() =>
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "professional" },
-                  })
-                }
+                onClick={() => handleTemplateChange("professional")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "professional" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Chuyên Nghiệp</div>

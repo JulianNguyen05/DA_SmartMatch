@@ -152,14 +152,13 @@ const TextFormatToolbar = () => {
 
   // Danh sách màu sắc mặc định (Worklify blue dẫn đầu)
   const TEXT_COLORS = [
-    "#000000",
-    "#2563eb",
-    "#14b8a6",
-    "#374151",
-    "#dc2626",
-    "#16a34a",
-    "#d97706",
-    "#9333ea",
+    "#000000", // Black
+    "#FFFFFF", // White
+    "#2563EB", // Blue
+    "#14B8A6", // Teal
+    "#16A34A", // Green
+    "#9333EA", // Purple
+    "#374151", // Gray
   ];
 
   return (
