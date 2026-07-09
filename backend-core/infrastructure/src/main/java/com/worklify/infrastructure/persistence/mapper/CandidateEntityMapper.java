@@ -14,13 +14,9 @@ public interface CandidateEntityMapper {
     CvDocumentJpaEntity toEntity(CvDocument document);
     CvDocument toDomain(CvDocumentJpaEntity entity);
 
-    SkillJpaEntity toEntity(Skill skill);
-    Skill toDomain(SkillJpaEntity entity);
-
     CandidateSkillJpaEntity toEntity(CandidateSkill candidateSkill);
     CandidateSkill toDomain(CandidateSkillJpaEntity entity);
 
-    // MỚI — 8 cặp thêm vào
     EducationJpaEntity toEntity(Education education);
     Education toDomain(EducationJpaEntity entity);
 

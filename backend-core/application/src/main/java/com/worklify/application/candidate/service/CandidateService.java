@@ -2,6 +2,8 @@ package com.worklify.application.candidate.service;
 
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,6 +28,10 @@ public interface CandidateService {
 
     void addSkillToCandidate(Long userId, Long skillId);
     void removeSkillFromCandidate(Long userId, Long skillId);
+
+    // [MỚI] Dropdown search + đề xuất bổ sung, dùng chung cho SKILL/LANGUAGE/...
+    List<ReferenceValueResponse> searchReferenceValues(String type, String keyword);
+    SuggestionResponse suggestReferenceValue(Long userId, String type, String name);
 
     CvDocumentResponse renameCv(Long userId, Long cvId, String newName);
     PageResponse<CandidateProfileResponse> searchCandidates(String keyword, DomainPageable pageable);

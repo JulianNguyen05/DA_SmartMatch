@@ -285,6 +285,101 @@ public interface UserRepository {
 }
 
 ================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Activity.java
+================================================================================
+
+// Activity.java
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Activity {
+    private Long id;
+    private Long candidateId;
+    private String organization;
+    private String role;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private boolean isCurrent;
+    private String description;
+    private int displayOrder;
+
+    public static Activity create(Long candidateId, String organization) {
+        if (candidateId == null || organization == null || organization.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên tổ chức không được để trống.");
+        }
+        return Activity.builder().candidateId(candidateId).organization(organization)
+                .isCurrent(false).displayOrder(0).build();
+    }
+
+    public void updateDetails(String organization, String role, LocalDate startDate, LocalDate endDate,
+                              boolean isCurrent, String description, int displayOrder) {
+        if (organization == null || organization.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên tổ chức không được để trống.");
+        }
+        this.organization = organization;
+        this.role = role;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.description = description;
+        this.displayOrder = displayOrder;
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Award.java
+================================================================================
+
+// Award.java
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Award {
+    private Long id;
+    private Long candidateId;
+    private String title;
+    private String issuer;
+    private LocalDate awardedDate;
+    private String description;
+    private int displayOrder;
+
+    public static Award create(Long candidateId, String title) {
+        if (candidateId == null || title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên giải thưởng không được để trống.");
+        }
+        return Award.builder().candidateId(candidateId).title(title).displayOrder(0).build();
+    }
+
+    public void updateDetails(String title, String issuer, LocalDate awardedDate,
+                              String description, int displayOrder) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên giải thưởng không được để trống.");
+        }
+        this.title = title;
+        this.issuer = issuer;
+        this.awardedDate = awardedDate;
+        this.description = description;
+        this.displayOrder = displayOrder;
+    }
+}
+
+================================================================================
 FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateProfile.java
 ================================================================================
 
@@ -303,10 +398,16 @@ public class CandidateProfile {
     private Long id;
     private Long userId;
     private String fullName;
+    private String avatarUrl;      // MỚI
+    private String headline;       // MỚI - chức danh/vị trí mong muốn
     private String phone;
+    private String emailContact;   // MỚI
     private String gender;
     private LocalDate dob;
     private String address;
+    private String websiteUrl;     // MỚI
+    private String linkedinUrl;    // MỚI
+    private String githubUrl;      // MỚI
     private String summary;
 
     public static CandidateProfile create(Long userId, String fullName) {
@@ -319,17 +420,33 @@ public class CandidateProfile {
                 .build();
     }
 
-    public void updateProfileDetails(String fullName, String phone, String gender,
-                                     LocalDate dob, String address, String summary) {
+    // [ĐÃ SỬA] Thêm đủ field mới vào chữ ký — cần cập nhật lại các nơi đang gọi hàm này
+    public void updateProfileDetails(String fullName, String headline, String phone,
+                                     String emailContact, String gender, LocalDate dob,
+                                     String address, String summary) {
         if (fullName == null || fullName.trim().isEmpty()) {
             throw new IllegalArgumentException("Họ tên không được để trống.");
         }
         this.fullName = fullName;
+        this.headline = headline;
         this.phone = phone;
+        this.emailContact = emailContact;
         this.gender = gender;
         this.dob = dob;
         this.address = address;
         this.summary = summary;
+    }
+
+    // Business Behavior: cập nhật ảnh đại diện — tách riêng vì đây là hành động độc lập (giống updateLogo bên CompanyProfile)
+    public void updateAvatar(String newAvatarUrl) {
+        this.avatarUrl = newAvatarUrl;
+    }
+
+    // Business Behavior: cập nhật các đường link mạng xã hội/portfolio
+    public void updateSocialLinks(String websiteUrl, String linkedinUrl, String githubUrl) {
+        this.websiteUrl = websiteUrl;
+        this.linkedinUrl = linkedinUrl;
+        this.githubUrl = githubUrl;
     }
 }
 
@@ -361,6 +478,58 @@ public class CandidateSkill {
         this.level = "";
         this.yearsOfEx = 0;
         this.note = "";
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Certification.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Certification {
+    private Long id;
+    private Long candidateId;
+    private String name;
+    private String issuingOrg;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
+    private String credentialId;
+    private String credentialUrl;
+    private int displayOrder;
+
+    public static Certification create(Long candidateId, String name) {
+        if (candidateId == null || name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên chứng chỉ không được để trống.");
+        }
+        return Certification.builder()
+                .candidateId(candidateId)
+                .name(name)
+                .displayOrder(0)
+                .build();
+    }
+
+    public void updateDetails(String name, String issuingOrg, LocalDate issueDate, LocalDate expiryDate,
+                              String credentialId, String credentialUrl, int displayOrder) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên chứng chỉ không được để trống.");
+        }
+        this.name = name;
+        this.issuingOrg = issuingOrg;
+        this.issueDate = issueDate;
+        this.expiryDate = expiryDate;
+        this.credentialId = credentialId;
+        this.credentialUrl = credentialUrl;
+        this.displayOrder = displayOrder;
     }
 }
 
@@ -444,7 +613,7 @@ public class CvDocument {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Skill.java
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Education.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -453,37 +622,325 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Skill {
+public class Education {
     private Long id;
-    private String name;
+    private Long candidateId;
+    private String schoolName;
+    private String major;
+    private String degree; // Trung cấp, Cao đẳng, Đại học, Thạc sĩ, Tiến sĩ
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private boolean isCurrent;
+    private BigDecimal gpa;
+    private String description;
+    private int displayOrder;
 
-    public static Skill createStandard(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
+    public static Education create(Long candidateId, String schoolName) {
+        if (candidateId == null || schoolName == null || schoolName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên trường học không được để trống.");
         }
-        return Skill.builder().name(name.trim().toLowerCase()).build();
-    }
-
-    public static Skill create(String cleanSkillName) {
-        if (cleanSkillName == null || cleanSkillName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
-        }
-        return Skill.builder()
-                .name(cleanSkillName.trim())
+        return Education.builder()
+                .candidateId(candidateId)
+                .schoolName(schoolName)
+                .isCurrent(false)
+                .displayOrder(0)
                 .build();
     }
 
-    public void setName(String trimmedName) {
-        if (trimmedName == null || trimmedName.trim().isEmpty()) {
-            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
+    public void updateDetails(String schoolName, String major, String degree,
+                              LocalDate startDate, LocalDate endDate, boolean isCurrent,
+                              BigDecimal gpa, String description, int displayOrder) {
+        if (schoolName == null || schoolName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên trường học không được để trống.");
         }
-        this.name = trimmedName.trim();
+        this.schoolName = schoolName;
+        this.major = major;
+        this.degree = degree;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.gpa = gpa;
+        this.description = description;
+        this.displayOrder = displayOrder;
     }
 }
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Experience.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Experience {
+    private Long id;
+    private Long candidateId;
+    private String companyName;
+    private String position;
+    private String employmentType; // FULL_TIME, PART_TIME, INTERNSHIP, FREELANCE
+    private String location;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private boolean isCurrent;
+    private String description;
+    private int displayOrder;
+
+    public static Experience create(Long candidateId, String companyName) {
+        if (candidateId == null || companyName == null || companyName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên công ty không được để trống.");
+        }
+        return Experience.builder()
+                .candidateId(candidateId)
+                .companyName(companyName)
+                .isCurrent(false)
+                .displayOrder(0)
+                .build();
+    }
+
+    public void updateDetails(String companyName, String position, String employmentType,
+                              String location, LocalDate startDate, LocalDate endDate,
+                              boolean isCurrent, String description, int displayOrder) {
+        if (companyName == null || companyName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên công ty không được để trống.");
+        }
+        this.companyName = companyName;
+        this.position = position;
+        this.employmentType = employmentType;
+        this.location = location;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.description = description;
+        this.displayOrder = displayOrder;
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Hobby.java
+================================================================================
+
+// Hobby.java
+package com.worklify.domain.candidate.model;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Hobby {
+    private Long id;
+    private Long candidateId;
+    private String name;
+    private int displayOrder;
+
+    public static Hobby create(Long candidateId, String name) {
+        if (candidateId == null || name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên sở thích không được để trống.");
+        }
+        return Hobby.builder().candidateId(candidateId).name(name).displayOrder(0).build();
+    }
+
+    public void updateDetails(String name, int displayOrder) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên sở thích không được để trống.");
+        }
+        this.name = name;
+        this.displayOrder = displayOrder;
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Language.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.Objects;
+
+@Getter
+public class Language {
+
+    private final Long id;
+    private final Long candidateId;
+    private Long languageId;
+    private String proficiency;
+    private Integer displayOrder;
+
+    @Builder
+    private Language(Long id, Long candidateId, Long languageId, String proficiency, Integer displayOrder) {
+        this.id = id;
+        this.candidateId = candidateId;
+        this.languageId = languageId;
+        this.proficiency = proficiency;
+        this.displayOrder = displayOrder;
+    }
+
+    /** Tạo mới. languageId phải trỏ tới một ReferenceValue(type=LANGUAGE) đã tồn tại. */
+    public static Language create(Long candidateId, Long languageId, String proficiency, Integer displayOrder) {
+        if (candidateId == null) {
+            throw new IllegalArgumentException("candidateId không được null");
+        }
+        if (languageId == null) {
+            throw new IllegalArgumentException(
+                    "languageId không được null — phải resolve/tạo ReferenceValue(type=LANGUAGE) trước");
+        }
+        return new Language(null, candidateId, languageId, proficiency, displayOrder == null ? 0 : displayOrder);
+    }
+
+    /** Dựng lại từ persistence. */
+    public static Language restore(Long id, Long candidateId, Long languageId, String proficiency, Integer displayOrder) {
+        if (id == null) {
+            throw new IllegalArgumentException("id không được null khi restore");
+        }
+        return new Language(id, candidateId, languageId, proficiency, displayOrder);
+    }
+
+    public void changeLanguage(Long languageId) {
+        if (languageId == null) {
+            throw new IllegalArgumentException("languageId không được null");
+        }
+        this.languageId = languageId;
+    }
+
+    public void changeProficiency(String proficiency) {
+        this.proficiency = proficiency;
+    }
+
+    public void changeDisplayOrder(Integer displayOrder) {
+        this.displayOrder = displayOrder;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Language that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Project.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Project {
+    private Long id;
+    private Long candidateId;
+    private String projectName;
+    private String role;
+    private String techStack;
+    private String projectUrl;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private boolean isCurrent;
+    private String description;
+    private int displayOrder;
+
+    public static Project create(Long candidateId, String projectName) {
+        if (candidateId == null || projectName == null || projectName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên dự án không được để trống.");
+        }
+        return Project.builder()
+                .candidateId(candidateId)
+                .projectName(projectName)
+                .isCurrent(false)
+                .displayOrder(0)
+                .build();
+    }
+
+    public void updateDetails(String projectName, String role, String techStack, String projectUrl,
+                              LocalDate startDate, LocalDate endDate, boolean isCurrent,
+                              String description, int displayOrder) {
+        if (projectName == null || projectName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên dự án không được để trống.");
+        }
+        this.projectName = projectName;
+        this.role = role;
+        this.techStack = techStack;
+        this.projectUrl = projectUrl;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.isCurrent = isCurrent;
+        this.description = description;
+        this.displayOrder = displayOrder;
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ActivityRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Activity;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ActivityRepository {
+    Activity save(Activity education);
+    Optional<Activity> findById(Long id);
+    List<Activity> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\AwardRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Award;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface AwardRepository {
+    Award save(Award education);
+    Optional<Award> findById(Long id);
+    List<Award> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
 
 ================================================================================
 FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateProfileRepository.java
@@ -521,6 +978,26 @@ public interface CandidateSkillRepository {
 }
 
 ================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CertificationRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+
+import com.worklify.domain.candidate.model.Certification;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface CertificationRepository {
+    Certification save(Certification education);
+    Optional<Certification> findById(Long id);
+    List<Certification> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
 FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CvDocumentRepository.java
 ================================================================================
 
@@ -538,24 +1015,101 @@ public interface CvDocumentRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\SkillRepository.java
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\EducationRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
 
-import com.worklify.domain.candidate.model.Skill;
+import com.worklify.domain.candidate.model.Education;
+import java.util.List;
+import java.util.Optional;
+
+public interface EducationRepository {
+    Education save(Education education);
+    Optional<Education> findById(Long id);
+    List<Education> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ExperienceRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Experience;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface SkillRepository {
-    Skill save(Skill skill);
-    Optional<Skill> findById(Long id);
-    Optional<Skill> findByName(String name);
-    Optional<Skill> findByNameIgnoreCase(String name);
-    List<Skill> findAll();
+public interface ExperienceRepository {
+    Experience save(Experience education);
+    Optional<Experience> findById(Long id);
+    List<Experience> findByCandidateId(Long candidateId);
     void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
 }
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\HobbyRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Hobby;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface HobbyRepository {
+    Hobby save(Hobby education);
+    Optional<Hobby> findById(Long id);
+    List<Hobby> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\LanguageRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Language;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface LanguageRepository {
+    Language save(Language education);
+    Optional<Language> findById(Long id);
+    List<Language> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ProjectRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Project;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface ProjectRepository {
+    Project save(Project education);
+    Optional<Project> findById(Long id);
+    List<Project> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+    void deleteByCandidateId(Long candidateId);
+}
+
 
 ================================================================================
 FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\DomainPage.java
@@ -1019,4 +1573,252 @@ public interface SavedJobRepository {
     Optional<SavedJob> findByCandidateIdAndJobId(Long candidateId, Long jobId);
     DomainPage<SavedJob> findByCandidateId(Long candidateId, DomainPageable pageable);
     void delete(SavedJob savedJob);
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\ReferenceValue.java
+================================================================================
+
+package com.worklify.domain.referencedata.model;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.Objects;
+
+@Getter
+public class ReferenceValue {
+
+    private final Long id;
+    private final String type;
+    private final String name;
+
+    @Builder
+    private ReferenceValue(Long id, String type, String name) {
+        this.id = id;
+        this.type = type;
+        this.name = name;
+    }
+
+    /** Tạo mới (chưa có id, sẽ được gán sau khi persist). */
+    public static ReferenceValue create(String type, String name) {
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("type không được để trống");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name không được để trống");
+        }
+        return new ReferenceValue(null, normalizeType(type), name.trim());
+    }
+
+    /** Dựng lại từ persistence (đã có id). */
+    public static ReferenceValue restore(Long id, String type, String name) {
+        if (id == null) {
+            throw new IllegalArgumentException("id không được null khi restore");
+        }
+        return new ReferenceValue(id, type, name);
+    }
+
+    private static String normalizeType(String type) {
+        return type.trim().toUpperCase();
+    }
+
+    public boolean isSameTypeAndName(String type, String name) {
+        return this.type.equalsIgnoreCase(type) && this.name.equalsIgnoreCase(name);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ReferenceValue that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\ReferenceValueSuggestion.java
+================================================================================
+
+package com.worklify.domain.referencedata.model;
+
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.Objects;
+
+@Getter
+public class ReferenceValueSuggestion {
+
+    private final Long id;
+    private final String type;
+    private final String name;
+    private final Long requestedByUserId;
+    private SuggestionStatus status;
+    private Long reviewedByAdminId;
+    private String reviewNote;
+    private final LocalDateTime createdAt;
+    private LocalDateTime reviewedAt;
+
+    @Builder
+    private ReferenceValueSuggestion(Long id, String type, String name, Long requestedByUserId,
+                                     SuggestionStatus status, Long reviewedByAdminId, String reviewNote,
+                                     LocalDateTime createdAt, LocalDateTime reviewedAt) {
+        this.id = id;
+        this.type = type;
+        this.name = name;
+        this.requestedByUserId = requestedByUserId;
+        this.status = status;
+        this.reviewedByAdminId = reviewedByAdminId;
+        this.reviewNote = reviewNote;
+        this.createdAt = createdAt;
+        this.reviewedAt = reviewedAt;
+    }
+
+    /** Tạo mới một đề xuất, mặc định status = PENDING. */
+    public static ReferenceValueSuggestion create(String type, String name, Long requestedByUserId) {
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("type không được để trống");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name không được để trống");
+        }
+        if (requestedByUserId == null) {
+            throw new IllegalArgumentException("requestedByUserId không được null");
+        }
+        return new ReferenceValueSuggestion(
+                null, type.trim().toUpperCase(), name.trim(), requestedByUserId,
+                SuggestionStatus.PENDING, null, null,
+                LocalDateTime.now(), null
+        );
+    }
+
+    /** Dựng lại từ persistence. */
+    public static ReferenceValueSuggestion restore(Long id, String type, String name, Long requestedByUserId,
+                                                   SuggestionStatus status, Long reviewedByAdminId,
+                                                   String reviewNote, LocalDateTime createdAt,
+                                                   LocalDateTime reviewedAt) {
+        return new ReferenceValueSuggestion(id, type, name, requestedByUserId, status,
+                reviewedByAdminId, reviewNote, createdAt, reviewedAt);
+    }
+
+    /**
+     * Admin duyệt đề xuất. Trả về một ReferenceValue mới (chưa persist) để tầng
+     * Application lưu vào bảng reference_values.
+     */
+    public ReferenceValue approve(Long adminId) {
+        ensurePending();
+        if (adminId == null) {
+            throw new IllegalArgumentException("adminId không được null");
+        }
+        this.status = SuggestionStatus.APPROVED;
+        this.reviewedByAdminId = adminId;
+        this.reviewedAt = LocalDateTime.now();
+        return ReferenceValue.create(this.type, this.name);
+    }
+
+    /** Admin từ chối đề xuất, có thể kèm ghi chú lý do. */
+    public void reject(Long adminId, String note) {
+        ensurePending();
+        if (adminId == null) {
+            throw new IllegalArgumentException("adminId không được null");
+        }
+        this.status = SuggestionStatus.REJECTED;
+        this.reviewedByAdminId = adminId;
+        this.reviewNote = note;
+        this.reviewedAt = LocalDateTime.now();
+    }
+
+    private void ensurePending() {
+        if (this.status != SuggestionStatus.PENDING) {
+            throw new IllegalStateException(
+                    "Suggestion id=" + id + " đã được xử lý (status=" + status + "), không thể duyệt/từ chối lại");
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ReferenceValueSuggestion that)) return false;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\SuggestionStatus.java
+================================================================================
+
+package com.worklify.domain.referencedata.model;
+
+public enum SuggestionStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\repository\ReferenceValueRepository.java
+================================================================================
+
+package com.worklify.domain.referencedata.repository;
+
+import com.worklify.domain.referencedata.model.ReferenceValue;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Port (outbound) cho ReferenceValue — thay thế SkillRepository cũ, dùng chung
+ * cho mọi type (SKILL, LANGUAGE, ...).
+ */
+public interface ReferenceValueRepository {
+
+    Optional<ReferenceValue> findById(Long id);
+
+    Optional<ReferenceValue> findByTypeAndNameIgnoreCase(String type, String name);
+
+    /** Dùng cho dropdown search khi user gõ tìm skill/language. */
+    List<ReferenceValue> searchByTypeAndKeyword(String type, String keyword);
+
+    ReferenceValue save(ReferenceValue referenceValue);
+
+    void deleteById(Long id);
+}
+
+================================================================================
+FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\repository\ReferenceValueSuggestionRepository.java
+================================================================================
+
+package com.worklify.domain.referencedata.repository;
+
+import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.model.SuggestionStatus;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Port (outbound) cho ReferenceValueSuggestion — phục vụ flow candidate đề xuất
+ * skill/language mới và admin duyệt/từ chối.
+ */
+public interface ReferenceValueSuggestionRepository {
+
+    ReferenceValueSuggestion save(ReferenceValueSuggestion suggestion);
+
+    Optional<ReferenceValueSuggestion> findById(Long id);
+
+    List<ReferenceValueSuggestion> findByStatus(SuggestionStatus status);
+
+    List<ReferenceValueSuggestion> findByType(String type);
 }

@@ -18,8 +18,8 @@ public class LanguageJpaEntity {
     @Column(name = "candidate_id", nullable = false)
     private Long candidateId;
 
-    @Column(name = "language_name", nullable = false, length = 100)
-    private String languageName;
+    @Column(name = "language_id", nullable = false)
+    private Long languageId;
 
     @Column(length = 50)
     private String proficiency;

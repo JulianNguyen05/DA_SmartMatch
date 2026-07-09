@@ -1,15 +1,14 @@
 package com.worklify.api.controller.admin;
 
 import com.worklify.api.common.response.ApiResponse;
-import com.worklify.application.admin.dto.AdminJobResponse;
-import com.worklify.application.admin.dto.CompanyModerationRequest;
-import com.worklify.application.admin.dto.DashboardStatsResponse;
-import com.worklify.application.admin.dto.JobModerationRequest;
+import com.worklify.application.admin.dto.*;
 import com.worklify.application.admin.service.AdminService;
 import com.worklify.application.auth.dto.UserResponse;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.employer.dto.CompanyProfileResponse;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.referencedata.model.SuggestionStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +96,33 @@ public class AdminController {
         };
 
         return ApiResponse.success(adminService.getAllUsers(pageable));
+    }
+
+    // ==========================================
+    // DUYỆT ĐỀ XUẤT SKILL/LANGUAGE (ReferenceValueSuggestion)
+    // ==========================================
+    @GetMapping("/suggestions")
+    @Operation(summary = "Lấy danh sách đề xuất Skill/Language theo trạng thái (mặc định PENDING)")
+    public ApiResponse<List<SuggestionResponse>> getSuggestions(
+            @RequestParam(value = "status", required = false) SuggestionStatus status) {
+        return ApiResponse.success(adminService.getSuggestions(status));
+    }
+
+    @PatchMapping("/suggestions/{suggestionId}/approve")
+    @Operation(summary = "Duyệt đề xuất — tạo ReferenceValue chính thức từ suggestion")
+    public ApiResponse<SuggestionResponse> approveSuggestion(
+            @PathVariable("suggestionId") Long suggestionId) {
+        return ApiResponse.success(adminService.approveSuggestion(suggestionId), "Đã duyệt đề xuất");
+    }
+
+    @PatchMapping("/suggestions/{suggestionId}/reject")
+    @Operation(summary = "Từ chối đề xuất, kèm lý do để candidate biết")
+    public ApiResponse<SuggestionResponse> rejectSuggestion(
+            @PathVariable("suggestionId") Long suggestionId,
+            @RequestBody SuggestionModerationRequest request) {
+        return ApiResponse.success(
+                adminService.rejectSuggestion(suggestionId, request.getReviewNote()),
+                "Đã từ chối đề xuất"
+        );
     }
 }

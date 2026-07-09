@@ -701,6 +701,297 @@ public class CandidateController {
 
         return ApiResponse.success(candidateService.uploadCvThumbnail(userId, cvId, file), "Lưu ảnh thu nhỏ thành công");
     }
+
+    // ==========================================
+    // 4. ẢNH ĐẠI DIỆN (AVATAR)
+    // ==========================================
+    @PostMapping(value = "/{userId}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Tải lên ảnh đại diện ứng viên")
+    public ApiResponse<CandidateProfileResponse> uploadAvatar(
+            @PathVariable("userId") Long userId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+        return ApiResponse.success(candidateService.uploadAvatar(userId, file), "Cập nhật ảnh đại diện thành công");
+    }
+
+    // ==========================================
+    // 5. QUẢN LÝ HỌC VẤN (EDUCATIONS)
+    // ==========================================
+    @GetMapping("/{userId}/educations")
+    @Operation(summary = "Lấy danh sách học vấn của ứng viên")
+    public ApiResponse<List<EducationResponse>> getEducations(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getEducationsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/educations")
+    @Operation(summary = "Thêm mục học vấn mới")
+    public ApiResponse<EducationResponse> createEducation(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody EducationRequest request) {
+        return ApiResponse.success(candidateService.createEducation(userId, request), "Thêm học vấn thành công");
+    }
+
+    @PutMapping("/{userId}/educations/{educationId}")
+    @Operation(summary = "Cập nhật mục học vấn")
+    public ApiResponse<EducationResponse> updateEducation(
+            @PathVariable("userId") Long userId,
+            @PathVariable("educationId") Long educationId,
+            @Valid @RequestBody EducationRequest request) {
+        return ApiResponse.success(candidateService.updateEducation(userId, educationId, request), "Cập nhật học vấn thành công");
+    }
+
+    @DeleteMapping("/{userId}/educations/{educationId}")
+    @Operation(summary = "Xóa mục học vấn")
+    public ApiResponse<Void> deleteEducation(
+            @PathVariable("userId") Long userId,
+            @PathVariable("educationId") Long educationId) {
+        candidateService.deleteEducation(userId, educationId);
+        return ApiResponse.success(null, "Xóa học vấn thành công");
+    }
+
+    // ==========================================
+    // 6. QUẢN LÝ KINH NGHIỆM LÀM VIỆC (EXPERIENCES)
+    // ==========================================
+    @GetMapping("/{userId}/experiences")
+    @Operation(summary = "Lấy danh sách kinh nghiệm làm việc")
+    public ApiResponse<List<ExperienceResponse>> getExperiences(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getExperiencesByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/experiences")
+    @Operation(summary = "Thêm kinh nghiệm làm việc mới")
+    public ApiResponse<ExperienceResponse> createExperience(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody ExperienceRequest request) {
+        return ApiResponse.success(candidateService.createExperience(userId, request), "Thêm kinh nghiệm thành công");
+    }
+
+    @PutMapping("/{userId}/experiences/{experienceId}")
+    @Operation(summary = "Cập nhật kinh nghiệm làm việc")
+    public ApiResponse<ExperienceResponse> updateExperience(
+            @PathVariable("userId") Long userId,
+            @PathVariable("experienceId") Long experienceId,
+            @Valid @RequestBody ExperienceRequest request) {
+        return ApiResponse.success(candidateService.updateExperience(userId, experienceId, request), "Cập nhật kinh nghiệm thành công");
+    }
+
+    @DeleteMapping("/{userId}/experiences/{experienceId}")
+    @Operation(summary = "Xóa kinh nghiệm làm việc")
+    public ApiResponse<Void> deleteExperience(
+            @PathVariable("userId") Long userId,
+            @PathVariable("experienceId") Long experienceId) {
+        candidateService.deleteExperience(userId, experienceId);
+        return ApiResponse.success(null, "Xóa kinh nghiệm thành công");
+    }
+
+    // ==========================================
+    // 7. QUẢN LÝ DỰ ÁN (PROJECTS)
+    // ==========================================
+    @GetMapping("/{userId}/projects")
+    @Operation(summary = "Lấy danh sách dự án")
+    public ApiResponse<List<ProjectResponse>> getProjects(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getProjectsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/projects")
+    @Operation(summary = "Thêm dự án mới")
+    public ApiResponse<ProjectResponse> createProject(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody ProjectRequest request) {
+        return ApiResponse.success(candidateService.createProject(userId, request), "Thêm dự án thành công");
+    }
+
+    @PutMapping("/{userId}/projects/{projectId}")
+    @Operation(summary = "Cập nhật dự án")
+    public ApiResponse<ProjectResponse> updateProject(
+            @PathVariable("userId") Long userId,
+            @PathVariable("projectId") Long projectId,
+            @Valid @RequestBody ProjectRequest request) {
+        return ApiResponse.success(candidateService.updateProject(userId, projectId, request), "Cập nhật dự án thành công");
+    }
+
+    @DeleteMapping("/{userId}/projects/{projectId}")
+    @Operation(summary = "Xóa dự án")
+    public ApiResponse<Void> deleteProject(
+            @PathVariable("userId") Long userId,
+            @PathVariable("projectId") Long projectId) {
+        candidateService.deleteProject(userId, projectId);
+        return ApiResponse.success(null, "Xóa dự án thành công");
+    }
+
+    // ==========================================
+    // 8. QUẢN LÝ CHỨNG CHỈ (CERTIFICATIONS)
+    // ==========================================
+    @GetMapping("/{userId}/certifications")
+    @Operation(summary = "Lấy danh sách chứng chỉ")
+    public ApiResponse<List<CertificationResponse>> getCertifications(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getCertificationsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/certifications")
+    @Operation(summary = "Thêm chứng chỉ mới")
+    public ApiResponse<CertificationResponse> createCertification(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody CertificationRequest request) {
+        return ApiResponse.success(candidateService.createCertification(userId, request), "Thêm chứng chỉ thành công");
+    }
+
+    @PutMapping("/{userId}/certifications/{certificationId}")
+    @Operation(summary = "Cập nhật chứng chỉ")
+    public ApiResponse<CertificationResponse> updateCertification(
+            @PathVariable("userId") Long userId,
+            @PathVariable("certificationId") Long certificationId,
+            @Valid @RequestBody CertificationRequest request) {
+        return ApiResponse.success(candidateService.updateCertification(userId, certificationId, request), "Cập nhật chứng chỉ thành công");
+    }
+
+    @DeleteMapping("/{userId}/certifications/{certificationId}")
+    @Operation(summary = "Xóa chứng chỉ")
+    public ApiResponse<Void> deleteCertification(
+            @PathVariable("userId") Long userId,
+            @PathVariable("certificationId") Long certificationId) {
+        candidateService.deleteCertification(userId, certificationId);
+        return ApiResponse.success(null, "Xóa chứng chỉ thành công");
+    }
+
+    // ==========================================
+    // 9. QUẢN LÝ HOẠT ĐỘNG (ACTIVITIES)
+    // ==========================================
+    @GetMapping("/{userId}/activities")
+    @Operation(summary = "Lấy danh sách hoạt động")
+    public ApiResponse<List<ActivityResponse>> getActivities(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getActivitiesByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/activities")
+    @Operation(summary = "Thêm hoạt động mới")
+    public ApiResponse<ActivityResponse> createActivity(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody ActivityRequest request) {
+        return ApiResponse.success(candidateService.createActivity(userId, request), "Thêm hoạt động thành công");
+    }
+
+    @PutMapping("/{userId}/activities/{activityId}")
+    @Operation(summary = "Cập nhật hoạt động")
+    public ApiResponse<ActivityResponse> updateActivity(
+            @PathVariable("userId") Long userId,
+            @PathVariable("activityId") Long activityId,
+            @Valid @RequestBody ActivityRequest request) {
+        return ApiResponse.success(candidateService.updateActivity(userId, activityId, request), "Cập nhật hoạt động thành công");
+    }
+
+    @DeleteMapping("/{userId}/activities/{activityId}")
+    @Operation(summary = "Xóa hoạt động")
+    public ApiResponse<Void> deleteActivity(
+            @PathVariable("userId") Long userId,
+            @PathVariable("activityId") Long activityId) {
+        candidateService.deleteActivity(userId, activityId);
+        return ApiResponse.success(null, "Xóa hoạt động thành công");
+    }
+
+    // ==========================================
+    // 10. QUẢN LÝ GIẢI THƯỞNG (AWARDS)
+    // ==========================================
+    @GetMapping("/{userId}/awards")
+    @Operation(summary = "Lấy danh sách giải thưởng")
+    public ApiResponse<List<AwardResponse>> getAwards(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getAwardsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/awards")
+    @Operation(summary = "Thêm giải thưởng mới")
+    public ApiResponse<AwardResponse> createAward(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody AwardRequest request) {
+        return ApiResponse.success(candidateService.createAward(userId, request), "Thêm giải thưởng thành công");
+    }
+
+    @PutMapping("/{userId}/awards/{awardId}")
+    @Operation(summary = "Cập nhật giải thưởng")
+    public ApiResponse<AwardResponse> updateAward(
+            @PathVariable("userId") Long userId,
+            @PathVariable("awardId") Long awardId,
+            @Valid @RequestBody AwardRequest request) {
+        return ApiResponse.success(candidateService.updateAward(userId, awardId, request), "Cập nhật giải thưởng thành công");
+    }
+
+    @DeleteMapping("/{userId}/awards/{awardId}")
+    @Operation(summary = "Xóa giải thưởng")
+    public ApiResponse<Void> deleteAward(
+            @PathVariable("userId") Long userId,
+            @PathVariable("awardId") Long awardId) {
+        candidateService.deleteAward(userId, awardId);
+        return ApiResponse.success(null, "Xóa giải thưởng thành công");
+    }
+
+    // ==========================================
+    // 11. QUẢN LÝ SỞ THÍCH (HOBBIES)
+    // ==========================================
+    @GetMapping("/{userId}/hobbies")
+    @Operation(summary = "Lấy danh sách sở thích")
+    public ApiResponse<List<HobbyResponse>> getHobbies(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getHobbiesByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/hobbies")
+    @Operation(summary = "Thêm sở thích mới")
+    public ApiResponse<HobbyResponse> createHobby(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody HobbyRequest request) {
+        return ApiResponse.success(candidateService.createHobby(userId, request), "Thêm sở thích thành công");
+    }
+
+    @PutMapping("/{userId}/hobbies/{hobbyId}")
+    @Operation(summary = "Cập nhật sở thích")
+    public ApiResponse<HobbyResponse> updateHobby(
+            @PathVariable("userId") Long userId,
+            @PathVariable("hobbyId") Long hobbyId,
+            @Valid @RequestBody HobbyRequest request) {
+        return ApiResponse.success(candidateService.updateHobby(userId, hobbyId, request), "Cập nhật sở thích thành công");
+    }
+
+    @DeleteMapping("/{userId}/hobbies/{hobbyId}")
+    @Operation(summary = "Xóa sở thích")
+    public ApiResponse<Void> deleteHobby(
+            @PathVariable("userId") Long userId,
+            @PathVariable("hobbyId") Long hobbyId) {
+        candidateService.deleteHobby(userId, hobbyId);
+        return ApiResponse.success(null, "Xóa sở thích thành công");
+    }
+
+    // ==========================================
+    // 12. QUẢN LÝ NGOẠI NGỮ (LANGUAGES)
+    // ==========================================
+    @GetMapping("/{userId}/languages")
+    @Operation(summary = "Lấy danh sách ngoại ngữ")
+    public ApiResponse<List<LanguageResponse>> getLanguages(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getLanguagesByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/languages")
+    @Operation(summary = "Thêm ngoại ngữ mới")
+    public ApiResponse<LanguageResponse> createLanguage(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody LanguageRequest request) {
+        return ApiResponse.success(candidateService.createLanguage(userId, request), "Thêm ngoại ngữ thành công");
+    }
+
+    @PutMapping("/{userId}/languages/{languageId}")
+    @Operation(summary = "Cập nhật ngoại ngữ")
+    public ApiResponse<LanguageResponse> updateLanguage(
+            @PathVariable("userId") Long userId,
+            @PathVariable("languageId") Long languageId,
+            @Valid @RequestBody LanguageRequest request) {
+        return ApiResponse.success(candidateService.updateLanguage(userId, languageId, request), "Cập nhật ngoại ngữ thành công");
+    }
+
+    @DeleteMapping("/{userId}/languages/{languageId}")
+    @Operation(summary = "Xóa ngoại ngữ")
+    public ApiResponse<Void> deleteLanguage(
+            @PathVariable("userId") Long userId,
+            @PathVariable("languageId") Long languageId) {
+        candidateService.deleteLanguage(userId, languageId);
+        return ApiResponse.success(null, "Xóa ngoại ngữ thành công");
+    }
 }
 
 ================================================================================

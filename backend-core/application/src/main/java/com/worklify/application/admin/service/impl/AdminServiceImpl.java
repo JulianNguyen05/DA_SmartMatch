@@ -4,35 +4,39 @@ import com.worklify.application.admin.dto.AdminJobResponse;
 import com.worklify.application.common.exception.ResourceNotFoundException;
 import com.worklify.application.employer.dto.CompanyProfileResponse;
 import com.worklify.domain.auth.model.User;
-import com.worklify.domain.candidate.model.Skill;
 import com.worklify.domain.candidate.repository.CandidateProfileRepository;
-import com.worklify.domain.candidate.repository.SkillRepository;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.employer.repository.CompanyLikeRepository;
 import com.worklify.domain.employer.repository.CompanyProfileRepository;
 import com.worklify.domain.admin.repository.SystemLogRepository;
 import com.worklify.application.admin.dto.DashboardStatsResponse;
-import com.worklify.application.admin.dto.MasterDataRequest;
 import com.worklify.application.admin.dto.SystemLogResponse;
 import com.worklify.application.admin.service.AdminService;
 import com.worklify.application.auth.dto.UserResponse;
 import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.admin.model.SystemLog;
 import com.worklify.domain.application.model.ApplicationStatus;
 import com.worklify.domain.application.repository.ApplicationRepository;
 import com.worklify.domain.auth.repository.UserRepository;
 import com.worklify.domain.common.DomainPageable;
 import com.worklify.domain.employer.model.CompanyProfile;
-import com.worklify.domain.employer.model.VerificationStatus; // Cần import thêm Enum này
+import com.worklify.domain.employer.model.VerificationStatus;
 import com.worklify.domain.job.model.JobPosting;
 import com.worklify.domain.job.model.JobStatus;
 import com.worklify.domain.job.repository.JobPostingRepository;
+import com.worklify.domain.referencedata.model.ReferenceValue;
+import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.domain.referencedata.repository.ReferenceValueRepository;
+import com.worklify.domain.referencedata.repository.ReferenceValueSuggestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors; // Import cho stream map
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -45,7 +49,9 @@ public class AdminServiceImpl implements AdminService {
     private final CompanyProfileRepository companyProfileRepository;
     private final CompanyLikeRepository companyLikeRepository;
     private final SystemLogRepository systemLogRepository;
-    private final SkillRepository skillRepository;
+    // [ĐÃ SỬA] Thay SkillRepository bằng cặp ReferenceValue/ReferenceValueSuggestion
+    private final ReferenceValueRepository referenceValueRepository;
+    private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
     private final CandidateProfileRepository candidateProfileRepository;
 
     // Admin ID thực tế nên được lấy từ SecurityContext — tạm dùng hằng số
@@ -132,25 +138,73 @@ public class AdminServiceImpl implements AdminService {
                 .collect(Collectors.toList());
     }
 
+    // ==========================================
+    // [ĐÃ SỬA] Flow duyệt suggestion tổng quát — thay createSkillMasterData/deleteSkillMasterData
+    // ==========================================
+
     @Override
-    public void createSkillMasterData(MasterDataRequest request) {
-        if (skillRepository.findByNameIgnoreCase(request.getName()).isPresent()) {
-            throw new IllegalArgumentException("Kỹ năng '" + request.getName() + "' đã tồn tại.");
-        }
-        skillRepository.save(Skill.create(request.getName()));
-        systemLogRepository.save(SystemLog.record(
-                SYSTEM_ADMIN_ID, "CREATE_SKILL", "Tên: " + request.getName()
-        ));
+    @Transactional(readOnly = true)
+    public List<SuggestionResponse> getSuggestions(SuggestionStatus status) {
+        SuggestionStatus effectiveStatus = status != null ? status : SuggestionStatus.PENDING;
+        return referenceValueSuggestionRepository.findByStatus(effectiveStatus).stream()
+                .map(this::mapToSuggestionResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void deleteSkillMasterData(Long skillId) {
-        skillRepository.findById(skillId)
-                .orElseThrow(() -> new ResourceNotFoundException("Kỹ năng không tồn tại."));
-        skillRepository.deleteById(skillId);
+    public SuggestionResponse approveSuggestion(Long suggestionId) {
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.findById(suggestionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất."));
+
+        // Phòng trường hợp giữa lúc đề xuất PENDING và lúc duyệt, đã có admin khác
+        // hoặc suggestion khác approve trùng type+name trước đó -> tránh vi phạm
+        // UNIQUE(type, name) ở bảng reference_values.
+        Optional<ReferenceValue> existing = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(suggestion.getType(), suggestion.getName());
+
+        ReferenceValue approvedValue = suggestion.approve(SYSTEM_ADMIN_ID);
+        if (existing.isEmpty()) {
+            referenceValueRepository.save(approvedValue);
+        }
+
+        ReferenceValueSuggestion saved = referenceValueSuggestionRepository.save(suggestion);
+
         systemLogRepository.save(SystemLog.record(
-                SYSTEM_ADMIN_ID, "DELETE_SKILL", "Skill ID: " + skillId
+                SYSTEM_ADMIN_ID, "APPROVE_SUGGESTION",
+                "Suggestion ID: " + suggestionId + " (" + suggestion.getType() + ": " + suggestion.getName() + ")"
         ));
+
+        return mapToSuggestionResponse(saved);
+    }
+
+    @Override
+    public SuggestionResponse rejectSuggestion(Long suggestionId, String reviewNote) {
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.findById(suggestionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất."));
+
+        suggestion.reject(SYSTEM_ADMIN_ID, reviewNote);
+        ReferenceValueSuggestion saved = referenceValueSuggestionRepository.save(suggestion);
+
+        systemLogRepository.save(SystemLog.record(
+                SYSTEM_ADMIN_ID, "REJECT_SUGGESTION",
+                "Suggestion ID: " + suggestionId + ". Lý do: " + reviewNote
+        ));
+
+        return mapToSuggestionResponse(saved);
+    }
+
+    private SuggestionResponse mapToSuggestionResponse(ReferenceValueSuggestion s) {
+        return SuggestionResponse.builder()
+                .id(s.getId())
+                .type(s.getType())
+                .name(s.getName())
+                .requestedByUserId(s.getRequestedByUserId())
+                .status(s.getStatus())
+                .reviewedByAdminId(s.getReviewedByAdminId())
+                .reviewNote(s.getReviewNote())
+                .createdAt(s.getCreatedAt())
+                .reviewedAt(s.getReviewedAt())
+                .build();
     }
 
     @Override
@@ -177,16 +231,11 @@ public class AdminServiceImpl implements AdminService {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> getAllUsers(DomainPageable pageable) {
-        // 1. Lấy danh sách người dùng từ DB thông qua Repository
         DomainPage<User> page = userRepository.findAll(pageable);
 
-        // 2. Chuyển đổi dữ liệu từ Entity (User) sang DTO (UserResponse) để gửi về Frontend
         List<UserResponse> content = page.getContent().stream().map(user -> {
-
-            // ĐÃ SỬA: Dùng .value() thay vì String.valueOf() để lấy chuỗi email chuẩn
             String emailStr = user.getEmail() != null ? user.getEmail().value() : "Chưa cập nhật";
 
-            // Tìm tên hiển thị dựa trên Role (Tùy chọn, Frontend có cơ chế fallback nếu null)
             String fullName = "Chưa cập nhật tên";
             if (user.getRole() != null) {
                 if (user.getRole().name().equals("CANDIDATE")) {
@@ -208,7 +257,6 @@ public class AdminServiceImpl implements AdminService {
                     .build();
         }).collect(Collectors.toList());
 
-        // 3. Đóng gói vào PageResponse
         return PageResponse.<UserResponse>builder()
                 .content(content)
                 .totalElements(page.getTotalElements())

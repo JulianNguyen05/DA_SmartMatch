@@ -5,19 +5,29 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.common.exception.ReferenceValueSuggestionPendingException;
 import com.worklify.application.common.port.FileStoragePort;
+import com.worklify.application.referencedata.ReferenceValueType;
+import com.worklify.application.referencedata.dto.ReferenceValueResponse;
 import com.worklify.domain.candidate.model.*;
 import com.worklify.domain.candidate.repository.*;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.referencedata.model.ReferenceValue;
+import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.repository.ReferenceValueRepository;
+import com.worklify.domain.referencedata.repository.ReferenceValueSuggestionRepository;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -29,7 +39,8 @@ public class CandidateServiceImpl implements CandidateService {
     private final CandidateProfileRepository candidateProfileRepository;
     private final CvDocumentRepository cvDocumentRepository;
     private final CandidateSkillRepository candidateSkillRepository;
-    private final SkillRepository skillRepository;
+    private final ReferenceValueRepository referenceValueRepository;
+    private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
     private final FileStoragePort fileStoragePort;
     private final ObjectMapper objectMapper;
     private final EducationRepository educationRepository;
@@ -46,7 +57,6 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseGet(() -> CandidateProfile.create(userId, request.getFullName()));
 
-        // [SỬA] Khớp chữ ký mới của updateProfileDetails và thêm updateSocialLinks
         profile.updateProfileDetails(
                 request.getFullName(),
                 request.getHeadline(),
@@ -61,10 +71,12 @@ public class CandidateServiceImpl implements CandidateService {
 
         CandidateProfile saved = candidateProfileRepository.save(profile);
 
-        // Đồng bộ kỹ năng từ chuỗi phân cách dấu phẩy (nếu có)
-        syncSkillsFromCsv(saved.getId(), request.getSkills());
+        // Đồng bộ kỹ năng từ chuỗi phân cách dấu phẩy (nếu có) — gom lại skill nào bị bỏ qua để báo cho candidate
+        List<String> skippedSkills = syncSkillsFromCsv(saved.getId(), request.getSkills());
 
-        return mapToProfileResponse(saved);
+        CandidateProfileResponse response = mapToProfileResponse(saved);
+        response.setSkippedSkillSuggestions(skippedSkills);
+        return response;
     }
 
     @Override
@@ -193,7 +205,7 @@ public class CandidateServiceImpl implements CandidateService {
 
         return candidateSkillRepository.findByCandidateId(profile.getId()).stream()
                 .map(cs -> {
-                    Skill skill = skillRepository.findById(cs.getSkillId())
+                    ReferenceValue skill = referenceValueRepository.findById(cs.getSkillId())
                             .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
                     return CandidateSkillResponse.builder()
                             .id(skill.getId())
@@ -211,8 +223,21 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
 
-        Skill skill = skillRepository.findByNameIgnoreCase(request.getSkillName())
-                .orElseGet(() -> skillRepository.save(Skill.create(request.getSkillName())));
+        ReferenceValue skill = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
+                .orElseGet(() -> {
+                    referenceValueSuggestionRepository.save(
+                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                    );
+                    return null;
+                });
+
+        if (skill == null) {
+            throw new ReferenceValueSuggestionPendingException(
+                    "Kỹ năng '" + request.getSkillName() + "' chưa có trong hệ thống. " +
+                            "Đã gửi đề xuất bổ sung, vui lòng chờ admin duyệt."
+            );
+        }
 
         CandidateSkill cs = CandidateSkill.builder()
                 .candidateId(profile.getId())
@@ -238,8 +263,21 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
 
-        Skill targetSkill = skillRepository.findByNameIgnoreCase(request.getSkillName())
-                .orElseGet(() -> skillRepository.save(Skill.create(request.getSkillName())));
+        ReferenceValue targetSkill = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
+                .orElseGet(() -> {
+                    referenceValueSuggestionRepository.save(
+                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                    );
+                    return null;
+                });
+
+        if (targetSkill == null) {
+            throw new ReferenceValueSuggestionPendingException(
+                    "Kỹ năng '" + request.getSkillName() + "' chưa có trong hệ thống. " +
+                            "Đã gửi đề xuất bổ sung, vui lòng chờ admin duyệt."
+            );
+        }
 
         CandidateSkill oldCs = candidateSkillRepository.findByCandidateIdAndSkillId(profile.getId(), skillId)
                 .orElseThrow(() -> new IllegalArgumentException("Kỹ năng này chưa được thêm vào hồ sơ."));
@@ -271,7 +309,7 @@ public class CandidateServiceImpl implements CandidateService {
     public void addSkillToCandidate(Long userId, Long skillId) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
-        skillRepository.findById(skillId)
+        referenceValueRepository.findById(skillId)
                 .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
         CandidateSkill cs = new CandidateSkill(profile.getId(), skillId);
         candidateSkillRepository.save(cs);
@@ -305,8 +343,9 @@ public class CandidateServiceImpl implements CandidateService {
     // PRIVATE HELPERS
     // ====================================================
 
-    private void syncSkillsFromCsv(Long candidateId, String csvSkills) {
-        if (csvSkills == null || csvSkills.trim().isEmpty()) return;
+    private List<String> syncSkillsFromCsv(Long candidateId, String csvSkills) {
+        List<String> skipped = new ArrayList<>();
+        if (csvSkills == null || csvSkills.trim().isEmpty()) return skipped;
 
         candidateSkillRepository.deleteByCandidateId(candidateId);
 
@@ -314,11 +353,23 @@ public class CandidateServiceImpl implements CandidateService {
             String trimmed = skillName.trim();
             if (trimmed.isEmpty()) continue;
 
-            Skill skill = skillRepository.findByNameIgnoreCase(trimmed)
-                    .orElseGet(() -> skillRepository.save(Skill.create(trimmed)));
+            Optional<ReferenceValue> skill = referenceValueRepository
+                    .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, trimmed);
 
-            candidateSkillRepository.save(new CandidateSkill(candidateId, skill.getId()));
+            if (skill.isEmpty()) {
+                // Không tự tạo — chỉ đề xuất, admin duyệt sau. Không gán vào candidate_skills.
+                referenceValueSuggestionRepository.save(
+                        ReferenceValueSuggestion.create(ReferenceValueType.SKILL, trimmed, candidateId)
+                );
+                log.info("Skill '{}' chưa tồn tại, đã tạo suggestion PENDING, bỏ qua gán cho candidateId={}",
+                        trimmed, candidateId);
+                skipped.add(trimmed);
+                continue;
+            }
+
+            candidateSkillRepository.save(new CandidateSkill(candidateId, skill.get().getId()));
         }
+        return skipped;
     }
 
     // [SỬA] Cập nhật thêm các field mới vào response
@@ -349,7 +400,8 @@ public class CandidateServiceImpl implements CandidateService {
         return PageResponse.<CandidateProfileResponse>builder()
                 .content(page.getContent().stream().map(profile -> {
                     List<String> skills = candidateSkillRepository.findByCandidateId(profile.getId()).stream()
-                            .map(cs -> skillRepository.findById(cs.getSkillId()).map(Skill::getName).orElse(""))
+                            .map(cs -> referenceValueRepository.findById(cs.getSkillId())
+                                    .map(ReferenceValue::getName).orElse(""))
                             .filter(name -> !name.isEmpty())
                             .collect(Collectors.toList());
 
@@ -899,8 +951,16 @@ public class CandidateServiceImpl implements CandidateService {
     public LanguageResponse createLanguage(Long userId, LanguageRequest request) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
-        Language language = Language.create(profile.getId(), request.getLanguageName());
-        language.updateDetails(request.getLanguageName(), request.getProficiency(), request.getDisplayOrder());
+
+        ReferenceValue languageRef = referenceValueRepository.findById(request.getLanguageId())
+                .orElseThrow(() -> new IllegalArgumentException("Ngôn ngữ không hợp lệ."));
+        if (!ReferenceValueType.LANGUAGE.equalsIgnoreCase(languageRef.getType())) {
+            throw new IllegalArgumentException("ReferenceValue này không thuộc type LANGUAGE.");
+        }
+
+        Language language = Language.create(
+                profile.getId(), request.getLanguageId(), request.getProficiency(), request.getDisplayOrder()
+        );
         return mapToLanguageResponse(languageRepository.save(language));
     }
 
@@ -913,7 +973,17 @@ public class CandidateServiceImpl implements CandidateService {
         if (!language.getCandidateId().equals(profile.getId())) {
             throw new IllegalArgumentException("Bạn không có quyền sửa ngoại ngữ này.");
         }
-        language.updateDetails(request.getLanguageName(), request.getProficiency(), request.getDisplayOrder());
+
+        ReferenceValue languageRef = referenceValueRepository.findById(request.getLanguageId())
+                .orElseThrow(() -> new IllegalArgumentException("Ngôn ngữ không hợp lệ."));
+        if (!ReferenceValueType.LANGUAGE.equalsIgnoreCase(languageRef.getType())) {
+            throw new IllegalArgumentException("ReferenceValue này không thuộc type LANGUAGE.");
+        }
+
+        language.changeLanguage(request.getLanguageId());
+        language.changeProficiency(request.getProficiency());
+        language.changeDisplayOrder(request.getDisplayOrder());
+
         return mapToLanguageResponse(languageRepository.save(language));
     }
 
@@ -930,11 +1000,49 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     private LanguageResponse mapToLanguageResponse(Language l) {
+        String languageName = referenceValueRepository.findById(l.getLanguageId())
+                .map(ReferenceValue::getName)
+                .orElse("Không xác định");
+
         return LanguageResponse.builder()
                 .id(l.getId())
-                .languageName(l.getLanguageName())
+                .languageId(l.getLanguageId())
+                .languageName(languageName)
                 .proficiency(l.getProficiency())
                 .displayOrder(l.getDisplayOrder())
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReferenceValueResponse> searchReferenceValues(String type, String keyword) {
+        return referenceValueRepository.searchByTypeAndKeyword(type, keyword == null ? "" : keyword).stream()
+                .map(rv -> ReferenceValueResponse.builder()
+                        .id(rv.getId())
+                        .type(rv.getType())
+                        .name(rv.getName())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public SuggestionResponse suggestReferenceValue(Long userId, String type, String name) {
+        Optional<ReferenceValue> existing = referenceValueRepository.findByTypeAndNameIgnoreCase(type, name);
+        if (existing.isPresent()) {
+            throw new IllegalArgumentException("'" + name + "' đã tồn tại trong hệ thống, không cần đề xuất.");
+        }
+
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
+                ReferenceValueSuggestion.create(type, name, userId)
+        );
+
+        return SuggestionResponse.builder()
+                .id(suggestion.getId())
+                .type(suggestion.getType())
+                .name(suggestion.getName())
+                .requestedByUserId(suggestion.getRequestedByUserId())
+                .status(suggestion.getStatus())
+                .createdAt(suggestion.getCreatedAt())
                 .build();
     }
 }

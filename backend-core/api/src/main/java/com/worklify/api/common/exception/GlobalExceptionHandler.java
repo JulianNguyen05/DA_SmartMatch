@@ -1,6 +1,7 @@
 package com.worklify.api.common.exception;
 
 import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.common.exception.ReferenceValueSuggestionPendingException;
 import com.worklify.application.common.exception.ResourceNotFoundException; // Nhớ import file này nhé!
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -70,5 +71,17 @@ public class GlobalExceptionHandler {
         ex.printStackTrace();
 
         return ApiResponse.error(500, "Hệ thống SmartMatch gặp sự cố bất ngờ: " + ex.getMessage());
+    }
+
+    /**
+     * 1b. Bắt trường hợp candidate submit skill/language chưa tồn tại trong hệ thống.
+     * Request đã được ghi nhận dưới dạng ReferenceValueSuggestion (PENDING), nhưng
+     * hành động chính (gán skill vào hồ sơ) CHƯA xảy ra ngay — dùng 409 Conflict để
+     * FE dễ xử lý qua nhánh catch lỗi chung (status >= 400) như các lỗi nghiệp vụ khác.
+     */
+    @ExceptionHandler(ReferenceValueSuggestionPendingException.class)
+    @ResponseStatus(HttpStatus.CONFLICT) // HTTP 409
+    public ApiResponse<Void> handleReferenceValueSuggestionPendingException(ReferenceValueSuggestionPendingException ex) {
+        return ApiResponse.error(409, ex.getMessage());
     }
 }

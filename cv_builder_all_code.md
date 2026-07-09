@@ -1096,37 +1096,6 @@ import {
 import LayoutSidebar from "./LayoutSidebar";
 import TextFormatToolbar from "./TextFormatToolbar";
 import { CV_FONT_SIZES } from "../templates/cvTemplateCore";
-import { SIMPLE_TEMPLATE_CONFIG } from "../templates/SimpleTemplate";
-import { HARVARD_TEMPLATE_CONFIG } from "../templates/HarvardTemplate";
-import { PROFESSIONAL_TEMPLATE_CONFIG } from "../templates/ProfessionalTemplate";
-
-// Map templateId -> config, dùng để nạp lại layout mặc định khi người dùng đổi mẫu.
-const TEMPLATE_CONFIGS = {
-  simple: SIMPLE_TEMPLATE_CONFIG,
-  harvard: HARVARD_TEMPLATE_CONFIG,
-  professional: PROFESSIONAL_TEMPLATE_CONFIG,
-};
-
-// Khi đổi mẫu, cần "nạp lại" layout theo defaultLayout của mẫu mới (thay vì giữ
-// nguyên layout cũ như hiện tại) — nhưng KHÔNG được làm mất các mục "Thông tin
-// thêm" (customSection_xxx) mà người dùng đã tự tạo: những mục đó sẽ được gom
-// về "Mục chưa sử dụng" của layout mới, tránh mất dữ liệu khi chuyển mẫu.
-const remapLayoutForTemplate = (currentLayout, newConfig) => {
-  const allCurrentIds = [
-    ...currentLayout.activeRows.flatMap((r) => [...r.leftItems, ...r.rightItems]),
-    ...currentLayout.unusedItems,
-  ];
-  const dynamicExtras = allCurrentIds.filter((id) => id.startsWith("customSection_"));
-
-  return {
-    activeRows: newConfig.defaultLayout.activeRows.map((r) => ({
-      ...r,
-      leftItems: [...r.leftItems],
-      rightItems: [...r.rightItems],
-    })),
-    unusedItems: [...newConfig.defaultLayout.unusedItems, ...dynamicExtras],
-  };
-};
 
 const FONT_OPTIONS = [
   "Roboto",
@@ -1135,12 +1104,16 @@ const FONT_OPTIONS = [
   "Georgia",
   "Courier New",
 ];
+// Mỗi theme giờ là 1 CỤM MÀU (màu chính + màu phụ thật sự, không còn là màu chính +
+// 1 bản nhạt của chính nó) — primary dùng cho tiêu đề/viền/nền đậm, accent dùng cho
+// các điểm nhấn phụ (icon danh thiếp, viền ảnh đại diện, đường kẻ nối tiêu đề...).
+// Đã bỏ 2 theme "Đỏ" / "Cam" vì trùng ngữ nghĩa màu cảnh báo (warning) và nguy hiểm
+// (danger/error) thường dùng cho thông báo lỗi trong hệ thống, dễ gây hiểu lầm khi
+// dùng làm màu thương hiệu trên CV.
 const COLOR_THEMES = [
-  { name: "Xanh dương Worklify", primary: "#2563EB", accent: "#EFF6FF" },
-  { name: "Xanh ngọc", primary: "#14B8A6", accent: "#ECFDF5" },
-  { name: "Tím", primary: "#7c3aed", accent: "#f3e8ff" },
-  { name: "Đỏ", primary: "#dc2626", accent: "#fee2e2" },
-  { name: "Cam", primary: "#ea580c", accent: "#fff7ed" },
+  { name: "Xanh dương Worklify", primary: "#2563EB", accent: "#38BDF8" },
+  { name: "Xanh ngọc",           primary: "#0F766E", accent: "#5EEAD4" },
+  { name: "Tím",                 primary: "#7C3AED", accent: "#C4B5FD" },
 ];
 
 const SECTION_NAMES = {
@@ -1168,6 +1141,7 @@ const TabPanel = ({
   setCvData,
   handleFontChange,
   handleColorChange,
+  handleTemplateChange,
   handleChangeRatio,
   handleAddRow,
   handleDeleteRow,
@@ -1368,9 +1342,12 @@ const TabPanel = ({
                       className={`w-full flex items-center gap-3 p-2.5 border rounded-xl transition-all hover:shadow-sm ${cvData.settings.primaryColor === theme.primary ? "border-[#2563EB] bg-[#EFF6FF] ring-1 ring-[#2563EB]" : "border-gray-200 hover:border-gray-300 bg-white"}`}
                     >
                       <div
-                        className="w-5 h-5 rounded-full shadow-sm"
-                        style={{ backgroundColor: theme.primary }}
-                      />
+                        className="w-5 h-5 rounded-full shadow-sm overflow-hidden flex"
+                        title={`${theme.primary} + ${theme.accent}`}
+                      >
+                        <div className="w-1/2 h-full" style={{ backgroundColor: theme.primary }} />
+                        <div className="w-1/2 h-full" style={{ backgroundColor: theme.accent }} />
+                      </div>
                       <span className="text-sm font-medium text-gray-700">
                         {theme.name}
                       </span>
@@ -1398,14 +1375,7 @@ const TabPanel = ({
             <div className="animate-fadeIn space-y-3">
               {/* Mẫu Tiêu Chuẩn */}
               <button
-                onClick={() => {
-                  if (cvData.settings.template === "simple") return;
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "simple" },
-                    layout: remapLayoutForTemplate(cvData.layout, SIMPLE_TEMPLATE_CONFIG),
-                  });
-                }}
+                onClick={() => handleTemplateChange("simple")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "simple" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Tiêu Chuẩn</div>
@@ -1416,14 +1386,7 @@ const TabPanel = ({
 
               {/* Mẫu Harvard */}
               <button
-                onClick={() => {
-                  if (cvData.settings.template === "harvard") return;
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "harvard" },
-                    layout: remapLayoutForTemplate(cvData.layout, HARVARD_TEMPLATE_CONFIG),
-                  });
-                }}
+                onClick={() => handleTemplateChange("harvard")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "harvard" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Harvard</div>
@@ -1434,14 +1397,7 @@ const TabPanel = ({
 
               {/* Mẫu Professional */}
               <button
-                onClick={() => {
-                  if (cvData.settings.template === "professional") return;
-                  setCvData({
-                    ...cvData,
-                    settings: { ...cvData.settings, template: "professional" },
-                    layout: remapLayoutForTemplate(cvData.layout, PROFESSIONAL_TEMPLATE_CONFIG),
-                  });
-                }}
+                onClick={() => handleTemplateChange("professional")}
                 className={`block w-full p-4 rounded-xl font-medium border-2 transition-all text-left hover:shadow-sm ${cvData.settings.template === "professional" ? "border-[#2563EB] bg-[#EFF6FF] text-[#2563EB]" : "border-gray-200 text-gray-700 hover:border-[#2563EB]"}`}
               >
                 <div className="font-bold mb-1 text-sm">Mẫu Chuyên Nghiệp</div>
@@ -1458,6 +1414,7 @@ const TabPanel = ({
 };
 
 export default TabPanel;
+
 ```
 
 ## File: `sidebar/TextFormatToolbar.jsx`
@@ -1617,14 +1574,13 @@ const TextFormatToolbar = () => {
 
   // Danh sách màu sắc mặc định (Worklify blue dẫn đầu)
   const TEXT_COLORS = [
-    "#000000",
-    "#2563eb",
-    "#14b8a6",
-    "#374151",
-    "#dc2626",
-    "#16a34a",
-    "#d97706",
-    "#9333ea",
+    "#000000", // Black
+    "#FFFFFF", // White
+    "#2563EB", // Blue
+    "#14B8A6", // Teal
+    "#16A34A", // Green
+    "#9333EA", // Purple
+    "#374151", // Gray
   ];
 
   return (
@@ -2561,7 +2517,7 @@ export default HarvardTemplate;
 
 ```javascript
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, ArrowDown, Plus } from 'lucide-react';
+import { ArrowUp, ArrowDown, Plus, Phone, Calendar, Mail, Globe, MapPin, User } from 'lucide-react';
 import EditableTimelineList from '../shared/EditableTimelineList';
 import EditableRowList from '../shared/EditableRowList';
 import EditableTagList from '../shared/EditableTagList';
@@ -2598,7 +2554,7 @@ export const PROFESSIONAL_TEMPLATE_CONFIG = {
     font: "Roboto",
     fontSize: "medium",
     primaryColor: "#7C2D12",
-    accentColor: "#F5E9DA",
+    accentColor: "#F2C185",
     avatarShape: "circle",
     avatarSize: 110,
   },
@@ -2689,6 +2645,25 @@ const pickContrastColor = (bgRgb) => (getLuminance(bgRgb) < 0.5 ? '#FFFFFF' : '#
 const pickMutedContrastColor = (bgRgb) =>
   getLuminance(bgRgb) < 0.5 ? 'rgba(255,255,255,0.62)' : 'rgba(17,24,39,0.6)';
 
+// Màu viền/outline khi section được chọn (đang sửa): ở cột tối PHẢI dùng accentColor
+// (màu phụ) chứ không phải primaryColor — vì sidebarBg chính là bản tối của
+// primaryColor, dùng lại nó làm viền sẽ bị "chìm" vào nền như lỗi đã gặp.
+const getOutlineColor = (variant, primaryColor, accentColor) =>
+  variant === 'dark' ? (accentColor || '#F2C185') : primaryColor;
+
+// Đoán icon phù hợp theo nội dung nhãn (label) người dùng nhập cho từng dòng danh
+// thiếp — chỉ mang tính gợi ý trực quan (giống bản mẫu tham khảo), không ảnh hưởng
+// dữ liệu thật; nếu không khớp từ khoá nào, dùng icon User làm mặc định.
+const pickContactIcon = (label = '') => {
+  const l = (label || '').toLowerCase();
+  if (l.includes('điện thoại') || l.includes('phone') || l.includes('sđt') || l.includes('sdt')) return Phone;
+  if (l.includes('sinh') || l.includes('ngày')) return Calendar;
+  if (l.includes('email') || l.includes('mail')) return Mail;
+  if (l.includes('địa chỉ') || l.includes('address')) return MapPin;
+  if (l.includes('web') || l.includes('link') || l.includes('facebook') || l.includes('github') || l.includes('http')) return Globe;
+  return User;
+};
+
 // Ép màu chữ của các list component DÙNG CHUNG (vốn code cứng cho nền sáng)
 // sang màu sáng khi được đặt trong sidebar tối. Chỉ nhắm đúng các class Tailwind
 // đã biết trong EditableRowList/EditableTimelineList/EditableParagraphList.
@@ -2709,12 +2684,25 @@ const highlightStyle = (isHighlighted, primaryColor) => ({
 
 const sectionWrapClass = (isHighlighted) => `mb-3 flow-root cursor-pointer transition-all duration-200 ${isHighlighted ? 'rounded-lg' : ''}`;
 
+// commonEditableClass (dùng chung, có sẵn "focus:bg-blue-50" thiết kế cho nền trắng)
+// sẽ tạo 1 khối nền trắng/xanh nhạt đè lên chữ trắng khi đang gõ trên sidebar tối —
+// đúng lỗi "gõ tên bị mất chữ vì nền trắng" đã gặp. Đây là hằng số DÙNG CHUNG
+// (Simple/Harvard cũng dùng) nên không sửa trực tiếp được — ProfessionalTemplate
+// định nghĩa riêng 1 class cho vùng tối: thay khối nền đặc bằng hiệu ứng "kính mờ"
+// (lớp phủ trắng trong suốt + backdrop-blur), vẫn báo hiệu đang focus nhưng không
+// che chữ, đồng bộ với hiệu ứng kính đã thấy ở các khối khác.
+const darkEditableFocusClass =
+  'outline-none focus:bg-white/15 focus:backdrop-blur-sm focus:ring-1 focus:ring-white/40 rounded p-0.5 transition-all ' +
+  'empty:before:content-[attr(data-placeholder)] empty:before:text-white/35 ' +
+  'empty:before:pointer-events-none empty:before:block cursor-text inline-block min-w-[30px]';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // SUB-COMPONENTS — "danh thiếp" (contactInfo) tương thích 2 biến thể sáng/tối vì
 // mục này có thể bị kéo sang cột phải qua tab "Bố cục".
 // ─────────────────────────────────────────────────────────────────────────────
-const ContactList = ({ items, sectionId, primaryColor, onUpdateItems, isDark, textColor, mutedColor }) => {
+const ContactList = ({ items, sectionId, primaryColor, accentColor, onUpdateItems, isDark, textColor, mutedColor }) => {
   const config = useTemplateContext();
+  const iconBadgeTextColor = pickContrastColor(hexToRgb(accentColor));
 
   const handleTextChange = (index, field, newText) => {
     const updated = [...items];
@@ -2740,44 +2728,59 @@ const ContactList = ({ items, sectionId, primaryColor, onUpdateItems, isDark, te
     onUpdateItems(sectionId, updated);
   };
 
-  const labelStyle = isDark ? { color: mutedColor } : {};
+  // Nhãn dùng thẳng accentColor (màu phụ) thay vì chữ xám/trắng mờ như trước — vừa
+  // tăng độ tương phản, vừa tận dụng đúng "cụm màu chính + phụ" đã chọn ở Thiết kế.
+  const labelStyle = isDark ? { color: accentColor } : { color: primaryColor };
   const valueStyle = isDark ? { color: textColor } : {};
-  const labelClass = isDark
-    ? "text-[0.72em] uppercase tracking-wide"
-    : "text-[0.75em] uppercase tracking-wide text-gray-400";
+  const labelClass = "text-[0.72em] font-semibold uppercase tracking-wide";
   const valueClass = isDark
     ? "text-[0.92em] font-medium"
     : "text-[0.92em] text-gray-700 font-medium";
-  const editableBase = "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded transition-all cursor-text empty:before:content-[attr(data-placeholder)] empty:before:pointer-events-none empty:before:block";
+  const editableBase = isDark
+    ? "outline-none focus:bg-white/15 focus:backdrop-blur-sm focus:ring-1 focus:ring-white/40 rounded transition-all cursor-text empty:before:content-[attr(data-placeholder)] empty:before:text-white/35 empty:before:pointer-events-none empty:before:block"
+    : "outline-none focus:bg-blue-50 focus:ring-1 focus:ring-blue-300 rounded transition-all cursor-text empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 empty:before:pointer-events-none empty:before:block";
 
   return (
     <div className={`w-full relative group/section ${isDark ? 'space-y-2.5' : 'space-y-1.5'}`}>
-      {items.map((item, index) => (
-        <div key={index} className="relative group/item">
-          <div
-            className={`absolute right-0 -top-6 flex-row gap-0.5 rounded-md z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex ${isDark ? 'bg-gray-800' : 'bg-white shadow-lg border border-gray-200'}`}
-            contentEditable="false"
-          >
-            <button onClick={() => handleMoveUp(index)} disabled={index === 0} className={`px-1.5 py-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><ArrowUp size={12} /></button>
-            <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className={`px-1.5 py-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><ArrowDown size={12} /></button>
-            <button onClick={() => handleAdd(index)} className={`px-1.5 py-1 rounded ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><Plus size={12} /></button>
-            <button onClick={() => handleDelete(index)} className={`px-2 py-1 rounded text-[10px] text-white ${isDark ? 'bg-red-500/80 hover:bg-red-500' : 'bg-red-500 hover:bg-red-600'}`}>Xóa</button>
-          </div>
+      {items.map((item, index) => {
+        const Icon = pickContactIcon(item.label);
+        return (
+          <div key={index} className="relative group/item flex items-start gap-2.5">
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+              style={{ backgroundColor: accentColor, color: iconBadgeTextColor }}
+              contentEditable="false"
+            >
+              <Icon size={12} strokeWidth={2.5} />
+            </div>
 
-          <div contentEditable suppressContentEditableWarning
-            onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))}
-            className={`${labelClass} ${editableBase} ${isDark ? 'focus:bg-white/10' : 'focus:bg-blue-50 empty:before:text-gray-400'}`}
-            style={labelStyle}
-            data-placeholder={config.placeholders.contactInfo.title}
-            dangerouslySetInnerHTML={{ __html: item.label }} />
-          <div contentEditable suppressContentEditableWarning
-            onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))}
-            className={`${valueClass} ${editableBase} ${isDark ? 'focus:bg-white/10' : 'focus:bg-blue-50 empty:before:text-gray-400'}`}
-            style={valueStyle}
-            data-placeholder={item.placeholder || config.placeholders.contactInfo.value}
-            dangerouslySetInnerHTML={{ __html: item.value }} />
-        </div>
-      ))}
+            <div className="flex-1 min-w-0 relative">
+              <div
+                className={`absolute right-0 -top-6 flex-row gap-0.5 rounded-md z-20 opacity-0 invisible group-hover/item:opacity-100 group-hover/item:visible transition-all flex ${isDark ? 'bg-gray-800' : 'bg-white shadow-lg border border-gray-200'}`}
+                contentEditable="false"
+              >
+                <button onClick={() => handleMoveUp(index)} disabled={index === 0} className={`px-1.5 py-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><ArrowUp size={12} /></button>
+                <button onClick={() => handleMoveDown(index)} disabled={index === items.length - 1} className={`px-1.5 py-1 rounded disabled:opacity-30 ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><ArrowDown size={12} /></button>
+                <button onClick={() => handleAdd(index)} className={`px-1.5 py-1 rounded ${isDark ? 'hover:bg-white/10 text-white/70' : 'hover:bg-blue-50 text-blue-600'}`}><Plus size={12} /></button>
+                <button onClick={() => handleDelete(index)} className={`px-2 py-1 rounded text-[10px] text-white ${isDark ? 'bg-red-500/80 hover:bg-red-500' : 'bg-red-500 hover:bg-red-600'}`}>Xóa</button>
+              </div>
+
+              <div contentEditable suppressContentEditableWarning
+                onBlur={(e) => handleHTMLBlur(e, 'label', (f, v) => handleTextChange(index, f, v))}
+                className={`${labelClass} ${editableBase}`}
+                style={labelStyle}
+                data-placeholder={config.placeholders.contactInfo.title}
+                dangerouslySetInnerHTML={{ __html: item.label }} />
+              <div contentEditable suppressContentEditableWarning
+                onBlur={(e) => handleHTMLBlur(e, 'value', (f, v) => handleTextChange(index, f, v))}
+                className={`${valueClass} ${editableBase} break-words`}
+                style={valueStyle}
+                data-placeholder={item.placeholder || config.placeholders.contactInfo.value}
+                dangerouslySetInnerHTML={{ __html: item.value }} />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -2801,15 +2804,17 @@ const MainSectionTitle = ({ sectionId, sectionTitle, allSectionTitles, primaryCo
   );
 };
 
-// Tiêu đề mục ở CỘT TỐI: dạng pill nổi trên nền tối/sáng — màu chữ và màu pill lấy
-// từ textColor/pillBg do component cha tính theo độ tương phản thực tế của nền.
+// Tiêu đề mục ở CỘT TỐI: pill nền ĐẶC bằng accentColor (màu phụ) — không dùng lớp
+// phủ trắng mờ như bản trước vì độ tương phản quá thấp trên nền cùng tông màu.
+// textColor ở đây là màu chữ RIÊNG cho pill (tính theo độ tương phản với chính
+// accentColor), khác với textColor chung của toàn sidebar.
 const SidebarSectionTitle = ({ sectionId, sectionTitle, allSectionTitles, onUpdateSectionData, textColor, pillBg }) => {
   const config = useTemplateContext();
   const defaultTitle = config.placeholders.sections[sectionId.split('_')[0]] || "TIÊU ĐỀ";
   return (
     <h3 contentEditable suppressContentEditableWarning
       onBlur={(e) => handleHTMLBlur(e, sectionId, (f, v) => onUpdateSectionData('sectionTitles', { ...allSectionTitles, [f]: v }))}
-      className={`inline-block font-bold text-[0.8em] uppercase tracking-wider rounded-full px-3 py-1 mb-2.5 ${commonEditableClass}`}
+      className={`inline-block font-bold text-[0.8em] uppercase tracking-wider rounded-full px-3 py-1 mb-2.5 ${darkEditableFocusClass}`}
       style={{ color: textColor, backgroundColor: pillBg }}
       data-placeholder={defaultTitle}
       dangerouslySetInnerHTML={{ __html: sectionTitle ?? defaultTitle }}
@@ -2836,11 +2841,12 @@ const listProps = (dataType, data, sectionId, primaryColor, onUpdateSectionData)
 // (props.variant do component cha truyền xuống theo CỘT thực tế đang render, chứ
 // không cố định theo sectionId — nhờ vậy kéo thả qua tab "Bố cục" vẫn ra đúng màu).
 const makeListSectionRenderer = (dataType, defaultLayoutType) => (props) => {
-  const { isHighlighted, primaryColor, variant, textColor, pillBg } = props;
+  const { isHighlighted, primaryColor, variant, textColor, pillBg, pillTextColor, settings } = props;
   const isDark = variant === 'dark';
+  const outlineColor = getOutlineColor(variant, primaryColor, settings?.accentColor);
   return (
-    <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
-      {isDark ? <SidebarSectionTitle {...props} textColor={textColor} pillBg={pillBg} /> : <MainSectionTitle {...props} />}
+    <div style={highlightStyle(isHighlighted, outlineColor)} className={sectionWrapClass(isHighlighted)}>
+      {isDark ? <SidebarSectionTitle {...props} textColor={pillTextColor} pillBg={pillBg} /> : <MainSectionTitle {...props} />}
       <div className={isDark ? sidebarListOverrideClass : ''}>
         {renderDynamicList(
           props.settings?.sectionLayouts?.[props.sectionId] || defaultLayoutType,
@@ -2893,7 +2899,10 @@ const SECTION_RENDERER = {
     }, [sectionId, data, onUpdateSectionData]);
 
     const isCircle = settings?.avatarShape === 'circle';
-    const pc = primaryColor || '#7C2D12';
+    // Viền chọn/nút sửa ảnh: ở cột tối dùng accentColor (màu phụ) thay vì primaryColor,
+    // vì nền sidebar chính là 1 bản tối của primaryColor — dùng lại primaryColor ở đây
+    // sẽ bị "chìm" vào nền (đúng lỗi khung viền trùng màu nền đã gặp).
+    const pc = isDark ? (settings?.accentColor || '#F2C185') : (primaryColor || '#7C2D12');
 
     const handleImageChange = (e) => {
       const file = e.target.files[0];
@@ -2980,24 +2989,25 @@ const SECTION_RENDERER = {
     );
   },
 
-  personalInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
+  personalInfo: ({ data, primaryColor, settings, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
     const config = useTemplateContext();
     const isDark = variant !== 'light';
+    const outlineColor = getOutlineColor(isDark ? 'dark' : 'light', primaryColor, settings?.accentColor);
     return (
       <div
-        style={highlightStyle(isHighlighted, primaryColor)}
+        style={highlightStyle(isHighlighted, outlineColor)}
         className={`${sectionWrapClass(isHighlighted)} ${isDark ? 'text-center mb-5' : 'text-left'}`}
       >
         <h1 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'fullName', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`font-bold leading-tight ${commonEditableClass} ${isDark ? 'text-[1.5em]' : 'text-[1.9em] text-gray-900'}`}
+          className={`font-bold leading-tight ${isDark ? darkEditableFocusClass : commonEditableClass} ${isDark ? 'text-[1.5em]' : 'text-[1.9em] text-gray-900'}`}
           style={isDark ? { color: textColor } : { color: primaryColor }}
           data-placeholder={config.placeholders.personalInfo.fullName}
           dangerouslySetInnerHTML={{ __html: data?.fullName || '' }} />
         <br />
         <h2 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'jobTitle', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`mt-1 ${commonEditableClass} ${isDark ? 'text-[0.95em] uppercase tracking-wide' : 'text-[1.1em] text-gray-600'}`}
+          className={`mt-1 ${isDark ? darkEditableFocusClass : commonEditableClass} ${isDark ? 'text-[0.95em] uppercase tracking-wide' : 'text-[1.1em] text-gray-600'}`}
           style={isDark ? { color: mutedColor } : {}}
           data-placeholder={config.placeholders.personalInfo.jobTitle}
           dangerouslySetInnerHTML={{ __html: data?.jobTitle || '' }} />
@@ -3005,20 +3015,22 @@ const SECTION_RENDERER = {
     );
   },
 
-  contactInfo: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
+  contactInfo: ({ data, primaryColor, settings, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
     const isDark = variant !== 'light';
+    const outlineColor = getOutlineColor(isDark ? 'dark' : 'light', primaryColor, settings?.accentColor);
     return (
-      <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
-        <ContactList items={Array.isArray(data) ? data : []} sectionId={sectionId} primaryColor={primaryColor} onUpdateItems={onUpdateSectionData} isDark={isDark} textColor={textColor} mutedColor={mutedColor} />
+      <div style={highlightStyle(isHighlighted, outlineColor)} className={sectionWrapClass(isHighlighted)}>
+        <ContactList items={Array.isArray(data) ? data : []} sectionId={sectionId} primaryColor={primaryColor} accentColor={settings?.accentColor || '#F2C185'} onUpdateItems={onUpdateSectionData} isDark={isDark} textColor={textColor} mutedColor={mutedColor} />
       </div>
     );
   },
 
   objective: (props) => {
     const isDark = props.variant === 'dark';
+    const outlineColor = getOutlineColor(props.variant, props.primaryColor, props.settings?.accentColor);
     return (
-      <div style={highlightStyle(props.isHighlighted, props.primaryColor)} className={sectionWrapClass(props.isHighlighted)}>
-        {isDark ? <SidebarSectionTitle {...props} textColor={props.textColor} pillBg={props.pillBg} /> : <MainSectionTitle {...props} />}
+      <div style={highlightStyle(props.isHighlighted, outlineColor)} className={sectionWrapClass(props.isHighlighted)}>
+        {isDark ? <SidebarSectionTitle {...props} textColor={props.pillTextColor} pillBg={props.pillBg} /> : <MainSectionTitle {...props} />}
         <div className={isDark ? sidebarListOverrideClass : ''}>
           {renderDynamicList(props.settings?.sectionLayouts?.[props.sectionId] || 'paragraph', {
             items: Array.isArray(props.data) ? props.data : props.data ? [{ description: props.data }] : [],
@@ -3030,20 +3042,21 @@ const SECTION_RENDERER = {
     );
   },
 
-  customSectionRenderer: ({ data, primaryColor, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
+  customSectionRenderer: ({ data, primaryColor, settings, sectionId, onUpdateSectionData, isHighlighted, variant, textColor, mutedColor }) => {
     const config = useTemplateContext();
     const isDark = variant === 'dark';
+    const outlineColor = getOutlineColor(variant, primaryColor, settings?.accentColor);
     return (
-      <div style={highlightStyle(isHighlighted, primaryColor)} className={sectionWrapClass(isHighlighted)}>
+      <div style={highlightStyle(isHighlighted, outlineColor)} className={sectionWrapClass(isHighlighted)}>
         <h3 contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'title', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`font-bold text-[1.05em] uppercase tracking-wide mb-2 pb-1.5 w-full ${commonEditableClass} ${isDark ? '' : 'text-gray-800 border-b border-gray-200'}`}
+          className={`font-bold text-[1.05em] uppercase tracking-wide mb-2 pb-1.5 w-full ${isDark ? darkEditableFocusClass : commonEditableClass} ${isDark ? '' : 'text-gray-800 border-b border-gray-200'}`}
           style={isDark ? { color: textColor, borderBottom: `1px solid ${mutedColor}` } : {}}
           data-placeholder="Tên mục"
           dangerouslySetInnerHTML={{ __html: data?.title || config.placeholders.sections.customSection }} />
         <div contentEditable suppressContentEditableWarning
           onBlur={(e) => handleHTMLBlur(e, 'content', (f, v) => onUpdateSectionData(sectionId, { ...data, [f]: v }))}
-          className={`text-[1em] leading-relaxed whitespace-pre-wrap min-h-[40px] w-full ${commonEditableClass} ${isDark ? '' : 'text-gray-700'}`}
+          className={`text-[1em] leading-relaxed whitespace-pre-wrap min-h-[40px] w-full ${isDark ? darkEditableFocusClass : commonEditableClass} ${isDark ? '' : 'text-gray-700'}`}
           style={isDark ? { color: mutedColor } : {}}
           data-placeholder="Nội dung thông tin thêm..."
           dangerouslySetInnerHTML={{ __html: data?.content || '' }} />
@@ -3082,13 +3095,17 @@ const ProfessionalTemplate = ({ cvData, selectedSection, onSectionClick, onUpdat
   const { layout, data, settings } = cvData;
   const containerRef = useRef(null);
   const primaryColor = settings.primaryColor || '#7C2D12';
+  const accentColor = settings.accentColor || '#F2C185';
   const sidebarBgRgb = shadeRgb(primaryColor, -0.55);
   const sidebarBg = rgbToCss(sidebarBgRgb);
   // Tự động chọn chữ trắng hay đen dựa trên độ sáng THỰC TẾ của sidebarBg vừa tính,
   // thay vì giả định cứng "nền tối luôn là chữ trắng" — đúng yêu cầu tương phản tự động.
   const textColor = pickContrastColor(sidebarBgRgb);
   const mutedColor = pickMutedContrastColor(sidebarBgRgb);
-  const pillBg = textColor === '#FFFFFF' ? 'rgba(255,255,255,0.12)' : 'rgba(17,24,39,0.08)';
+  // Pill tiêu đề dùng NỀN ĐẶC bằng accentColor (màu phụ) — không dùng overlay trắng
+  // mờ nữa vì độ tương phản quá thấp khi nền pill và nền sidebar cùng tông màu.
+  const pillBg = accentColor;
+  const pillTextColor = pickContrastColor(hexToRgb(accentColor));
 
   const handleSectionClick = (e, sectionId) => {
     e.stopPropagation();
@@ -3116,6 +3133,7 @@ const ProfessionalTemplate = ({ cvData, selectedSection, onSectionClick, onUpdat
             textColor={variant === 'dark' ? textColor : undefined}
             mutedColor={variant === 'dark' ? mutedColor : undefined}
             pillBg={variant === 'dark' ? pillBg : undefined}
+            pillTextColor={variant === 'dark' ? pillTextColor : undefined}
           />
         </div>
       );
@@ -3137,9 +3155,9 @@ const ProfessionalTemplate = ({ cvData, selectedSection, onSectionClick, onUpdat
 
           return (
             <div key={row.id} className="grid grid-cols-10 items-stretch">
-              <div className={`${left} ${hasRightCol ? 'p-4' : 'px-8 pt-8'}`}>
+              <div className={`${left} ${hasRightCol ? 'p-0' : 'px-8 pt-8'}`}>
                 {hasRightCol ? (
-                  <div className="rounded-2xl h-full p-6" style={{ backgroundColor: sidebarBg }}>
+                  <div className="h-full p-6" style={{ backgroundColor: sidebarBg }}>
                     {renderItems(row.leftItems, 'dark')}
                   </div>
                 ) : (

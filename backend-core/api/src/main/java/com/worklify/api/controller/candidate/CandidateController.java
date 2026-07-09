@@ -457,4 +457,22 @@ public class CandidateController {
         candidateService.deleteLanguage(userId, languageId);
         return ApiResponse.success(null, "Xóa ngoại ngữ thành công");
     }
+
+    @PostMapping("/{userId}/skills/{skillId}/assign")
+    @Operation(summary = "Gán nhanh 1 kỹ năng đã tồn tại (theo skillId) vào hồ sơ, không cần nhập tên")
+    public ApiResponse<Void> assignSkill(
+            @PathVariable("userId") Long userId,
+            @PathVariable("skillId") Long skillId) {
+        candidateService.addSkillToCandidate(userId, skillId);
+        return ApiResponse.success(null, "Đã gán kỹ năng vào hồ sơ");
+    }
+
+    @DeleteMapping("/{userId}/skills/{skillId}")
+    @Operation(summary = "Gỡ 1 kỹ năng khỏi hồ sơ ứng viên")
+    public ApiResponse<Void> removeSkill(
+            @PathVariable("userId") Long userId,
+            @PathVariable("skillId") Long skillId) {
+        candidateService.removeSkillFromCandidate(userId, skillId);
+        return ApiResponse.success(null, "Đã gỡ kỹ năng khỏi hồ sơ");
+    }
 }

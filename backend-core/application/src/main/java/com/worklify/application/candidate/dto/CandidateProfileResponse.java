@@ -24,4 +24,5 @@ public class CandidateProfileResponse {
     private String githubUrl;      // MỚI
     private String summary;
     private List<String> skills;
+    private List<String> skippedSkillSuggestions;
 }

@@ -264,6 +264,57 @@ public class DomainEventRabbitMqDispatcher {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ActivityRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Activity;
+import com.worklify.domain.candidate.repository.ActivityRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ActivityJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ActivityRepositoryAdapter implements ActivityRepository {
+    private final ActivityJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Activity save(Activity activity) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(activity)));
+    }
+
+    @Override
+    public Optional<Activity> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Activity> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ApplicationRepositoryAdapter.java
 ================================================================================
 
@@ -327,6 +378,57 @@ public class ApplicationRepositoryAdapter implements ApplicationRepository {
     @Override
     public long countByStatus(ApplicationStatus status) {
         return jpaRepository.countByStatus(status);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\AwardRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Award;
+import com.worklify.domain.candidate.repository.AwardRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.AwardJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class AwardRepositoryAdapter implements AwardRepository {
+    private final AwardJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Award save(Award award) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(award)));
+    }
+
+    @Override
+    public Optional<Award> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Award> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
     }
 }
 
@@ -429,6 +531,57 @@ public class CandidateSkillRepositoryAdapter implements CandidateSkillRepository
     @Override
     public void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId) {
         jpaRepository.deleteByCandidateIdAndSkillId(candidateId, skillId);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CertificationRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Certification;
+import com.worklify.domain.candidate.repository.CertificationRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CertificationJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class CertificationRepositoryAdapter implements CertificationRepository {
+    private final CertificationJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Certification save(Certification certification) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(certification)));
+    }
+
+    @Override
+    public Optional<Certification> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Certification> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
     }
 
     @Override
@@ -667,6 +820,159 @@ public class DemoProductAdapter implements DemoProductRepository {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\EducationRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Education;
+import com.worklify.domain.candidate.repository.EducationRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.EducationJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class EducationRepositoryAdapter implements EducationRepository {
+    private final EducationJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Education save(Education education) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(education)));
+    }
+
+    @Override
+    public Optional<Education> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Education> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ExperienceRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Experience;
+import com.worklify.domain.candidate.repository.ExperienceRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ExperienceJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ExperienceRepositoryAdapter implements ExperienceRepository {
+    private final ExperienceJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Experience save(Experience experience) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(experience)));
+    }
+
+    @Override
+    public Optional<Experience> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Experience> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\HobbyRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Hobby;
+import com.worklify.domain.candidate.repository.HobbyRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.HobbyJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class HobbyRepositoryAdapter implements HobbyRepository {
+    private final HobbyJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Hobby save(Hobby hobby) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(hobby)));
+    }
+
+    @Override
+    public Optional<Hobby> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Hobby> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\JobPostingRepositoryAdapter.java
 ================================================================================
 
@@ -741,6 +1047,210 @@ public class JobPostingRepositoryAdapter implements JobPostingRepository {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\LanguageRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Language;
+import com.worklify.domain.candidate.repository.LanguageRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.LanguageJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class LanguageRepositoryAdapter implements LanguageRepository {
+    private final LanguageJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Language save(Language language) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(language)));
+    }
+
+    @Override
+    public Optional<Language> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Language> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ProjectRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Project;
+import com.worklify.domain.candidate.repository.ProjectRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ProjectJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ProjectRepositoryAdapter implements ProjectRepository {
+    private final ProjectJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Project save(Project project) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(project)));
+    }
+
+    @Override
+    public Optional<Project> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Project> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ReferenceValueRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.referencedata.model.ReferenceValue;
+import com.worklify.domain.referencedata.repository.ReferenceValueRepository;
+import com.worklify.infrastructure.persistence.mapper.ReferenceDataEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ReferenceValueJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ReferenceValueRepositoryAdapter implements ReferenceValueRepository {
+
+    private final ReferenceValueJpaRepository jpaRepository;
+    private final ReferenceDataEntityMapper mapper;
+
+    @Override
+    public Optional<ReferenceValue> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<ReferenceValue> findByTypeAndNameIgnoreCase(String type, String name) {
+        return jpaRepository.findByTypeAndNameIgnoreCase(type, name).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<ReferenceValue> searchByTypeAndKeyword(String type, String keyword) {
+        return jpaRepository.findByTypeAndNameContainingIgnoreCase(type, keyword).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ReferenceValue save(ReferenceValue referenceValue) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(referenceValue)));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ReferenceValueSuggestionRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.domain.referencedata.repository.ReferenceValueSuggestionRepository;
+import com.worklify.infrastructure.persistence.mapper.ReferenceDataEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ReferenceValueSuggestionJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class ReferenceValueSuggestionRepositoryAdapter implements ReferenceValueSuggestionRepository {
+
+    private final ReferenceValueSuggestionJpaRepository jpaRepository;
+    private final ReferenceDataEntityMapper mapper;
+
+    @Override
+    public ReferenceValueSuggestion save(ReferenceValueSuggestion suggestion) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(suggestion)));
+    }
+
+    @Override
+    public Optional<ReferenceValueSuggestion> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<ReferenceValueSuggestion> findByStatus(SuggestionStatus status) {
+        return jpaRepository.findByStatus(status).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReferenceValueSuggestion> findByType(String type) {
+        return jpaRepository.findByType(type).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SavedJobRepositoryAdapter.java
 ================================================================================
 
@@ -785,64 +1295,6 @@ public class SavedJobRepositoryAdapter implements SavedJobRepository {
     @Override
     public void delete(SavedJob savedJob) {
         jpaRepository.delete(mapper.toEntity(savedJob));
-    }
-}
-
-================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SkillRepositoryAdapter.java
-================================================================================
-
-package com.worklify.infrastructure.persistence.adapter;
-
-import com.worklify.domain.candidate.model.Skill;
-import com.worklify.domain.candidate.repository.SkillRepository;
-import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
-import com.worklify.infrastructure.persistence.repository.SkillJpaRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-@Component
-@RequiredArgsConstructor
-public class SkillRepositoryAdapter implements SkillRepository {
-
-    private final SkillJpaRepository jpaRepository;
-    private final CandidateEntityMapper mapper;
-
-    @Override
-    public Skill save(Skill skill) {
-        return mapper.toDomain(jpaRepository.save(mapper.toEntity(skill)));
-    }
-
-    @Override
-    public Optional<Skill> findById(Long id) {
-        return jpaRepository.findById(id).map(mapper::toDomain);
-    }
-
-    @Override
-    public Optional<Skill> findByName(String name) {
-        return jpaRepository.findByName(name).map(mapper::toDomain);
-    }
-
-    @Override
-    public List<Skill> findAll() {
-        return jpaRepository.findAll().stream()
-                .map(mapper::toDomain)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        jpaRepository.deleteById(id);
-    }
-
-    @Override
-    public Optional<Skill> findByNameIgnoreCase(String name) {
-        return jpaRepository.findByNameIgnoreCase(name)
-                .map(mapper::toDomain);
     }
 }
 
@@ -982,6 +1434,54 @@ public class PaginationMapper {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ActivityJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "candidate_activities")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ActivityJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(nullable = false, length = 255)
+    private String organization;
+
+    @Column(length = 255)
+    private String role;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "is_current")
+    private boolean isCurrent;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ApplicationJpaEntity.java
 ================================================================================
 
@@ -1032,6 +1532,48 @@ public class ApplicationJpaEntity {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\AwardJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "candidate_awards")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class AwardJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(nullable = false, length = 255)
+    private String title;
+
+    @Column(length = 255)
+    private String issuer;
+
+    @Column(name = "awarded_date")
+    private LocalDate awardedDate;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateProfileJpaEntity.java
 ================================================================================
 
@@ -1060,8 +1602,17 @@ public class CandidateProfileJpaEntity {
     @Column(name = "full_name", nullable = false, length = 255)
     private String fullName;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;          // MỚI
+
+    @Column(length = 255)
+    private String headline;           // MỚI
+
     @Column(length = 20)
     private String phone;
+
+    @Column(name = "email_contact", length = 191)
+    private String emailContact;       // MỚI
 
     @Column(length = 20)
     private String gender;
@@ -1070,6 +1621,15 @@ public class CandidateProfileJpaEntity {
 
     @Column(length = 500)
     private String address;
+
+    @Column(name = "website_url", length = 255)
+    private String websiteUrl;         // MỚI
+
+    @Column(name = "linkedin_url", length = 255)
+    private String linkedinUrl;        // MỚI
+
+    @Column(name = "github_url", length = 255)
+    private String githubUrl;          // MỚI
 
     @Column(name = "summary", columnDefinition = "TEXT")
     private String summary;
@@ -1127,6 +1687,54 @@ public class CandidateSkillJpaEntity {
 
     @Column(name = "note", length = 255)
     private String note;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CertificationJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "candidate_certifications")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CertificationJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "issuing_org", length = 255)
+    private String issuingOrg;
+
+    @Column(name = "issue_date")
+    private LocalDate issueDate;
+
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
+    @Column(name = "credential_id", length = 255)
+    private String credentialId;
+
+    @Column(name = "credential_url", length = 500)
+    private String credentialUrl;
+
+    @Column(name = "display_order")
+    private int displayOrder;
 }
 
 ================================================================================
@@ -1289,6 +1897,168 @@ public class DemoProductEntity {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\EducationJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "candidate_educations")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class EducationJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "school_name", nullable = false, length = 255)
+    private String schoolName;
+
+    @Column(length = 255)
+    private String major;
+
+    @Column(length = 100)
+    private String degree;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "is_current")
+    private boolean isCurrent;
+
+    @Column(precision = 3, scale = 2)
+    private BigDecimal gpa;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ExperienceJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "candidate_experiences")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ExperienceJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "company_name", nullable = false, length = 255)
+    private String companyName;
+
+    @Column(length = 255)
+    private String position;
+
+    @Column(name = "employment_type", length = 50)
+    private String employmentType;
+
+    @Column(length = 255)
+    private String location;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "is_current")
+    private boolean isCurrent;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\HobbyJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "candidate_hobbies")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class HobbyJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\JobPostingJpaEntity.java
 ================================================================================
 
@@ -1349,6 +2119,198 @@ public class JobPostingJpaEntity {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\LanguageJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "candidate_languages")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LanguageJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "language_id", nullable = false)
+    private Long languageId;
+
+    @Column(length = 50)
+    private String proficiency;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ProjectJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "candidate_projects")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ProjectJpaEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "project_name", nullable = false, length = 255)
+    private String projectName;
+
+    @Column(length = 255)
+    private String role;
+
+    @Column(name = "tech_stack", length = 500)
+    private String techStack;
+
+    @Column(name = "project_url", length = 500)
+    private String projectUrl;
+
+    @Column(name = "start_date")
+    private LocalDate startDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "is_current")
+    private boolean isCurrent;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "display_order")
+    private int displayOrder;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ReferenceValueJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+/**
+ * Thay thế hoàn toàn SkillJpaEntity cũ — dùng chung cho mọi loại dữ liệu tham
+ * chiếu (SKILL, LANGUAGE, ...). UNIQUE(type, name) khớp với init.sql
+ * (uq_type_name).
+ */
+@Entity
+@Table(
+        name = "reference_values",
+        uniqueConstraints = @UniqueConstraint(name = "uq_type_name", columnNames = {"type", "name"})
+)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ReferenceValueJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String type;
+
+    @Column(nullable = false, length = 255)
+    private String name;
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ReferenceValueSuggestionJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.referencedata.model.SuggestionStatus;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+/**
+ * Map bảng reference_value_suggestions. Tái sử dụng trực tiếp domain enum
+ * SuggestionStatus (giống cách UserJpaEntity dùng domain.auth.model.Role),
+ * lưu dạng STRING (PENDING/APPROVED/REJECTED) khớp init.sql.
+ */
+@Entity
+@Table(name = "reference_value_suggestions")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ReferenceValueSuggestionJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 50)
+    private String type;
+
+    @Column(nullable = false, length = 255)
+    private String name;
+
+    @Column(name = "requested_by_user_id", nullable = false)
+    private Long requestedByUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private SuggestionStatus status;
+
+    @Column(name = "reviewed_by_admin_id")
+    private Long reviewedByAdminId;
+
+    @Column(name = "review_note", length = 500)
+    private String reviewNote;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "reviewed_at")
+    private LocalDateTime reviewedAt;
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SavedJobJpaEntity.java
 ================================================================================
 
@@ -1380,32 +2342,6 @@ public class SavedJobJpaEntity {
 
     @Column(name = "saved_at", nullable = false, updatable = false)
     private LocalDateTime savedAt;
-}
-
-================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SkillJpaEntity.java
-================================================================================
-
-package com.worklify.infrastructure.persistence.entity;
-
-import jakarta.persistence.*;
-import lombok.*;
-
-@Entity
-@Table(name = "skills")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class SkillJpaEntity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(unique = true, nullable = false, length = 100)
-    private String name;
 }
 
 ================================================================================
@@ -1531,14 +2467,8 @@ FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\pe
 
 package com.worklify.infrastructure.persistence.mapper;
 
-import com.worklify.domain.candidate.model.CandidateProfile;
-import com.worklify.domain.candidate.model.CandidateSkill;
-import com.worklify.domain.candidate.model.CvDocument;
-import com.worklify.domain.candidate.model.Skill;
-import com.worklify.infrastructure.persistence.entity.CandidateProfileJpaEntity;
-import com.worklify.infrastructure.persistence.entity.CandidateSkillJpaEntity;
-import com.worklify.infrastructure.persistence.entity.CvDocumentJpaEntity;
-import com.worklify.infrastructure.persistence.entity.SkillJpaEntity;
+import com.worklify.domain.candidate.model.*;
+import com.worklify.infrastructure.persistence.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -1551,11 +2481,32 @@ public interface CandidateEntityMapper {
     CvDocumentJpaEntity toEntity(CvDocument document);
     CvDocument toDomain(CvDocumentJpaEntity entity);
 
-    SkillJpaEntity toEntity(Skill skill);
-    Skill toDomain(SkillJpaEntity entity);
-
     CandidateSkillJpaEntity toEntity(CandidateSkill candidateSkill);
     CandidateSkill toDomain(CandidateSkillJpaEntity entity);
+
+    EducationJpaEntity toEntity(Education education);
+    Education toDomain(EducationJpaEntity entity);
+
+    ExperienceJpaEntity toEntity(Experience experience);
+    Experience toDomain(ExperienceJpaEntity entity);
+
+    ProjectJpaEntity toEntity(Project project);
+    Project toDomain(ProjectJpaEntity entity);
+
+    CertificationJpaEntity toEntity(Certification certification);
+    Certification toDomain(CertificationJpaEntity entity);
+
+    ActivityJpaEntity toEntity(Activity activity);
+    Activity toDomain(ActivityJpaEntity entity);
+
+    AwardJpaEntity toEntity(Award award);
+    Award toDomain(AwardJpaEntity entity);
+
+    HobbyJpaEntity toEntity(Hobby hobby);
+    Hobby toDomain(HobbyJpaEntity entity);
+
+    LanguageJpaEntity toEntity(Language language);
+    Language toDomain(LanguageJpaEntity entity);
 }
 
 ================================================================================
@@ -1590,6 +2541,29 @@ import org.mapstruct.ReportingPolicy;
 public interface JobPostingEntityMapper {
     JobPostingJpaEntity toEntity(JobPosting jobPosting);
     JobPosting toDomain(JobPostingJpaEntity entity);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\ReferenceDataEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.referencedata.model.ReferenceValue;
+import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.infrastructure.persistence.entity.ReferenceValueJpaEntity;
+import com.worklify.infrastructure.persistence.entity.ReferenceValueSuggestionJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface ReferenceDataEntityMapper {
+
+    ReferenceValueJpaEntity toEntity(ReferenceValue referenceValue);
+    ReferenceValue toDomain(ReferenceValueJpaEntity entity);
+
+    ReferenceValueSuggestionJpaEntity toEntity(ReferenceValueSuggestion suggestion);
+    ReferenceValueSuggestion toDomain(ReferenceValueSuggestionJpaEntity entity);
 }
 
 ================================================================================
@@ -1671,6 +2645,24 @@ public interface UserEntityMapper {
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ActivityJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.ActivityJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ActivityJpaRepository extends JpaRepository<ActivityJpaEntity, Long> {
+    List<ActivityJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ApplicationJpaRepository.java
 ================================================================================
 
@@ -1689,6 +2681,24 @@ public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEn
     Page<ApplicationJpaEntity> findByJobId(Long jobId, Pageable pageable);
     Page<ApplicationJpaEntity> findByCandidateId(Long candidateId, Pageable pageable);
     long countByStatus(ApplicationStatus status);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\AwardJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.AwardJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface AwardJpaRepository extends JpaRepository<AwardJpaEntity, Long> {
+    List<AwardJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
 }
 
 ================================================================================
@@ -1744,6 +2754,24 @@ public interface CandidateSkillJpaRepository extends JpaRepository<CandidateSkil
     List<CandidateSkillJpaEntity> findByCandidateId(Long candidateId);
     Optional<CandidateSkillJpaEntity> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CertificationJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CertificationJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CertificationJpaRepository extends JpaRepository<CertificationJpaEntity, Long> {
+    List<CertificationJpaEntity> findByCandidateId(Long candidateId);
     void deleteByCandidateId(Long candidateId);
 }
 
@@ -1817,6 +2845,59 @@ public interface DemoProductJpaRepository extends JpaRepository<DemoProductEntit
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\EducationJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.EducationJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface EducationJpaRepository extends JpaRepository<EducationJpaEntity, Long> {
+    List<EducationJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ExperienceJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.ExperienceJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ExperienceJpaRepository extends JpaRepository<ExperienceJpaEntity, Long> {
+    List<ExperienceJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\HobbyJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.HobbyJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface HobbyJpaRepository extends JpaRepository<HobbyJpaEntity, Long> {
+    List<HobbyJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\JobPostingJpaRepository.java
 ================================================================================
 
@@ -1855,6 +2936,85 @@ public interface JobPostingJpaRepository extends JpaRepository<JobPostingJpaEnti
 }
 
 ================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\LanguageJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.LanguageJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface LanguageJpaRepository extends JpaRepository<LanguageJpaEntity, Long> {
+    List<LanguageJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ProjectJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.ProjectJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ProjectJpaRepository extends JpaRepository<ProjectJpaEntity, Long> {
+    List<ProjectJpaEntity> findByCandidateId(Long candidateId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ReferenceValueJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.ReferenceValueJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ReferenceValueJpaRepository extends JpaRepository<ReferenceValueJpaEntity, Long> {
+
+    Optional<ReferenceValueJpaEntity> findByTypeAndNameIgnoreCase(String type, String name);
+
+    /** Dùng cho dropdown search khi candidate gõ tìm skill/language. */
+    List<ReferenceValueJpaEntity> findByTypeAndNameContainingIgnoreCase(String type, String keyword);
+}
+
+================================================================================
+FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ReferenceValueSuggestionJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.infrastructure.persistence.entity.ReferenceValueSuggestionJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ReferenceValueSuggestionJpaRepository extends JpaRepository<ReferenceValueSuggestionJpaEntity, Long> {
+
+    List<ReferenceValueSuggestionJpaEntity> findByStatus(SuggestionStatus status);
+
+    List<ReferenceValueSuggestionJpaEntity> findByType(String type);
+}
+
+================================================================================
 FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SavedJobJpaRepository.java
 ================================================================================
 
@@ -1872,24 +3032,6 @@ import java.util.Optional;
 public interface SavedJobJpaRepository extends JpaRepository<SavedJobJpaEntity, Long> {
     Optional<SavedJobJpaEntity> findByCandidateIdAndJobId(Long candidateId, Long jobId);
     Page<SavedJobJpaEntity> findByCandidateId(Long candidateId, Pageable pageable);
-}
-
-================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SkillJpaRepository.java
-================================================================================
-
-package com.worklify.infrastructure.persistence.repository;
-
-import com.worklify.infrastructure.persistence.entity.SkillJpaEntity;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
-
-@Repository
-public interface SkillJpaRepository extends JpaRepository<SkillJpaEntity, Long> {
-    Optional<SkillJpaEntity> findByName(String name);
-    Optional<SkillJpaEntity> findByNameIgnoreCase(String name);
 }
 
 ================================================================================
