@@ -1,13 +1,7 @@
 package com.worklify.infrastructure.persistence.mapper;
 
-import com.worklify.domain.candidate.model.CandidateProfile;
-import com.worklify.domain.candidate.model.CandidateSkill;
-import com.worklify.domain.candidate.model.CvDocument;
-import com.worklify.domain.candidate.model.Skill;
-import com.worklify.infrastructure.persistence.entity.CandidateProfileJpaEntity;
-import com.worklify.infrastructure.persistence.entity.CandidateSkillJpaEntity;
-import com.worklify.infrastructure.persistence.entity.CvDocumentJpaEntity;
-import com.worklify.infrastructure.persistence.entity.SkillJpaEntity;
+import com.worklify.domain.candidate.model.*;
+import com.worklify.infrastructure.persistence.entity.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -25,4 +19,29 @@ public interface CandidateEntityMapper {
 
     CandidateSkillJpaEntity toEntity(CandidateSkill candidateSkill);
     CandidateSkill toDomain(CandidateSkillJpaEntity entity);
+
+    // MỚI — 8 cặp thêm vào
+    EducationJpaEntity toEntity(Education education);
+    Education toDomain(EducationJpaEntity entity);
+
+    ExperienceJpaEntity toEntity(Experience experience);
+    Experience toDomain(ExperienceJpaEntity entity);
+
+    ProjectJpaEntity toEntity(Project project);
+    Project toDomain(ProjectJpaEntity entity);
+
+    CertificationJpaEntity toEntity(Certification certification);
+    Certification toDomain(CertificationJpaEntity entity);
+
+    ActivityJpaEntity toEntity(Activity activity);
+    Activity toDomain(ActivityJpaEntity entity);
+
+    AwardJpaEntity toEntity(Award award);
+    Award toDomain(AwardJpaEntity entity);
+
+    HobbyJpaEntity toEntity(Hobby hobby);
+    Hobby toDomain(HobbyJpaEntity entity);
+
+    LanguageJpaEntity toEntity(Language language);
+    Language toDomain(LanguageJpaEntity entity);
 }

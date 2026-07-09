@@ -1,0 +1,1157 @@
+=== TẦNG API ===
+
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\WorklifyApplication.java
+================================================================================
+
+package com.worklify.api;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+/**
+ * Lớp khởi động (Entry point) của toàn bộ hệ thống Backend Worklify.
+ */
+@SpringBootApplication(scanBasePackages = {"com.worklify"}) // ĐÃ SỬA: Quét toàn bộ Bean ở các module của Worklify
+@EnableJpaRepositories(basePackages = {"com.worklify.infrastructure.persistence.repository"}) // ĐÃ SỬA: Đường dẫn Repo mới
+@EntityScan(basePackages = {"com.worklify.infrastructure.persistence.entity"}) // ĐÃ SỬA: Đường dẫn Entity mới
+@EnableTransactionManagement // Kích hoạt quản lý giao dịch (@Transactional)
+@EnableJpaAuditing // Kích hoạt tính năng tự động ghi nhận thời gian (JPA Auditing)
+// [ĐÃ XÓA] @EnableAsync vì hệ thống không còn dùng RabbitMQ và AI nữa
+public class WorklifyApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(WorklifyApplication.class, args);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\ErrorCode.java
+================================================================================
+
+package com.worklify.api.common.exception;
+
+import lombok.Getter;
+
+@Getter
+public enum ErrorCode {
+    SUCCESS(200, "Thành công"),
+    BAD_REQUEST(400, "Dữ liệu đầu vào không hợp lệ"),
+    UNAUTHORIZED(401, "Chưa xác thực hoặc token hết hạn"),
+    FORBIDDEN(403, "Không có quyền truy cập tài nguyên này"),
+    NOT_FOUND(404, "Không tìm thấy tài nguyên"),
+    INTERNAL_SERVER_ERROR(500, "Lỗi hệ thống máy chủ");
+
+    private final int code;
+    private final String message;
+
+    ErrorCode(int code, String message) {
+        this.code = code;
+        this.message = message;
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\ErrorResponse.java
+================================================================================
+
+package com.worklify.api.common.exception;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Data
+@Builder
+public class ErrorResponse {
+    private int code;
+    private String message;
+    private String error;
+
+    // Lưu trữ chi tiết lỗi (Ví dụ: map các field bị lỗi validation)
+    private Map<String, String> validationErrors;
+
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\GlobalExceptionHandler.java
+================================================================================
+
+package com.worklify.api.common.exception;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.common.exception.ResourceNotFoundException; // Nhớ import file này nhé!
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    /**
+     * 1. Bắt lỗi vi phạm quy tắc nghiệp vụ (Fail-Fast từ tầng Service/Domain)
+     * Thường ném ra bằng: throw new IllegalArgumentException("Email đã tồn tại");
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // Trả về HTTP Status 400 ra Network tab
+    public ApiResponse<Void> handleIllegalArgumentException(IllegalArgumentException ex) {
+        // Đưa trực tiếp thông điệp nghiệp vụ cụ thể vào thuộc tính 'message'
+        return ApiResponse.error(400, ex.getMessage());
+    }
+
+    /**
+     * 2. Bắt lỗi không tìm thấy tài nguyên (Ví dụ: Không tìm thấy doanh nghiệp cần duyệt)
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // Trả về HTTP Status 404 ra Network tab
+    public ApiResponse<Void> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ApiResponse.error(404, ex.getMessage());
+    }
+
+    /**
+     * 3. Bắt lỗi ràng buộc dữ liệu đầu vào của các DTO (@NotBlank, @Email, @Size,...)
+     * Tự động bóc tách lỗi đầu tiên làm thông điệp đại diện (Top-level message) cho React hiển thị nhanh
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // Trả về HTTP Status 400 ra Network tab
+    public ApiResponse<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+
+        // Thu thập toàn bộ danh sách các trường bị nhập lỗi
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
+            String fieldName = ((FieldError) error).getField();
+            String errorMessage = error.getDefaultMessage();
+            errors.put(fieldName, errorMessage);
+        });
+
+        // Tìm kiếm lỗi đầu tiên xuất hiện để gán làm thông điệp chính ở lớp ngoài cùng
+        String topLevelMessage = errors.values().stream()
+                .findFirst()
+                .orElse("Dữ liệu đầu vào không hợp lệ, vui lòng kiểm tra lại.");
+
+        // Trả về cấu trúc ApiResponse chứa map chi tiết lỗi bên trong trường 'data'
+        return ApiResponse.error(errors, topLevelMessage);
+    }
+
+    /**
+     * 4. Bắt các lỗi hệ thống phát sinh ngoài ý muốn (NullPointerException, lỗi kết nối DB,...)
+     */
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR) // Trả về HTTP Status 500 ra Network tab
+    public ApiResponse<Void> handleGeneralException(Exception ex) {
+        // Log log lỗi chi tiết ra console của IDE để Developer dễ dàng sửa lỗi (Debug)
+        ex.printStackTrace();
+
+        return ApiResponse.error(500, "Hệ thống SmartMatch gặp sự cố bất ngờ: " + ex.getMessage());
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\common\response\ApiResponse.java
+================================================================================
+
+package com.worklify.api.common.response;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ApiResponse<T> {
+
+    @Builder.Default
+    private int code = 200;
+
+    @Builder.Default
+    private String message = "Thành công";
+
+    private T data;
+
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
+
+    // Helper method trả về dữ liệu thành công
+    public static <T> ApiResponse<T> success(T data) {
+        return ApiResponse.<T>builder()
+                .code(200)
+                .message("Thành công")
+                .data(data)
+                .build();
+    }
+
+    // Helper method trả về dữ liệu thành công kèm custom message
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return ApiResponse.<T>builder()
+                .code(200)
+                .message(message)
+                .data(data)
+                .build();
+    }
+
+    // [ĐÃ SỬA] Định nghĩa chi tiết cho hàm xử lý lỗi Validation đầu vào (DTO)
+    public static ApiResponse<Map<String, String>> error(Map<String, String> errors, String topLevelMessage) {
+        return ApiResponse.<Map<String, String>>builder()
+                .code(400) // HTTP Status 400 Bad Request
+                .message(topLevelMessage)
+                .data(errors) // Trả về map chi tiết: {"email": "Định dạng không hợp lệ", ...}
+                .build();
+    }
+
+    // [BỔ SUNG] Helper method xử lý các lỗi chuỗi thông thường (Lỗi nghiệp vụ, Hệ thống)
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return ApiResponse.<T>builder()
+                .code(code)
+                .message(message)
+                .data(null)
+                .build();
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\common\response\PageResponseWrapper.java
+================================================================================
+
+package com.worklify.api.common.response;
+
+import com.worklify.application.common.dto.PageResponse;
+import lombok.Builder;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+public class PageResponseWrapper<T> {
+    @Builder.Default
+    private int code = 200;
+    @Builder.Default
+    private String message = "Thành công";
+
+    private PageResponse<T> data;
+
+    @Builder.Default
+    private LocalDateTime timestamp = LocalDateTime.now();
+
+    public static <T> PageResponseWrapper<T> success(PageResponse<T> pageData) {
+        return PageResponseWrapper.<T>builder()
+                .data(pageData)
+                .build();
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\config\OpenApiConfig.java
+================================================================================
+
+package com.worklify.api.config;
+
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.info.Contact;
+import io.swagger.v3.oas.annotations.info.Info;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@OpenAPIDefinition(
+        info = @Info(
+                title = "SmartMatch API Documentation",
+                version = "1.0.0",
+                description = "Tài liệu đặc tả các Endpoint cho hệ thống tuyển dụng SmartMatch. Hỗ trợ Quản trị viên, Nhà tuyển dụng và Ứng viên.",
+                contact = @Contact(name = "SmartMatch Team")
+        ),
+        // Áp dụng bảo mật JWT mặc định cho tất cả các API (trừ những API được permitAll)
+        security = {@SecurityRequirement(name = "bearerAuth")}
+)
+@SecurityScheme(
+        name = "bearerAuth",
+        description = "Nhập JWT Token của bạn vào đây (Không cần thêm tiền tố 'Bearer ')",
+        type = SecuritySchemeType.HTTP,
+        scheme = "bearer",
+        bearerFormat = "JWT"
+)
+public class OpenApiConfig {
+    // SpringDoc tự động quét các Controller để tạo tài liệu
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\config\WebMvcConfig.java
+================================================================================
+
+package com.worklify.api.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+@Configuration
+public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Lấy đường dẫn tuyệt đối của thư mục "uploads" ở root dự án
+        Path uploadDir = Paths.get("uploads");
+        String uploadPath = uploadDir.toFile().getAbsolutePath();
+
+        // Map đường dẫn URL "/uploads/**" tới thư mục vật lý trên server
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/");
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\HomeController.java
+================================================================================
+
+package com.worklify.api.controller;
+
+import io.swagger.v3.oas.annotations.Hidden;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
+@Controller
+@Hidden
+public class HomeController {
+
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/swagger-ui.html";
+    }
+}
+
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\admin\AdminController.java
+================================================================================
+
+package com.worklify.api.controller.admin;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.admin.dto.AdminJobResponse;
+import com.worklify.application.admin.dto.CompanyModerationRequest;
+import com.worklify.application.admin.dto.DashboardStatsResponse;
+import com.worklify.application.admin.dto.JobModerationRequest;
+import com.worklify.application.admin.service.AdminService;
+import com.worklify.application.auth.dto.UserResponse;
+import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.employer.dto.CompanyProfileResponse;
+import com.worklify.domain.common.DomainPageable;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List; // Thêm dòng này để sửa lỗi List
+
+@RestController
+@RequestMapping("/api/v1/admin")
+@RequiredArgsConstructor
+@Tag(name = "6. Admin Dashboard", description = "Quản trị hệ thống, Kiểm duyệt và Báo cáo")
+@PreAuthorize("hasRole('ADMIN')") // Cực kỳ quan trọng: Khóa toàn bộ class này bằng role ADMIN
+public class AdminController {
+
+    private final AdminService adminService;
+
+    @GetMapping("/dashboard")
+    @Operation(summary = "Lấy các chỉ số thống kê tổng quan (Dashboard)")
+    public ApiResponse<DashboardStatsResponse> getStats() {
+        return ApiResponse.success(adminService.getDashboardStats());
+    }
+
+// Đừng quên import DTO mới: import com.smartmatch.application.admin.dto.JobModerationRequest;
+
+    @PatchMapping("/jobs/{jobId}/moderate")
+    @Operation(summary = "Kiểm duyệt (Duyệt/Khóa) tin tuyển dụng")
+    public ApiResponse<Void> moderateJob(
+            @PathVariable("jobId") Long jobId,
+            @RequestBody JobModerationRequest request) { // <-- Đổi sang RequestBody
+
+        boolean isApprove = "APPROVED".equalsIgnoreCase(request.getAction());
+        adminService.moderateJob(jobId, isApprove, request.getReason());
+
+        return ApiResponse.success(null, "Đã xử lý tin tuyển dụng");
+    }
+
+    @PatchMapping("/users/{userId}/ban")
+    @Operation(summary = "Khóa tài khoản người dùng vi phạm")
+    public ApiResponse<Void> banUser(
+            @PathVariable("userId") Long userId) { // <--- THÊM ("userId") VÀO ĐÂY
+        adminService.banUser(userId);
+        return ApiResponse.success(null, "Đã khóa tài khoản người dùng");
+    }
+
+    @GetMapping("/companies/pending")
+    @Operation(summary = "Lấy danh sách doanh nghiệp đang chờ duyệt")
+    public ApiResponse<List<CompanyProfileResponse>> getPendingCompanies() {
+        return ApiResponse.success(adminService.getPendingCompanies());
+    }
+
+    @PatchMapping("/companies/{companyId}/moderate")
+    @Operation(summary = "Duyệt hoặc từ chối hồ sơ doanh nghiệp")
+    public ApiResponse<Void> moderateCompany(
+            @PathVariable("companyId") Long companyId, // <--- THÊM ("companyId") VÀO ĐÂY
+            @RequestBody CompanyModerationRequest request) {
+
+        boolean isApprove = "APPROVED".equalsIgnoreCase(request.getAction());
+        adminService.moderateCompany(companyId, isApprove, request.getReason());
+
+        return ApiResponse.success(null, "Đã xử lý hồ sơ doanh nghiệp");
+    }
+
+    @GetMapping("/jobs/pending")
+    @Operation(summary = "Lấy danh sách tin tuyển dụng đang chờ duyệt")
+    public ApiResponse<List<AdminJobResponse>> getPendingJobs() {
+        return ApiResponse.success(adminService.getPendingJobs());
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Lấy danh sách tất cả người dùng (Có phân trang)")
+    public ApiResponse<PageResponse<UserResponse>> getAllUsers(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        DomainPageable pageable = new DomainPageable() {
+            @Override
+            public int getPageNumber() { return page; }
+            @Override
+            public int getPageSize() { return size; }
+            @Override
+            public org.springframework.data.domain.Pageable toSpringPageable() {
+                return org.springframework.data.domain.PageRequest.of(page, size);
+            }
+        };
+
+        return ApiResponse.success(adminService.getAllUsers(pageable));
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\auth\AuthController.java
+================================================================================
+
+package com.worklify.api.controller.auth;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.auth.dto.*;
+import com.worklify.application.auth.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map; // THÊM IMPORT NÀY
+
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+@Tag(name = "1. Authentication", description = "Các API Đăng nhập, Đăng ký và Quản lý bảo mật")
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/register")
+    @Operation(summary = "Đăng ký tài khoản mới (Ứng viên / Nhà tuyển dụng)")
+    public ApiResponse<UserResponse> register(@Valid @RequestBody RegisterRequest request) {
+        UserResponse response = authService.register(request);
+        return ApiResponse.success(response, "Đăng ký tài khoản thành công");
+    }
+
+    @PostMapping("/login")
+    @Operation(summary = "Đăng nhập hệ thống cấp JWT Token")
+    public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+        return ApiResponse.success(response, "Đăng nhập thành công");
+    }
+
+    @PostMapping("/{userId}/mfa/enable")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Kích hoạt xác thực đa yếu tố (MFA)")
+    public ApiResponse<Void> enableMfa(@PathVariable("userId") Long userId) { // <--- THÊM "userId" VÀO ĐÂY
+        authService.enableMfa(userId);
+        return ApiResponse.success(null, "Kích hoạt MFA thành công");
+    }
+
+    // ========== BỔ SUNG API QUÊN MẬT KHẨU ==========
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Yêu cầu khôi phục mật khẩu")
+    public ApiResponse<Void> forgotPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email không được để trống.");
+        }
+
+        // Gọi xuống tầng Service để xử lý
+        authService.forgotPassword(email);
+
+        return ApiResponse.success(null, "Yêu cầu khôi phục mật khẩu đã được xử lý");
+    }
+
+    // ========== BỔ SUNG API ĐỔI MẬT KHẨU ==========
+    @PutMapping("/{userId}/password")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Đổi mật khẩu người dùng")
+    public ApiResponse<Void> changePassword(
+            @PathVariable("userId") Long userId, // <--- THÊM "userId" VÀO ĐÂY
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        authService.changePassword(userId, request);
+        return ApiResponse.success(null, "Đổi mật khẩu thành công");
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\candidate\CandidateController.java
+================================================================================
+
+package com.worklify.api.controller.candidate;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.candidate.dto.*;
+import com.worklify.application.candidate.service.CandidateService;
+import com.worklify.application.common.dto.PageResponse;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.common.SearchPageable;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/candidates")
+@RequiredArgsConstructor
+@Tag(name = "2. Candidate", description = "Quản lý hồ sơ và CV của Ứng viên")
+@PreAuthorize("hasRole('CANDIDATE')")
+public class CandidateController {
+
+    private final CandidateService candidateService;
+
+    // ==========================================
+    // 1. QUẢN LÝ THÔNG TIN CÁ NHÂN (PROFILE)
+    // ==========================================
+    @PostMapping("/{userId}/profile")
+    @Operation(summary = "Tạo mới hoặc cập nhật hồ sơ năng lực ứng viên")
+    public ApiResponse<CandidateProfileResponse> createOrUpdateProfile(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody CandidateProfileRequest request) {
+        return ApiResponse.success(candidateService.createProfile(userId, request));
+    }
+
+    @GetMapping("/{userId}/profile")
+    @Operation(summary = "Lấy thông tin hồ sơ ứng viên")
+    public ApiResponse<CandidateProfileResponse> getProfile(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getProfileByUserId(userId));
+    }
+
+    // ==========================================
+    // 2. QUẢN LÝ KỸ NĂNG (SKILLS) - [MỚI BỔ SUNG]
+    // ==========================================
+    @GetMapping("/{userId}/skills")
+    @Operation(summary = "Lấy danh sách kỹ năng của ứng viên")
+    public ApiResponse<List<CandidateSkillResponse>> getSkills(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getSkillsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/skills")
+    @Operation(summary = "Thêm kỹ năng mới cho ứng viên")
+    public ApiResponse<CandidateSkillResponse> createSkill(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody CandidateSkillRequest request) {
+        return ApiResponse.success(candidateService.createSkill(userId, request));
+    }
+
+    @PutMapping("/{userId}/skills/{skillId}")
+    @Operation(summary = "Cập nhật kỹ năng của ứng viên")
+    public ApiResponse<CandidateSkillResponse> updateSkill(
+            @PathVariable("userId") Long userId,
+            @PathVariable("skillId") Long skillId,
+            @Valid @RequestBody CandidateSkillRequest request) {
+        return ApiResponse.success(candidateService.updateSkill(userId, skillId, request));
+    }
+
+    // ==========================================
+    // 3. QUẢN LÝ CV (FILE & SANDBOX)
+    // ==========================================
+    @PostMapping(value = "/{userId}/cvs", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Tải lên CV")
+    public ApiResponse<CvDocumentResponse> uploadCv(
+            @PathVariable("userId") Long userId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        // Truyền thẳng file nhận được xuống tầng service xử lý vật lý
+        return ApiResponse.success(candidateService.uploadCv(userId, file), "Tải CV lên thành công");
+    }
+
+    @GetMapping("/{userId}/cvs")
+    @Operation(summary = "Lấy danh sách CV đã lưu của ứng viên")
+    public ApiResponse<List<CvDocumentResponse>> getCvs(@PathVariable("userId") Long userId) {
+        // Hàm này gọi candidateService.getCvsByUserId(userId) hoặc getCvDocuments(userId)
+        // Hãy chắc chắn tên hàm gọi ở đây khớp với service của bạn
+        return ApiResponse.success(candidateService.getCvsByUserId(userId));
+    }
+
+    @PostMapping("/{userId}/cvs/generated")
+    @Operation(summary = "Lưu cấu trúc CV tạo từ Sandbox (JSON)")
+    public ApiResponse<CvDocumentResponse> saveGeneratedCv(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody GeneratedCvRequest request) {
+        return ApiResponse.success(candidateService.saveGeneratedCv(userId, request.getRawText()), "Lưu bản thảo CV thành công");
+    }
+
+    @GetMapping("/{userId}/cvs/generated/latest")
+    @Operation(summary = "Lấy bản thảo CV Sandbox mới nhất")
+    public ApiResponse<CvDocumentResponse> getLatestGeneratedCv(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getLatestGeneratedCv(userId));
+    }
+
+    @PutMapping("/{userId}/cvs/{cvId}/rename")
+    @Operation(summary = "Đổi tên hiển thị của CV")
+    public ApiResponse<CvDocumentResponse> renameCv(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId,
+            @RequestParam("newName") String newName) {
+        return ApiResponse.success(candidateService.renameCv(userId, cvId, newName), "Đổi tên CV thành công");
+    }
+
+    // [ĐÃ BỔ SUNG] Endpoint xóa CV để xử lý lỗi 500 khi bấm nút Xóa trên Frontend
+    @DeleteMapping("/{userId}/cvs/{cvId}")
+    @Operation(summary = "Xóa CV của ứng viên")
+    public ApiResponse<Void> deleteCv(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId) {
+
+        candidateService.deleteCv(userId, cvId);
+        return ApiResponse.success(null, "Xóa CV thành công");
+    }
+
+    @GetMapping("/search")
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'ADMIN')")
+    @Operation(summary = "Tìm kiếm ứng viên (Dành cho Nhà tuyển dụng)")
+    public ApiResponse<PageResponse<CandidateProfileResponse>> searchCandidates(
+            @RequestParam(name = "keyword", required = false, defaultValue = "") String keyword,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+
+        DomainPageable pageable = new SearchPageable(page, size);
+        return ApiResponse.success(candidateService.searchCandidates(keyword, pageable));
+    }
+
+    @GetMapping("/{userId}/cvs/{cvId}")
+    @Operation(summary = "Lấy chi tiết một CV của ứng viên")
+    public ApiResponse<CvDocumentResponse> getCvDetail(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId) {
+
+        // Gọi service lấy chi tiết CV.
+        // Lưu ý: Đảm bảo trong CandidateService của bạn đã có hàm getCvDetail (hoặc getCvById).
+        return ApiResponse.success(candidateService.getCvDetail(userId, cvId));
+    }
+
+    @PutMapping("/{userId}/cvs/generated/{cvId}")
+    @Operation(summary = "Cập nhật bản thảo CV Sandbox (JSON)")
+    public ApiResponse<CvDocumentResponse> updateGeneratedCv(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId,
+            @Valid @RequestBody GeneratedCvRequest request) { // Dùng lại DTO GeneratedCvRequest
+        return ApiResponse.success(candidateService.updateGeneratedCv(userId, cvId, request.getRawText()), "Cập nhật CV thành công");
+    }
+
+    @PostMapping(value = "/{userId}/cvs/{cvId}/thumbnail", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Tải lên ảnh thu nhỏ (Thumbnail) của CV")
+    public ApiResponse<CvDocumentResponse> uploadCvThumbnail(
+            @PathVariable("userId") Long userId,
+            @PathVariable("cvId") Long cvId,
+            @RequestParam("file") MultipartFile file) throws IOException {
+
+        return ApiResponse.success(candidateService.uploadCvThumbnail(userId, cvId, file), "Lưu ảnh thu nhỏ thành công");
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\demo\DemoProductController.java
+================================================================================
+
+package com.worklify.api.controller.demo;
+
+import com.worklify.application.demo.dto.DemoProductDto;
+import com.worklify.application.demo.service.DemoProductService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/demos/products")
+@RequiredArgsConstructor
+@Tag(name = "Demo API", description = "API dùng để demo")
+public class DemoProductController {
+
+    private final DemoProductService demoProductService;
+
+    @PostMapping
+    @Operation(summary = "1. CREATE - Tạo mới một sản phẩm Demo")
+    public ResponseEntity<DemoProductDto> createProduct(@RequestBody DemoProductDto dto) {
+        return ResponseEntity.ok(demoProductService.createProduct(dto));
+    }
+
+    @GetMapping
+    @Operation(summary = "2. READ - Lấy danh sách tất cả sản phẩm")
+    public ResponseEntity<List<DemoProductDto>> getAllProducts() {
+        return ResponseEntity.ok(demoProductService.getAllProducts());
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "3. UPDATE - Cập nhật tên/giá sản phẩm")
+    public ResponseEntity<DemoProductDto> updateProduct(@PathVariable("id") Long id, @RequestBody DemoProductDto dto) {
+        return ResponseEntity.ok(demoProductService.updateProduct(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "4. DELETE - Xóa sản phẩm")
+    public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id) {
+        demoProductService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\employer\EmployerController.java
+================================================================================
+
+package com.worklify.api.controller.employer;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.employer.dto.CompanyProfileRequest;
+import com.worklify.application.employer.dto.CompanyProfileResponse;
+import com.worklify.application.employer.service.EmployerService;
+import com.worklify.domain.common.DomainPageable;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest; // BỔ SUNG IMPORT
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/api/v1/employers")
+@RequiredArgsConstructor
+@Tag(name = "3. Employer", description = "Quản lý hồ sơ Doanh nghiệp")
+public class EmployerController {
+
+    private final EmployerService employerService;
+
+    @PostMapping("/{userId}/profile")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Tạo hồ sơ doanh nghiệp")
+    public ApiResponse<CompanyProfileResponse> createProfile(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody CompanyProfileRequest request) {
+        return ApiResponse.success(employerService.createProfile(userId, request), "Tạo hồ sơ thành công");
+    }
+
+    @PutMapping("/{userId}/profile")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Cập nhật hồ sơ doanh nghiệp")
+    public ApiResponse<CompanyProfileResponse> updateProfile(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody CompanyProfileRequest request) {
+        return ApiResponse.success(employerService.updateProfile(userId, request), "Cập nhật hồ sơ thành công");
+    }
+
+    @GetMapping("/{userId}/profile")
+    @Operation(summary = "Xem hồ sơ doanh nghiệp (Public/Private)")
+    public ApiResponse<CompanyProfileResponse> getProfile(@PathVariable("userId") Long userId) {
+        return ApiResponse.success(employerService.getProfileByUserId(userId));
+    }
+
+    @PostMapping(value = "/{userId}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Tải lên logo doanh nghiệp")
+    public ApiResponse<CompanyProfileResponse> uploadLogo(
+            @PathVariable("userId") Long userId,
+            @RequestPart("file") MultipartFile file) {
+        return ApiResponse.success(employerService.uploadLogo(userId, file), "Tải lên logo thành công");
+    }
+
+    @PostMapping("/{companyId}/like")
+    @PreAuthorize("hasAnyRole('CANDIDATE', 'EMPLOYER', 'ADMIN')")
+    @Operation(summary = "Thích / Bỏ thích công ty")
+    public ApiResponse<Void> toggleLikeCompany(
+            @PathVariable("companyId") Long companyId,
+            @RequestParam("userId") Long userId) { // ĐÃ SỬA: Nhận trực tiếp userId từ Frontend
+
+        employerService.toggleLikeCompany(userId, companyId);
+        return ApiResponse.success(null, "Thao tác thả tim thành công");
+    }
+
+    @GetMapping
+    @Operation(summary = "Lấy danh sách tất cả doanh nghiệp (Công ty nổi bật)")
+    public ApiResponse<PageResponse<CompanyProfileResponse>> getAllEmployers(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "5") int size,
+            // THÊM DÒNG DƯỚI ĐÂY (required = false để khách vãng lai không đăng nhập vẫn xem được)
+            @RequestParam(value = "userId", required = false) Long userId) {
+
+        DomainPageable pageable = new DomainPageable() {
+            @Override
+            public int getPageNumber() { return page; }
+            @Override
+            public int getPageSize() { return size; }
+            @Override
+            public org.springframework.data.domain.Pageable toSpringPageable() {
+                return PageRequest.of(page, size);
+            }
+        };
+
+        // TRUYỀN THÊM userId VÀO SERVICE
+        return ApiResponse.success(employerService.getAllProfiles(pageable, userId));
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\file\FileController.java
+================================================================================
+
+package com.worklify.api.controller.file;
+
+import com.worklify.domain.candidate.model.CvDocument;
+import com.worklify.domain.candidate.repository.CvDocumentRepository;
+import com.worklify.infrastructure.storage.LocalFileStorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/files")
+@RequiredArgsConstructor
+public class FileController {
+
+    private final CvDocumentRepository cvDocumentRepository;
+
+    // Inject Service đọc file của bạn (Dựa vào log bạn gửi, nó là LocalFileStorageService)
+    private final LocalFileStorageService fileStorageService;
+
+    @GetMapping("/cv/{cvId}")
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'CANDIDATE', 'ADMIN')")
+    @Operation(summary = "Đọc file CV (Dành cho Employer xem hồ sơ)")
+    public ResponseEntity<byte[]> getCvFile(@PathVariable("cvId") Long cvId) {
+
+        // 1. Tìm CV trong Database
+        CvDocument cv = cvDocumentRepository.findById(cvId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy thông tin CV"));
+
+        // 2. Chuẩn hóa đường dẫn: Loại bỏ tiền tố "/uploads/" hoặc "uploads/" nếu có trong DB
+        String cleanPath = cv.getFilePath();
+        if (cleanPath != null) {
+            // Thay thế tất cả các tiền tố gây lỗi về dạng đường dẫn tương đối đúng (VD: "cv/11_Bản-in.pdf")
+            cleanPath = cleanPath.replaceFirst("^/?uploads/", "");
+
+            // Xóa dấu '/' ở đầu nếu vẫn còn sót lại
+            if (cleanPath.startsWith("/")) {
+                cleanPath = cleanPath.substring(1);
+            }
+        }
+
+        // 3. Đọc file dưới dạng byte[]
+        byte[] fileData = fileStorageService.readFile(cleanPath);
+
+        // 4. Cấu hình Header để trả về file PDF cho trình duyệt
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + cv.getFileName() + "\"");
+
+        return new ResponseEntity<>(fileData, headers, HttpStatus.OK);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\job\JobController.java
+================================================================================
+
+package com.worklify.api.controller.job;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.job.dto.JobPostingRequest;
+import com.worklify.application.job.dto.JobPostingResponse;
+import com.worklify.application.job.service.JobService;
+import com.worklify.domain.common.DomainPageable;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest; // BỔ SUNG IMPORT NÀY
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/jobs")
+@RequiredArgsConstructor
+@Tag(name = "4. Job Postings", description = "Quản lý và Tìm kiếm Tin tuyển dụng")
+public class JobController {
+
+    private final JobService jobService;
+
+    @PostMapping("/employers/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Nhà tuyển dụng đăng tin tuyển dụng mới")
+    public ApiResponse<JobPostingResponse> createJob(
+            @PathVariable("companyId") Long companyId,
+            @Valid @RequestBody JobPostingRequest request) {
+        return ApiResponse.success(jobService.createJobPosting(companyId, request), "Đăng tin chờ duyệt thành công");
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Khách/Ứng viên tìm kiếm việc làm")
+    public ApiResponse<PageResponse<JobPostingResponse>> searchJobs(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "location", required = false) String location,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+
+        DomainPageable pageable = createPageable(page, size);
+        return ApiResponse.success(jobService.searchJobs(keyword, location, pageable));
+    }
+
+    @GetMapping("/{jobId}")
+    @Operation(summary = "Xem chi tiết tin tuyển dụng")
+    public ApiResponse<JobPostingResponse> getJobDetail(@PathVariable("jobId") Long jobId) {
+        return ApiResponse.success(jobService.getJobById(jobId));
+    }
+
+    @GetMapping("/employers/{companyId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Lấy danh sách tin tuyển dụng của doanh nghiệp")
+    public ApiResponse<PageResponse<JobPostingResponse>> getMyJobs(
+            @PathVariable("companyId") Long companyId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+
+        DomainPageable pageable = createPageable(page, size);
+        return ApiResponse.success(jobService.getJobsByCompany(companyId, pageable));
+    }
+
+    @PutMapping("/employers/{companyId}/{jobId}")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Nhà tuyển dụng chỉnh sửa tin tuyển dụng")
+    public ApiResponse<JobPostingResponse> updateJob(
+            @PathVariable("companyId") Long companyId,
+            @PathVariable("jobId") Long jobId,
+            @Valid @RequestBody JobPostingRequest request) {
+        return ApiResponse.success(jobService.updateJobPosting(companyId, jobId, request), "Cập nhật tin thành công");
+    }
+
+    // ==========================================================
+    // SỬA LỖI BIÊN DỊCH: Ghi đè phương thức toSpringPageable()
+    // ==========================================================
+    private DomainPageable createPageable(int page, int size) {
+        return new DomainPageable() {
+            @Override
+            public int getPageNumber() {
+                return page;
+            }
+
+            @Override
+            public int getPageSize() {
+                return size;
+            }
+
+            @Override
+            public org.springframework.data.domain.Pageable toSpringPageable() {
+                // Ánh xạ sang lớp cấu trúc phân trang của Spring Data
+                return PageRequest.of(page, size);
+            }
+        };
+    }
+
+    @GetMapping("/public/employers/{companyId}")
+    @Operation(summary = "Khách/Ứng viên xem danh sách việc làm đang tuyển của doanh nghiệp")
+    public ApiResponse<PageResponse<JobPostingResponse>> getPublicJobsByCompany(
+            @PathVariable("companyId") Long companyId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+
+        DomainPageable pageable = createPageable(page, size);
+        return ApiResponse.success(jobService.getPublicJobsByCompany(companyId, pageable));
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\jobapplication\JobApplicationController.java
+================================================================================
+
+package com.worklify.api.controller.jobapplication;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.jobapplication.dto.ApplicationRequest;
+import com.worklify.application.jobapplication.dto.ApplicationResponse;
+import com.worklify.application.jobapplication.service.JobApplicationService;
+import com.worklify.domain.application.model.ApplicationStatus;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.common.SearchPageable;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/v1/applications")
+@RequiredArgsConstructor
+@Tag(name = "5. Applications", description = "Quản lý nộp hồ sơ")
+public class JobApplicationController {
+
+    private final JobApplicationService applicationService;
+
+    @PostMapping("/candidates/{candidateId}")
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Operation(summary = "Nộp hồ sơ ứng tuyển")
+    public ApiResponse<ApplicationResponse> apply(
+            @PathVariable("candidateId") Long candidateId,
+            @Valid @RequestBody ApplicationRequest request) {
+        return ApiResponse.success(applicationService.applyJob(candidateId, request), "Nộp hồ sơ thành công");
+    }
+
+    @GetMapping("/candidates/{candidateId}")
+    @PreAuthorize("hasRole('CANDIDATE') or hasRole('ADMIN')")
+    @Operation(summary = "Ứng viên xem lịch sử danh sách đơn ứng tuyển của chính mình")
+    public ApiResponse<PageResponse<ApplicationResponse>> getApplicationsByCandidate(
+            @PathVariable("candidateId") Long candidateId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+        return ApiResponse.success(applicationService.getApplicationsByCandidate(candidateId, createPageable(page, size)), "Tải danh sách đơn ứng tuyển thành công");
+    }
+
+    @GetMapping("/jobs/{jobId}/review-board")
+    @PreAuthorize("hasRole('EMPLOYER') or hasRole('ADMIN')")
+    @Operation(summary = "Hội đồng đánh giá xem danh sách hồ sơ (Đã ẩn danh)")
+    public ApiResponse<PageResponse<ApplicationResponse>> getApplicationsForJob(
+            @PathVariable("jobId") Long jobId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+        return ApiResponse.success(applicationService.getApplicationsForReviewBoard(jobId, createPageable(page, size)));
+    }
+
+    @PatchMapping("/employers/{companyId}/{applicationId}/status")
+    @PreAuthorize("hasRole('EMPLOYER')")
+    @Operation(summary = "Cập nhật trạng thái hồ sơ (Duyệt/Loại)")
+    public ApiResponse<Void> updateStatus(
+            @PathVariable("companyId") Long companyId,
+            @PathVariable("applicationId") Long applicationId,
+            @RequestParam(name = "status") ApplicationStatus status) {
+        applicationService.updateApplicationStatus(companyId, applicationId, status);
+        return ApiResponse.success(null, "Cập nhật trạng thái thành công");
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('EMPLOYER') or hasRole('ADMIN')")
+    @Operation(summary = "Xem chi tiết 1 đơn ứng tuyển")
+    public ApiResponse<ApplicationResponse> getApplicationById(@PathVariable("id") Long id) {
+        return ApiResponse.success(applicationService.getApplicationById(id));
+    }
+
+    private DomainPageable createPageable(int page, int size) {
+        return new SearchPageable(page, size);
+    }
+}
+
+================================================================================
+FILE: ./backend-core\api\src\main\java\com\worklify\api\filter\RequestLoggingFilter.java
+================================================================================
+
+package com.worklify.api.filter;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Slf4j
+@Component
+public class RequestLoggingFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        long startTime = System.currentTimeMillis();
+
+        // Ghi log đường dẫn incoming request
+        log.info("Incoming Request: [{}] {}", request.getMethod(), request.getRequestURI());
+
+        try {
+            // Cho phép request tiếp tục đi vào các filter khác và Controller
+            filterChain.doFilter(request, response);
+        } finally {
+            // Tính toán thời gian phản hồi sau khi Controller xử lý xong
+            long duration = System.currentTimeMillis() - startTime;
+
+            // Cảnh báo nếu API phản hồi chậm hơn 2000ms (2 giây) - Theo đặc tả hiệu năng
+            if (duration > 2000) {
+                log.warn("Slow API Detected! [{}] {} - Status: {} - Time: {}ms",
+                        request.getMethod(), request.getRequestURI(), response.getStatus(), duration);
+            } else {
+                log.info("Completed Request: [{}] {} - Status: {} - Time: {}ms",
+                        request.getMethod(), request.getRequestURI(), response.getStatus(), duration);
+            }
+        }
+    }
+}

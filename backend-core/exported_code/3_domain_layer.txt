@@ -1,0 +1,1022 @@
+=== TẦNG DOMAIN ===
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\admin\model\SystemLog.java
+================================================================================
+
+package com.worklify.domain.admin.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class SystemLog {
+    private Long id;
+    private Long userId;
+    private String action;
+    private String details;
+    private LocalDateTime createdAt;
+
+    public static SystemLog record(Long userId, String action, String details) {
+        return SystemLog.builder()
+                .userId(userId)
+                .action(action)
+                .details(details)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\admin\repository\SystemLogRepository.java
+================================================================================
+
+package com.worklify.domain.admin.repository;
+import com.worklify.domain.admin.model.SystemLog;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+public interface SystemLogRepository {
+    SystemLog save(SystemLog systemLog);
+    DomainPage<SystemLog> findAll(DomainPageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\application\event\ApplicationSubmittedEvent.java
+================================================================================
+
+package com.worklify.domain.application.event;
+
+import java.time.LocalDateTime;
+
+public record ApplicationSubmittedEvent(Long applicationId, Long candidateId, Long jobId, LocalDateTime timestamp) {}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\application\model\Application.java
+================================================================================
+
+package com.worklify.domain.application.model;
+
+import com.worklify.domain.application.event.ApplicationSubmittedEvent;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Application {
+    private Long id;
+    private Long candidateId;
+    private Long jobId;
+    private Long cvId;
+    private String coverLetter;
+    private ApplicationStatus status;
+    private LocalDateTime appliedAt;
+
+    @Builder.Default
+    private final List<Object> domainEvents = new ArrayList<>();
+
+    // Factory Method: Tạo đơn ứng tuyển mới
+    public static Application createNew(Long jobId, Long cvId, Long candidateId, String coverLetter) {
+        Application application = Application.builder()
+                .jobId(jobId)
+                .cvId(cvId)
+                .candidateId(candidateId)
+                .coverLetter(coverLetter)
+                .status(ApplicationStatus.PENDING)
+                .appliedAt(LocalDateTime.now())
+                .build();
+
+        application.domainEvents.add(new ApplicationSubmittedEvent(
+                application.getId(), candidateId, jobId, application.getAppliedAt()
+        ));
+        return application;
+    }
+
+    // Business Behavior: Cập nhật trạng thái tự do (dùng cho các bước trong quy trình tuyển dụng)
+    public void updateStatus(ApplicationStatus status) {
+        this.status = status;
+    }
+
+    // Business Behavior: Employer/Admin chuyển sang đã xem xét
+    public void markAsReviewed() {
+        if (this.status != ApplicationStatus.PENDING) {
+            throw new IllegalStateException("Chỉ có thể xem xét hồ sơ đang ở trạng thái PENDING.");
+        }
+        this.status = ApplicationStatus.REVIEWED;
+    }
+
+    // Business Behavior: Employer/Admin mời phỏng vấn
+    public void scheduleInterview() {
+        if (this.status != ApplicationStatus.REVIEWED) {
+            throw new IllegalStateException("Chỉ có thể mời phỏng vấn hồ sơ đã được xem xét (REVIEWED).");
+        }
+        this.status = ApplicationStatus.INTERVIEW_SCHEDULED;
+    }
+
+    // Business Behavior: Chấp nhận ứng viên
+    public void accept() {
+        if (this.status == ApplicationStatus.REJECTED) {
+            throw new IllegalStateException("Không thể chấp nhận một hồ sơ đã bị từ chối.");
+        }
+        if (this.status != ApplicationStatus.ACCEPTED) {
+            this.status = ApplicationStatus.ACCEPTED;
+        }
+    }
+
+    // Business Behavior: Từ chối ứng viên
+    public void reject() {
+        if (this.status == ApplicationStatus.ACCEPTED) {
+            throw new IllegalStateException("Không thể từ chối một hồ sơ đã được chấp nhận.");
+        }
+        this.status = ApplicationStatus.REJECTED;
+    }
+
+    public void clearDomainEvents() {
+        this.domainEvents.clear();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\application\model\ApplicationStatus.java
+================================================================================
+
+package com.worklify.domain.application.model;
+
+public enum ApplicationStatus {
+    PENDING,
+    REVIEWED,
+    INTERVIEW_SCHEDULED,
+    ACCEPTED,
+    REJECTED
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\application\repository\ApplicationRepository.java
+================================================================================
+
+package com.worklify.domain.application.repository;
+import com.worklify.domain.application.model.Application;
+import com.worklify.domain.application.model.ApplicationStatus;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import java.util.Optional;
+public interface ApplicationRepository {
+    Application save(Application application);
+    Optional<Application> findById(Long id);
+    DomainPage<Application> findByJobId(Long jobId, DomainPageable pageable);
+    DomainPage<Application> findByCandidateId(Long candidateId, DomainPageable pageable);
+    boolean existsByCandidateIdAndJobId(Long candidateId, Long jobId);
+    long countAll();
+    long countByStatus(ApplicationStatus status);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\auth\model\Role.java
+================================================================================
+
+package com.worklify.domain.auth.model;
+
+public enum Role {
+    CANDIDATE,
+    EMPLOYER,
+    ADMIN
+}
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\auth\model\User.java
+================================================================================
+
+package com.worklify.domain.auth.model;
+
+import com.worklify.domain.common.valueobject.EmailAddress;
+import com.worklify.domain.common.valueobject.PhoneNumber;
+import lombok.*;
+
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class User {
+    private Long id;
+    private EmailAddress email;
+    private PhoneNumber phone;
+    private String passwordHash;
+    private Role role;
+    private UserStatus status;
+    private boolean isMfaEnabled;
+
+    // Business Behavior: Kích hoạt MFA
+    public void enableMfa() {
+        if (this.isMfaEnabled) {
+            throw new IllegalStateException("MFA đã được kích hoạt cho tài khoản này.");
+        }
+        this.isMfaEnabled = true;
+    }
+
+    // Business Behavior: Khóa tài khoản
+    public void ban() {
+        if (this.status == UserStatus.BANNED) {
+            throw new IllegalStateException("Tài khoản này đã bị khóa từ trước.");
+        }
+        this.status = UserStatus.BANNED;
+    }
+
+    // Business Behavior: Mở khóa tài khoản
+    public void unban() {
+        if (this.status != UserStatus.BANNED) {
+            throw new IllegalStateException("Tài khoản không nằm trong danh sách bị khóa.");
+        }
+        this.status = UserStatus.ACTIVE;
+    }
+
+    public boolean isValidEmail() {
+        return this.email != null && this.email.matches("^[A-Za-z0-9+_.-]+@(.+)$");
+    }
+
+    public void updatePassword(String newPasswordHash) {
+        this.passwordHash = newPasswordHash;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\auth\model\UserStatus.java
+================================================================================
+
+package com.worklify.domain.auth.model;
+
+public enum UserStatus {
+    ACTIVE,
+    INACTIVE,
+    BANNED
+}
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\auth\repository\UserRepository.java
+================================================================================
+
+package com.worklify.domain.auth.repository;
+import com.worklify.domain.auth.model.User;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+
+import java.util.Optional;
+public interface UserRepository {
+    User save(User user);
+    Optional<User> findById(Long id);
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
+    long count();
+    DomainPage<User> findAll(DomainPageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateProfile.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDate;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class CandidateProfile {
+    private Long id;
+    private Long userId;
+    private String fullName;
+    private String phone;
+    private String gender;
+    private LocalDate dob;
+    private String address;
+    private String summary;
+
+    public static CandidateProfile create(Long userId, String fullName) {
+        if (userId == null || fullName == null || fullName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thông tin bắt buộc không hợp lệ.");
+        }
+        return CandidateProfile.builder()
+                .userId(userId)
+                .fullName(fullName)
+                .build();
+    }
+
+    public void updateProfileDetails(String fullName, String phone, String gender,
+                                     LocalDate dob, String address, String summary) {
+        if (fullName == null || fullName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Họ tên không được để trống.");
+        }
+        this.fullName = fullName;
+        this.phone = phone;
+        this.gender = gender;
+        this.dob = dob;
+        this.address = address;
+        this.summary = summary;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateSkill.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+
+@Getter
+@Builder
+@AllArgsConstructor
+@EqualsAndHashCode
+public class CandidateSkill {
+    private final Long candidateId;
+    private final Long skillId;
+    private String level;
+    private Integer yearsOfEx;
+    private String note;
+
+    public CandidateSkill(Long candidateId, Long skillId) {
+        this.candidateId = candidateId;
+        this.skillId = skillId;
+        this.level = "";
+        this.yearsOfEx = 0;
+        this.note = "";
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CvDocument.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class CvDocument {
+    private Long id;
+    private Long candidateId;
+    private String filePath;
+    private String fileName;
+    private String thumbnailPath;
+    private String rawText;
+    private Boolean isGenerated;
+    private LocalDateTime createdAt;
+
+    // Factory Method: Ứng viên tải CV file lên
+    public static CvDocument upload(Long candidateId, String filePath, String fileName, String rawText) {
+        return CvDocument.builder()
+                .candidateId(candidateId)
+                .filePath(filePath)
+                .fileName(fileName)
+                .rawText(rawText)
+                .isGenerated(false)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    // Factory Method: Ứng viên tạo CV từ template có file đính kèm
+    public static CvDocument generateFromTemplate(Long candidateId, String filePath, String fileName, String rawText) {
+        return CvDocument.builder()
+                .candidateId(candidateId)
+                .filePath(filePath)
+                .fileName(fileName)
+                .rawText(rawText)
+                .isGenerated(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    // Factory Method: Ứng viên tạo CV từ CV Builder
+    public static CvDocument generate(Long candidateId, String fileName, String rawText) {
+        return CvDocument.builder()
+                .candidateId(candidateId)
+                .filePath(null)
+                .fileName(fileName)
+                .thumbnailPath(null)
+                .rawText(rawText)
+                .isGenerated(true)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    // [ĐÃ SỬA] Logic đổi tên
+    public void rename(String newName) {
+        if (newName == null || newName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên CV không được để trống.");
+        }
+        this.fileName = newName;
+    }
+
+    public void updateThumbnail(String path) {
+        this.thumbnailPath = path;
+    }
+
+    public void updateRawText(String rawText) {
+        this.rawText = rawText;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Skill.java
+================================================================================
+
+package com.worklify.domain.candidate.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class Skill {
+    private Long id;
+    private String name;
+
+    public static Skill createStandard(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
+        }
+        return Skill.builder().name(name.trim().toLowerCase()).build();
+    }
+
+    public static Skill create(String cleanSkillName) {
+        if (cleanSkillName == null || cleanSkillName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
+        }
+        return Skill.builder()
+                .name(cleanSkillName.trim())
+                .build();
+    }
+
+    public void setName(String trimmedName) {
+        if (trimmedName == null || trimmedName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tên kỹ năng không được bỏ trống.");
+        }
+        this.name = trimmedName.trim();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateProfileRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+import com.worklify.domain.candidate.model.CandidateProfile;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+
+import java.util.Optional;
+public interface CandidateProfileRepository {
+    CandidateProfile save(CandidateProfile profile);
+    Optional<CandidateProfile> findByUserId(Long userId);
+    Optional<CandidateProfile> findById(Long id);
+    DomainPage<CandidateProfile> searchCandidates(String keyword, DomainPageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateSkillRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.CandidateSkill;
+import java.util.List;
+import java.util.Optional;
+
+public interface CandidateSkillRepository {
+    CandidateSkill save(CandidateSkill candidateSkill);
+    List<CandidateSkill> findByCandidateId(Long candidateId);
+    Optional<CandidateSkill> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
+    void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CvDocumentRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.CvDocument;
+import java.util.List;
+import java.util.Optional;
+
+public interface CvDocumentRepository {
+    CvDocument save(CvDocument cvDocument);
+    Optional<CvDocument> findById(Long id);
+    List<CvDocument> findByCandidateId(Long candidateId);
+    void deleteById(Long id);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\SkillRepository.java
+================================================================================
+
+package com.worklify.domain.candidate.repository;
+
+import com.worklify.domain.candidate.model.Skill;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface SkillRepository {
+    Skill save(Skill skill);
+    Optional<Skill> findById(Long id);
+    Optional<Skill> findByName(String name);
+    Optional<Skill> findByNameIgnoreCase(String name);
+    List<Skill> findAll();
+    void deleteById(Long id);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\common\DomainPage.java
+================================================================================
+
+// File: \backend-core\domain\src\main\java\com\smartmatch\domain\common\DomainPage.java
+package com.worklify.domain.common;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import java.util.List;
+
+@Getter
+@AllArgsConstructor
+public class DomainPage<T> {
+    private final List<T> content;
+    private final long totalElements;
+    private final int totalPages;
+    private final int pageNumber;
+    private final int pageSize;
+
+    public int getNumber() {
+        return this.pageNumber;
+    }
+
+    public int getSize() {
+        return this.pageSize;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\common\DomainPageable.java
+================================================================================
+
+package com.worklify.domain.common;
+
+import org.springframework.data.domain.Pageable;
+
+public interface DomainPageable {
+    int getPageNumber();
+    int getPageSize();
+    Pageable toSpringPageable();
+}
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\common\SearchPageable.java
+================================================================================
+
+package com.worklify.domain.common;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+public class SearchPageable implements DomainPageable {
+    private final int page;
+    private final int size;
+
+    public SearchPageable(int page, int size) {
+        this.page = page;
+        this.size = size;
+    }
+
+    @Override
+    public int getPageNumber() {
+        return this.page;
+    }
+
+    @Override
+    public int getPageSize() {
+        return this.size;
+    }
+
+    @Override
+    public Pageable toSpringPageable() {
+        return PageRequest.of(this.page, this.size);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\common\valueobject\EmailAddress.java
+================================================================================
+
+package com.worklify.domain.common.valueobject;
+
+public record EmailAddress(String value) {
+    public EmailAddress {
+        if (value == null || !value.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
+            throw new IllegalArgumentException("Địa chỉ email không hợp lệ");
+        }
+    }
+
+    public boolean matches(String regex) {
+        return value != null && value.matches(regex);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\common\valueobject\PhoneNumber.java
+================================================================================
+
+package com.worklify.domain.common.valueobject;
+
+public record PhoneNumber(String value) {
+    public PhoneNumber {
+        if (value != null && !value.matches("^\\+?[0-9]{8,15}$")) {
+            throw new IllegalArgumentException("Số điện thoại không hợp lệ");
+        }
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\demo\model\DemoProduct.java
+================================================================================
+
+package com.worklify.domain.demo.model;
+
+import lombok.Data;
+
+@Data
+public class DemoProduct {
+    private Long id;
+    private String name;
+    private Double price;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\demo\repository\DemoProductRepository.java
+================================================================================
+
+package com.worklify.domain.demo.repository;
+
+import com.worklify.domain.demo.model.DemoProduct;
+import java.util.List;
+import java.util.Optional;
+
+public interface DemoProductRepository {
+    DemoProduct save(DemoProduct product);
+    List<DemoProduct> findAll();
+    Optional<DemoProduct> findById(Long id);
+    void deleteById(Long id);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\employer\model\CompanyProfile.java
+================================================================================
+
+package com.worklify.domain.employer.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.util.Objects; // BỔ SUNG IMPORT NÀY
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class CompanyProfile {
+    private Long id;
+    private Long userId;
+    private String companyName;
+    private String logoUrl;
+    private String website;
+    private String description;
+    private VerificationStatus verificationStatus;
+
+    public static CompanyProfile createInitial(Long userId, String companyName, String website, String description) {
+        if (userId == null || companyName == null || companyName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin bắt buộc để tạo hồ sơ công ty.");
+        }
+        return CompanyProfile.builder()
+                .userId(userId)
+                .companyName(companyName)
+                .website(website)
+                .description(description)
+                .verificationStatus(VerificationStatus.PENDING)
+                .build();
+    }
+
+    // Business Behavior: Admin duyệt công ty
+    public void approve() {
+        this.verificationStatus = VerificationStatus.APPROVED;
+    }
+
+    // Business Behavior: Admin từ chối công ty
+    public void reject() {
+        this.verificationStatus = VerificationStatus.REJECTED;
+    }
+
+    // Business Behavior: Cập nhật thông tin, tự động đưa về PENDING để kiểm duyệt lại
+    public void reviseProfile(String newCompanyName, String newWebsite, String newDescription) {
+        boolean requiresReverification = !Objects.equals(this.companyName, newCompanyName) ||
+                !Objects.equals(this.website, newWebsite) ||
+                !Objects.equals(this.description, newDescription);
+
+        this.companyName = newCompanyName;
+        this.website = newWebsite;
+        this.description = newDescription;
+
+        if (requiresReverification) {
+            this.verificationStatus = VerificationStatus.PENDING;
+        }
+    }
+
+    // Business Behavior: Cập nhật logo, tự động đưa về PENDING để kiểm duyệt lại
+    public void updateLogo(String newLogoUrl) {
+        if (newLogoUrl == null || newLogoUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("URL Logo không hợp lệ.");
+        }
+        boolean requiresReverification = !Objects.equals(this.logoUrl, newLogoUrl);
+        this.logoUrl = newLogoUrl;
+
+        if (requiresReverification) {
+            this.verificationStatus = VerificationStatus.PENDING;
+        }
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\employer\model\VerificationStatus.java
+================================================================================
+
+package com.worklify.domain.employer.model;
+
+public enum VerificationStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\employer\repository\CompanyLikeRepository.java
+================================================================================
+
+package com.worklify.domain.employer.repository;
+
+public interface CompanyLikeRepository {
+    boolean isLikedByUser(Long userId, Long companyId);
+    void addLike(Long userId, Long companyId);
+    void removeLike(Long userId, Long companyId);
+    int countLikesByCompany(Long companyId);
+}
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\employer\repository\CompanyProfileRepository.java
+================================================================================
+
+package com.worklify.domain.employer.repository;
+
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.employer.model.CompanyProfile;
+import com.worklify.domain.employer.model.VerificationStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable; // ĐÃ SỬA THÀNH: org.springframework.data.domain.Pageable
+
+import java.util.List;
+import java.util.Optional;
+
+public interface CompanyProfileRepository {
+    CompanyProfile save(CompanyProfile companyProfile);
+    Optional<CompanyProfile> findByUserId(Long userId);
+    Optional<CompanyProfile> findById(Long id);
+    List<CompanyProfile> findByVerificationStatus(VerificationStatus status);
+    DomainPage<CompanyProfile> findAll(DomainPageable pageable);
+
+    // ==========================================================
+    // BỔ SUNG: Triển khai hàm findAll phục vụ phân trang cho DDD
+    // ==========================================================
+    Page<CompanyProfile> findAll(Pageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\job\model\JobPosting.java
+================================================================================
+
+package com.worklify.domain.job.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class JobPosting {
+    private Long id;
+    private Long companyId;
+    private String title;
+    private String description;
+    private String requirements;
+    private String salaryRange;
+    private String location;
+    private String workType;
+    private JobStatus status;
+    private LocalDateTime createdAt;
+    private LocalDateTime expiresAt;
+
+    // Factory Method: Tạo tin tuyển dụng mới, mặc định ở trạng thái PENDING chờ Admin duyệt
+    public static JobPosting createNewJob(Long companyId, String title, String description,
+                                          String requirements, String salaryRange,
+                                          String location, String workType, LocalDateTime expiresAt) {
+        if (companyId == null || title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Thiếu thông tin bắt buộc để tạo tin tuyển dụng.");
+        }
+        return JobPosting.builder()
+                .companyId(companyId)
+                .title(title)
+                .description(description)
+                .requirements(requirements)
+                .salaryRange(salaryRange)
+                .location(location)
+                .workType(workType)
+                .status(JobStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(expiresAt)
+                .build();
+    }
+
+    // Business Behavior: Employer cập nhật tin → tự động về PENDING để Admin kiểm duyệt lại
+    public void updateDetails(String title, String description, String requirements,
+                              String salaryRange, String location, String workType, LocalDateTime expiresAt) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new IllegalArgumentException("Tiêu đề công việc không được để trống.");
+        }
+        this.title = title;
+        this.description = description;
+        this.requirements = requirements;
+        this.salaryRange = salaryRange;
+        this.location = location;
+        this.workType = workType;
+        this.expiresAt = expiresAt;
+        this.status = JobStatus.PENDING;
+    }
+
+    // Business Behavior: Admin duyệt tin
+    public void publish() {
+        if (this.status != JobStatus.PENDING) {
+            throw new IllegalStateException("Chỉ có thể duyệt tin đang ở trạng thái PENDING.");
+        }
+        this.status = JobStatus.ACTIVE;
+    }
+
+    // Business Behavior: Admin từ chối tin
+    public void reject() {
+        if (this.status != JobStatus.PENDING) {
+            throw new IllegalStateException("Chỉ có thể từ chối tin đang ở trạng thái PENDING.");
+        }
+        this.status = JobStatus.REJECTED;
+    }
+
+    // Business Behavior: Employer/Admin đóng tin
+    public void closeJob() {
+        if (this.status == JobStatus.CLOSED) {
+            throw new IllegalStateException("Tin tuyển dụng này đã ở trạng thái đóng.");
+        }
+        this.status = JobStatus.CLOSED;
+    }
+
+    // Business Behavior: Gia hạn ngày hết hạn
+    public void extendExpirationDate(int daysToAdd) {
+        if (this.status == JobStatus.CLOSED) {
+            throw new IllegalStateException("Không thể gia hạn một tin tuyển dụng đã đóng.");
+        }
+        if (daysToAdd <= 0) {
+            throw new IllegalArgumentException("Số ngày gia hạn phải lớn hơn 0.");
+        }
+        this.expiresAt = this.expiresAt.plusDays(daysToAdd);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\job\model\JobStatus.java
+================================================================================
+
+package com.worklify.domain.job.model;
+
+public enum JobStatus {
+    PENDING,
+    ACTIVE,
+    CLOSED,
+    REJECTED
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\job\model\SavedJob.java
+================================================================================
+
+// File: \backend-core\domain\src\main\java\com\smartmatch\domain\job\model\SavedJob.java
+package com.worklify.domain.job.model;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class SavedJob {
+    private Long id;
+    private Long candidateId;
+    private Long jobId;
+    private LocalDateTime savedAt;
+
+    // Factory Method: Ứng viên lưu tin tuyển dụng
+    public static SavedJob markAsSaved(Long candidateId, Long jobId) {
+        if (candidateId == null || jobId == null) {
+            throw new IllegalArgumentException("Thông tin lưu việc làm không hợp lệ.");
+        }
+        return SavedJob.builder()
+                .candidateId(candidateId)
+                .jobId(jobId)
+                .savedAt(LocalDateTime.now())
+                .build();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\job\repository\JobPostingRepository.java
+================================================================================
+
+package com.worklify.domain.job.repository;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.job.model.JobPosting;
+import com.worklify.domain.job.model.JobStatus;
+
+import java.util.List;
+import java.util.Optional;
+public interface JobPostingRepository {
+    JobPosting save(JobPosting jobPosting);
+    Optional<JobPosting> findById(Long id);
+    DomainPage<JobPosting> findByCompanyId(Long companyId, DomainPageable pageable);
+    DomainPage<JobPosting> searchJobs(String keyword, String location, JobStatus status, DomainPageable pageable);
+    List<JobPosting> findByStatus(JobStatus status);
+    long countByStatus(JobStatus status);
+    DomainPage<JobPosting> findByCompanyIdAndStatus(Long companyId, JobStatus status, DomainPageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\domain\src\main\java\com\worklify\domain\job\repository\SavedJobRepository.java
+================================================================================
+
+// File: \backend-core\domain\src\main\java\com\smartmatch\domain\job\repository\SavedJobRepository.java
+package com.worklify.domain.job.repository;
+
+import com.worklify.domain.job.model.SavedJob;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import java.util.Optional;
+
+public interface SavedJobRepository {
+    SavedJob save(SavedJob savedJob);
+    Optional<SavedJob> findByCandidateIdAndJobId(Long candidateId, Long jobId);
+    DomainPage<SavedJob> findByCandidateId(Long candidateId, DomainPageable pageable);
+    void delete(SavedJob savedJob);
+}

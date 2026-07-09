@@ -6,14 +6,8 @@ import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.common.port.FileStoragePort;
-import com.worklify.domain.candidate.model.CandidateProfile;
-import com.worklify.domain.candidate.model.CandidateSkill;
-import com.worklify.domain.candidate.model.CvDocument;
-import com.worklify.domain.candidate.model.Skill;
-import com.worklify.domain.candidate.repository.CandidateProfileRepository;
-import com.worklify.domain.candidate.repository.CandidateSkillRepository;
-import com.worklify.domain.candidate.repository.CvDocumentRepository;
-import com.worklify.domain.candidate.repository.SkillRepository;
+import com.worklify.domain.candidate.model.*;
+import com.worklify.domain.candidate.repository.*;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.common.DomainPageable;
 import lombok.RequiredArgsConstructor;
@@ -38,20 +32,32 @@ public class CandidateServiceImpl implements CandidateService {
     private final SkillRepository skillRepository;
     private final FileStoragePort fileStoragePort;
     private final ObjectMapper objectMapper;
+    private final EducationRepository educationRepository;
+    private final ExperienceRepository experienceRepository;
+    private final ProjectRepository projectRepository;
+    private final CertificationRepository certificationRepository;
+    private final ActivityRepository activityRepository;
+    private final AwardRepository awardRepository;
+    private final HobbyRepository hobbyRepository;
+    private final LanguageRepository languageRepository;
 
     @Override
     public CandidateProfileResponse createProfile(Long userId, CandidateProfileRequest request) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseGet(() -> CandidateProfile.create(userId, request.getFullName()));
 
+        // [SỬA] Khớp chữ ký mới của updateProfileDetails và thêm updateSocialLinks
         profile.updateProfileDetails(
                 request.getFullName(),
+                request.getHeadline(),
                 request.getPhone(),
+                request.getEmailContact(),
                 request.getGender(),
                 request.getDob(),
                 request.getAddress(),
                 request.getSummary()
         );
+        profile.updateSocialLinks(request.getWebsiteUrl(), request.getLinkedinUrl(), request.getGithubUrl());
 
         CandidateProfile saved = candidateProfileRepository.save(profile);
 
@@ -66,14 +72,18 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
 
+        // [SỬA] Khớp chữ ký mới của updateProfileDetails và thêm updateSocialLinks
         profile.updateProfileDetails(
                 request.getFullName(),
+                request.getHeadline(),
                 request.getPhone(),
+                request.getEmailContact(),
                 request.getGender(),
                 request.getDob(),
                 request.getAddress(),
                 request.getSummary()
         );
+        profile.updateSocialLinks(request.getWebsiteUrl(), request.getLinkedinUrl(), request.getGithubUrl());
 
         CandidateProfile saved = candidateProfileRepository.save(profile);
         return mapToProfileResponse(saved);
@@ -88,6 +98,18 @@ public class CandidateServiceImpl implements CandidateService {
         );
     }
 
+    // [THÊM MỚI] Upload Avatar
+    @Override
+    public CandidateProfileResponse uploadAvatar(Long userId, MultipartFile file) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        String savedRelativePath = fileStoragePort.storeFile(file, "avatars", String.valueOf(userId));
+        profile.updateAvatar("/uploads/" + savedRelativePath);
+
+        return mapToProfileResponse(candidateProfileRepository.save(profile));
+    }
+
     @Override
     public CvDocumentResponse uploadCv(Long userId, MultipartFile file) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
@@ -97,7 +119,6 @@ public class CandidateServiceImpl implements CandidateService {
         String uploadedFilePath = "/uploads/" + savedRelativePath;
         String extractedText = "Extracted text from " + file.getOriginalFilename();
 
-        // Cập nhật: Truyền thêm file.getOriginalFilename() vào tham số thứ 3
         CvDocument cv = CvDocument.upload(profile.getId(), uploadedFilePath, file.getOriginalFilename(), extractedText);
 
         return mapToCvResponse(cvDocumentRepository.save(cv));
@@ -110,16 +131,14 @@ public class CandidateServiceImpl implements CandidateService {
 
         Long candidateId = profile.getId();
 
-        // SỬA: Thêm tham số "CV_Tu_Tao" (hoặc tên mặc định bạn muốn) làm tham số thứ 2
         CvDocument cv = CvDocument.generate(candidateId, "CV_Tu_Tao", rawText);
         CvDocument saved = cvDocumentRepository.save(cv);
 
-        // ... phần logic còn lại giữ nguyên
         try {
             List<Map<String, Object>> blocks = objectMapper.readValue(
                     rawText, new TypeReference<List<Map<String, Object>>>() {}
             );
-            // ...
+            // ... logic bóc tách skill nếu cần
         } catch (Exception e) {
             log.error("Lỗi parse JSON CV Builder skills cho userId: {}", userId, e);
         }
@@ -225,7 +244,6 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateSkill oldCs = candidateSkillRepository.findByCandidateIdAndSkillId(profile.getId(), skillId)
                 .orElseThrow(() -> new IllegalArgumentException("Kỹ năng này chưa được thêm vào hồ sơ."));
 
-        // Nếu tên kỹ năng thay đổi, xóa bản ghi cũ
         if (!oldCs.getSkillId().equals(targetSkill.getId())) {
             candidateSkillRepository.deleteByCandidateIdAndSkillId(profile.getId(), skillId);
         }
@@ -266,7 +284,6 @@ public class CandidateServiceImpl implements CandidateService {
         candidateSkillRepository.deleteByCandidateIdAndSkillId(profile.getId(), skillId);
     }
 
-    // Thêm vào com.worklify.application.candidate.service.impl.CandidateServiceImpl[cite: 5]
     @Override
     public CvDocumentResponse renameCv(Long userId, Long cvId, String newName) {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
@@ -279,7 +296,6 @@ public class CandidateServiceImpl implements CandidateService {
             throw new IllegalArgumentException("Bạn không có quyền sửa CV này.");
         }
 
-        // Cập nhật tên thông qua phương thức domain (bạn cần đảm bảo class CvDocument có phương thức rename)
         cv.rename(newName);
 
         return mapToCvResponse(cvDocumentRepository.save(cv));
@@ -289,10 +305,6 @@ public class CandidateServiceImpl implements CandidateService {
     // PRIVATE HELPERS
     // ====================================================
 
-    /**
-     * Đồng bộ kỹ năng từ chuỗi CSV vào bảng candidate_skills.
-     * Xóa sạch kỹ năng cũ của candidate trước khi ghi mới.
-     */
     private void syncSkillsFromCsv(Long candidateId, String csvSkills) {
         if (csvSkills == null || csvSkills.trim().isEmpty()) return;
 
@@ -309,15 +321,22 @@ public class CandidateServiceImpl implements CandidateService {
         }
     }
 
+    // [SỬA] Cập nhật thêm các field mới vào response
     private CandidateProfileResponse mapToProfileResponse(CandidateProfile profile) {
         return CandidateProfileResponse.builder()
                 .id(profile.getId())
                 .userId(profile.getUserId())
                 .fullName(profile.getFullName())
+                .avatarUrl(profile.getAvatarUrl())
+                .headline(profile.getHeadline())
                 .phone(profile.getPhone())
+                .emailContact(profile.getEmailContact())
                 .gender(profile.getGender())
                 .dob(profile.getDob())
                 .address(profile.getAddress())
+                .websiteUrl(profile.getWebsiteUrl())
+                .linkedinUrl(profile.getLinkedinUrl())
+                .githubUrl(profile.getGithubUrl())
                 .summary(profile.getSummary())
                 .build();
     }
@@ -329,23 +348,15 @@ public class CandidateServiceImpl implements CandidateService {
 
         return PageResponse.<CandidateProfileResponse>builder()
                 .content(page.getContent().stream().map(profile -> {
-                    // Lấy danh sách tên kỹ năng của ứng viên này
                     List<String> skills = candidateSkillRepository.findByCandidateId(profile.getId()).stream()
                             .map(cs -> skillRepository.findById(cs.getSkillId()).map(Skill::getName).orElse(""))
                             .filter(name -> !name.isEmpty())
                             .collect(Collectors.toList());
 
-                    return CandidateProfileResponse.builder()
-                            .id(profile.getId())
-                            .userId(profile.getUserId())
-                            .fullName(profile.getFullName())
-                            .phone(profile.getPhone())
-                            .gender(profile.getGender())
-                            .dob(profile.getDob())
-                            .address(profile.getAddress())
-                            .summary(profile.getSummary())
-                            .skills(skills) // Truyền list skills vào DTO
-                            .build();
+                    // Sử dụng luôn hàm mapToProfileResponse đã được khai báo ở trên
+                    CandidateProfileResponse response = mapToProfileResponse(profile);
+                    response.setSkills(skills); // Gán thêm list skills
+                    return response;
                 }).collect(Collectors.toList()))
                 .totalElements(page.getTotalElements())
                 .totalPages(page.getTotalPages())
@@ -354,15 +365,11 @@ public class CandidateServiceImpl implements CandidateService {
                 .build();
     }
 
-    // Sửa hàm private trong CandidateServiceImpl.java
-    // Sửa hàm private trong CandidateServiceImpl.java
     private CvDocumentResponse mapToCvResponse(CvDocument cv) {
-        // Ưu tiên lấy fileName từ Domain (đã lưu trong DB), nếu null mới bóc tách từ path
         String finalFileName = (cv.getFileName() != null && !cv.getFileName().isEmpty())
                 ? cv.getFileName()
                 : "CV_Ban_Thao";
 
-        // Nếu vẫn chưa có tên và có filePath, mới bóc tách từ path
         if (finalFileName.equals("CV_Ban_Thao") && cv.getFilePath() != null) {
             String[] parts = cv.getFilePath().split("/");
             finalFileName = parts[parts.length - 1];
@@ -374,7 +381,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .filePath(cv.getFilePath())
                 .fileName(finalFileName)
                 .thumbnailPath(cv.getThumbnailPath())
-                .rawText(cv.getRawText()) // <--- DÒNG CỰC KỲ QUAN TRỌNG ĐỂ FRONTEND CÓ THỂ ĐỌC ĐƯỢC JSON
+                .rawText(cv.getRawText())
                 .isGenerated(cv.getIsGenerated())
                 .createdAt(cv.getCreatedAt())
                 .build();
@@ -389,7 +396,6 @@ public class CandidateServiceImpl implements CandidateService {
         CvDocument cv = cvDocumentRepository.findById(cvId)
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy CV với ID: " + cvId));
 
-        // Kiểm tra quyền sở hữu
         if (!cv.getCandidateId().equals(profile.getId())) {
             throw new IllegalArgumentException("Bạn không có quyền truy cập CV này.");
         }
@@ -425,14 +431,510 @@ public class CandidateServiceImpl implements CandidateService {
             throw new IllegalArgumentException("Bạn không có quyền sửa CV này.");
         }
 
-        // Tạo tên file đúng bằng ID của CV
         String customFileName = cvId + ".jpg";
 
-        // YÊU CẦU: Bạn cần cập nhật hàm storeFile trong LocalFileStorageService để nhận thêm tham số tên file này
         String savedRelativePath = fileStoragePort.storeFile(file, "cv_thumbnails", String.valueOf(userId), customFileName);
         String thumbnailPath = "/uploads/" + savedRelativePath;
 
         cv.updateThumbnail(thumbnailPath);
         return mapToCvResponse(cvDocumentRepository.save(cv));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EducationResponse> getEducationsByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return educationRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToEducationResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public EducationResponse createEducation(Long userId, EducationRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        Education education = Education.create(profile.getId(), request.getSchoolName());
+        education.updateDetails(request.getSchoolName(), request.getMajor(), request.getDegree(),
+                request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getGpa(), request.getDescription(), request.getDisplayOrder());
+
+        return mapToEducationResponse(educationRepository.save(education));
+    }
+
+    @Override
+    public EducationResponse updateEducation(Long userId, Long educationId, EducationRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        Education education = educationRepository.findById(educationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy học vấn."));
+
+        if (!education.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa mục học vấn này.");
+        }
+
+        education.updateDetails(request.getSchoolName(), request.getMajor(), request.getDegree(),
+                request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getGpa(), request.getDescription(), request.getDisplayOrder());
+
+        return mapToEducationResponse(educationRepository.save(education));
+    }
+
+    @Override
+    public void deleteEducation(Long userId, Long educationId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        Education education = educationRepository.findById(educationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy học vấn."));
+
+        if (!education.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa mục học vấn này.");
+        }
+        educationRepository.deleteById(educationId);
+    }
+
+    private EducationResponse mapToEducationResponse(Education e) {
+        return EducationResponse.builder()
+                .id(e.getId())
+                .schoolName(e.getSchoolName())
+                .major(e.getMajor())
+                .degree(e.getDegree())
+                .startDate(e.getStartDate())
+                .endDate(e.getEndDate())
+                .isCurrent(e.isCurrent())
+                .gpa(e.getGpa())
+                .description(e.getDescription())
+                .displayOrder(e.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD EXPERIENCE
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<ExperienceResponse> getExperiencesByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return experienceRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToExperienceResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ExperienceResponse createExperience(Long userId, ExperienceRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Experience experience = Experience.create(profile.getId(), request.getCompanyName());
+        experience.updateDetails(request.getCompanyName(), request.getPosition(), request.getEmploymentType(),
+                request.getLocation(), request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToExperienceResponse(experienceRepository.save(experience));
+    }
+
+    @Override
+    public ExperienceResponse updateExperience(Long userId, Long experienceId, ExperienceRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Experience experience = experienceRepository.findById(experienceId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy kinh nghiệm làm việc."));
+        if (!experience.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa mục kinh nghiệm này.");
+        }
+        experience.updateDetails(request.getCompanyName(), request.getPosition(), request.getEmploymentType(),
+                request.getLocation(), request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToExperienceResponse(experienceRepository.save(experience));
+    }
+
+    @Override
+    public void deleteExperience(Long userId, Long experienceId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Experience experience = experienceRepository.findById(experienceId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy kinh nghiệm làm việc."));
+        if (!experience.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa mục kinh nghiệm này.");
+        }
+        experienceRepository.deleteById(experienceId);
+    }
+
+    private ExperienceResponse mapToExperienceResponse(Experience e) {
+        return ExperienceResponse.builder()
+                .id(e.getId())
+                .companyName(e.getCompanyName())
+                .position(e.getPosition())
+                .employmentType(e.getEmploymentType())
+                .location(e.getLocation())
+                .startDate(e.getStartDate())
+                .endDate(e.getEndDate())
+                .isCurrent(e.isCurrent())
+                .description(e.getDescription())
+                .displayOrder(e.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD PROJECT
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<ProjectResponse> getProjectsByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return projectRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToProjectResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProjectResponse createProject(Long userId, ProjectRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Project project = Project.create(profile.getId(), request.getProjectName());
+        project.updateDetails(request.getProjectName(), request.getRole(), request.getTechStack(),
+                request.getProjectUrl(), request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToProjectResponse(projectRepository.save(project));
+    }
+
+    @Override
+    public ProjectResponse updateProject(Long userId, Long projectId, ProjectRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dự án."));
+        if (!project.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa mục dự án này.");
+        }
+        project.updateDetails(request.getProjectName(), request.getRole(), request.getTechStack(),
+                request.getProjectUrl(), request.getStartDate(), request.getEndDate(), request.isCurrent(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToProjectResponse(projectRepository.save(project));
+    }
+
+    @Override
+    public void deleteProject(Long userId, Long projectId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy dự án."));
+        if (!project.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa mục dự án này.");
+        }
+        projectRepository.deleteById(projectId);
+    }
+
+    private ProjectResponse mapToProjectResponse(Project p) {
+        return ProjectResponse.builder()
+                .id(p.getId())
+                .projectName(p.getProjectName())
+                .role(p.getRole())
+                .techStack(p.getTechStack())
+                .projectUrl(p.getProjectUrl())
+                .startDate(p.getStartDate())
+                .endDate(p.getEndDate())
+                .isCurrent(p.isCurrent())
+                .description(p.getDescription())
+                .displayOrder(p.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD CERTIFICATION
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<CertificationResponse> getCertificationsByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return certificationRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToCertificationResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CertificationResponse createCertification(Long userId, CertificationRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Certification cert = Certification.create(profile.getId(), request.getName());
+        cert.updateDetails(request.getName(), request.getIssuingOrg(), request.getIssueDate(),
+                request.getExpiryDate(), request.getCredentialId(), request.getCredentialUrl(), request.getDisplayOrder());
+        return mapToCertificationResponse(certificationRepository.save(cert));
+    }
+
+    @Override
+    public CertificationResponse updateCertification(Long userId, Long certificationId, CertificationRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Certification cert = certificationRepository.findById(certificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chứng chỉ."));
+        if (!cert.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa chứng chỉ này.");
+        }
+        cert.updateDetails(request.getName(), request.getIssuingOrg(), request.getIssueDate(),
+                request.getExpiryDate(), request.getCredentialId(), request.getCredentialUrl(), request.getDisplayOrder());
+        return mapToCertificationResponse(certificationRepository.save(cert));
+    }
+
+    @Override
+    public void deleteCertification(Long userId, Long certificationId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Certification cert = certificationRepository.findById(certificationId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy chứng chỉ."));
+        if (!cert.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa chứng chỉ này.");
+        }
+        certificationRepository.deleteById(certificationId);
+    }
+
+    private CertificationResponse mapToCertificationResponse(Certification c) {
+        return CertificationResponse.builder()
+                .id(c.getId())
+                .name(c.getName())
+                .issuingOrg(c.getIssuingOrg())
+                .issueDate(c.getIssueDate())
+                .expiryDate(c.getExpiryDate())
+                .credentialId(c.getCredentialId())
+                .credentialUrl(c.getCredentialUrl())
+                .displayOrder(c.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD ACTIVITY
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<ActivityResponse> getActivitiesByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return activityRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToActivityResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ActivityResponse createActivity(Long userId, ActivityRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Activity activity = Activity.create(profile.getId(), request.getOrganization());
+        activity.updateDetails(request.getOrganization(), request.getRole(), request.getStartDate(),
+                request.getEndDate(), request.isCurrent(), request.getDescription(), request.getDisplayOrder());
+        return mapToActivityResponse(activityRepository.save(activity));
+    }
+
+    @Override
+    public ActivityResponse updateActivity(Long userId, Long activityId, ActivityRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hoạt động."));
+        if (!activity.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa hoạt động này.");
+        }
+        activity.updateDetails(request.getOrganization(), request.getRole(), request.getStartDate(),
+                request.getEndDate(), request.isCurrent(), request.getDescription(), request.getDisplayOrder());
+        return mapToActivityResponse(activityRepository.save(activity));
+    }
+
+    @Override
+    public void deleteActivity(Long userId, Long activityId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hoạt động."));
+        if (!activity.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa hoạt động này.");
+        }
+        activityRepository.deleteById(activityId);
+    }
+
+    private ActivityResponse mapToActivityResponse(Activity a) {
+        return ActivityResponse.builder()
+                .id(a.getId())
+                .organization(a.getOrganization())
+                .role(a.getRole())
+                .startDate(a.getStartDate())
+                .endDate(a.getEndDate())
+                .isCurrent(a.isCurrent())
+                .description(a.getDescription())
+                .displayOrder(a.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD AWARD
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<AwardResponse> getAwardsByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return awardRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToAwardResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public AwardResponse createAward(Long userId, AwardRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Award award = Award.create(profile.getId(), request.getTitle());
+        award.updateDetails(request.getTitle(), request.getIssuer(), request.getAwardedDate(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToAwardResponse(awardRepository.save(award));
+    }
+
+    @Override
+    public AwardResponse updateAward(Long userId, Long awardId, AwardRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Award award = awardRepository.findById(awardId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giải thưởng."));
+        if (!award.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa giải thưởng này.");
+        }
+        award.updateDetails(request.getTitle(), request.getIssuer(), request.getAwardedDate(),
+                request.getDescription(), request.getDisplayOrder());
+        return mapToAwardResponse(awardRepository.save(award));
+    }
+
+    @Override
+    public void deleteAward(Long userId, Long awardId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Award award = awardRepository.findById(awardId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giải thưởng."));
+        if (!award.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa giải thưởng này.");
+        }
+        awardRepository.deleteById(awardId);
+    }
+
+    private AwardResponse mapToAwardResponse(Award a) {
+        return AwardResponse.builder()
+                .id(a.getId())
+                .title(a.getTitle())
+                .issuer(a.getIssuer())
+                .awardedDate(a.getAwardedDate())
+                .description(a.getDescription())
+                .displayOrder(a.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD HOBBY
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<HobbyResponse> getHobbiesByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return hobbyRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToHobbyResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public HobbyResponse createHobby(Long userId, HobbyRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Hobby hobby = Hobby.create(profile.getId(), request.getName());
+        hobby.updateDetails(request.getName(), request.getDisplayOrder());
+        return mapToHobbyResponse(hobbyRepository.save(hobby));
+    }
+
+    @Override
+    public HobbyResponse updateHobby(Long userId, Long hobbyId, HobbyRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Hobby hobby = hobbyRepository.findById(hobbyId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sở thích."));
+        if (!hobby.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa sở thích này.");
+        }
+        hobby.updateDetails(request.getName(), request.getDisplayOrder());
+        return mapToHobbyResponse(hobbyRepository.save(hobby));
+    }
+
+    @Override
+    public void deleteHobby(Long userId, Long hobbyId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Hobby hobby = hobbyRepository.findById(hobbyId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy sở thích."));
+        if (!hobby.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa sở thích này.");
+        }
+        hobbyRepository.deleteById(hobbyId);
+    }
+
+    private HobbyResponse mapToHobbyResponse(Hobby h) {
+        return HobbyResponse.builder()
+                .id(h.getId())
+                .name(h.getName())
+                .displayOrder(h.getDisplayOrder())
+                .build();
+    }
+
+    // ==========================================
+    // CRUD LANGUAGE
+    // ==========================================
+    @Override
+    @Transactional(readOnly = true)
+    public List<LanguageResponse> getLanguagesByUserId(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        return languageRepository.findByCandidateId(profile.getId()).stream()
+                .map(this::mapToLanguageResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public LanguageResponse createLanguage(Long userId, LanguageRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Language language = Language.create(profile.getId(), request.getLanguageName());
+        language.updateDetails(request.getLanguageName(), request.getProficiency(), request.getDisplayOrder());
+        return mapToLanguageResponse(languageRepository.save(language));
+    }
+
+    @Override
+    public LanguageResponse updateLanguage(Long userId, Long languageId, LanguageRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Language language = languageRepository.findById(languageId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ngoại ngữ."));
+        if (!language.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền sửa ngoại ngữ này.");
+        }
+        language.updateDetails(request.getLanguageName(), request.getProficiency(), request.getDisplayOrder());
+        return mapToLanguageResponse(languageRepository.save(language));
+    }
+
+    @Override
+    public void deleteLanguage(Long userId, Long languageId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+        Language language = languageRepository.findById(languageId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy ngoại ngữ."));
+        if (!language.getCandidateId().equals(profile.getId())) {
+            throw new IllegalArgumentException("Bạn không có quyền xóa ngoại ngữ này.");
+        }
+        languageRepository.deleteById(languageId);
+    }
+
+    private LanguageResponse mapToLanguageResponse(Language l) {
+        return LanguageResponse.builder()
+                .id(l.getId())
+                .languageName(l.getLanguageName())
+                .proficiency(l.getProficiency())
+                .displayOrder(l.getDisplayOrder())
+                .build();
     }
 }

@@ -1,0 +1,2271 @@
+=== TẦNG INFRASTRUCTURE ===
+
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\AuthConfig.java
+================================================================================
+
+// File: \backend-core\infrastructure\src\main\java\com\smartmatch\infrastructure\config\AuthConfig.java
+package com.worklify.infrastructure.config;
+
+import com.worklify.infrastructure.security.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+@Configuration
+@RequiredArgsConstructor
+public class AuthConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\RabbitMqConfig.java
+================================================================================
+
+package com.worklify.infrastructure.config;
+
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * [ĐÃ SỬA] Đổi toàn bộ prefix từ "smartmatch" sang "worklify" để đồng nhất thương hiệu.
+ * Routing keys khớp chính xác với những gì DomainEventRabbitMqDispatcher và AiMatchResultConsumer sử dụng.
+ */
+@Configuration
+public class RabbitMqConfig {
+
+    // Tên Exchange
+    public static final String EXCHANGE_NAME = "worklify.domain.exchange";
+
+    // Tên các Queues
+    public static final String QUEUE_AI_SUBMIT = "worklify.ai.submit.queue";
+    public static final String QUEUE_AI_RESULT = "worklify.ai.result.queue";
+
+    // Routing Keys
+    public static final String ROUTING_KEY_AI_SUBMIT = "ai.submit";
+    public static final String ROUTING_KEY_AI_RESULT = "ai.result";
+
+    @Bean
+    public TopicExchange domainExchange() {
+        return new TopicExchange(EXCHANGE_NAME);
+    }
+
+    @Bean
+    public Queue aiSubmitQueue() {
+        return new Queue(QUEUE_AI_SUBMIT, true);
+    }
+
+    @Bean
+    public Queue aiResultQueue() {
+        return new Queue(QUEUE_AI_RESULT, true);
+    }
+
+    @Bean
+    public Binding bindingSubmit(@Qualifier("aiSubmitQueue") Queue aiSubmitQueue, TopicExchange domainExchange) {
+        return BindingBuilder.bind(aiSubmitQueue).to(domainExchange).with(ROUTING_KEY_AI_SUBMIT);
+    }
+
+    @Bean
+    public Binding bindingResult(@Qualifier("aiResultQueue") Queue aiResultQueue, TopicExchange domainExchange) {
+        return BindingBuilder.bind(aiResultQueue).to(domainExchange).with(ROUTING_KEY_AI_RESULT);
+    }
+
+    @Bean
+    public MessageConverter jsonMessageConverter() {
+        return new Jackson2JsonMessageConverter();
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter jsonMessageConverter) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        template.setMessageConverter(jsonMessageConverter);
+        return template;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\SecurityConfig.java
+================================================================================
+
+package com.worklify.infrastructure.config;
+
+import com.worklify.infrastructure.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final AuthenticationProvider authenticationProvider;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**", "/api/auth/**", "/auth/**").permitAll()
+                        .requestMatchers("/", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/employers/**").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedMethods(List.of("*"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\WebConfig.java
+================================================================================
+
+package com.worklify.infrastructure.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${application.frontend.url:http://localhost:3000}")
+    private String frontendUrl;
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins(frontendUrl)
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With", "Accept")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        Path uploadDir = Paths.get("./uploads");
+        String uploadPath = uploadDir.toFile().getAbsolutePath();
+
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath + "/");
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\messaging\DomainEventRabbitMqDispatcher.java
+================================================================================
+
+package com.worklify.infrastructure.messaging;
+
+import com.worklify.domain.application.event.ApplicationSubmittedEvent;
+import com.worklify.infrastructure.config.RabbitMqConfig;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class DomainEventRabbitMqDispatcher {
+
+    private final RabbitTemplate rabbitTemplate;
+
+    /**
+     * @Async giúp luồng API của User không bị chặn lại để chờ thao tác gửi Message.
+     * @EventListener tự động bắt các Event được publish từ Aggregate Root.
+     */
+    @Async
+    @EventListener
+    public void handleApplicationSubmittedEvent(ApplicationSubmittedEvent event) {
+        log.info("[Domain Event -> RabbitMQ] Bắt được sự kiện nộp CV cho JobId: {}. Đang điều phối sang AI Server...", event.jobId());
+
+        rabbitTemplate.convertAndSend(
+                RabbitMqConfig.EXCHANGE_NAME,
+                RabbitMqConfig.ROUTING_KEY_AI_SUBMIT,
+                event
+        );
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ApplicationRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.application.model.Application;
+import com.worklify.domain.application.model.ApplicationStatus;
+import com.worklify.domain.application.repository.ApplicationRepository;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.ApplicationJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.ApplicationEntityMapper;
+import com.worklify.infrastructure.persistence.repository.ApplicationJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class ApplicationRepositoryAdapter implements ApplicationRepository {
+    private final ApplicationJpaRepository jpaRepository;
+    private final ApplicationEntityMapper mapper;
+
+    @Override
+    public Application save(Application application) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(application)));
+    }
+
+    @Override
+    public Optional<Application> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<Application> findByJobId(Long jobId, DomainPageable pageable) {
+        Page<ApplicationJpaEntity> page = jpaRepository.findByJobId(jobId, PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<Application> findByCandidateId(Long candidateId, DomainPageable pageable) {
+        Page<ApplicationJpaEntity> page = jpaRepository.findByCandidateId(candidateId, PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+
+    /**
+     * [ĐÃ SỬA] Trước đây hardcode trả về false. Nay delegate sang JPA repository thực sự.
+     */
+    @Override
+    public boolean existsByCandidateIdAndJobId(Long candidateId, Long jobId) {
+        return jpaRepository.existsByJobIdAndCandidateId(jobId, candidateId);
+    }
+
+    @Override
+    public long countAll() {
+        return jpaRepository.count();
+    }
+
+    @Override
+    public long countByStatus(ApplicationStatus status) {
+        return jpaRepository.countByStatus(status);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CandidateProfileRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.CandidateProfile;
+import com.worklify.domain.candidate.repository.CandidateProfileRepository;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.CandidateProfileJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CandidateProfileJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class CandidateProfileRepositoryAdapter implements CandidateProfileRepository {
+    private final CandidateProfileJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public CandidateProfile save(CandidateProfile profile) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(profile)));
+    }
+
+    @Override
+    public Optional<CandidateProfile> findByUserId(Long userId) {
+        // Đổi từ jpaRepository.findByUserId(...) thành:
+        return jpaRepository.findFirstByUserId(userId)
+                .map(mapper::toDomain);
+    }
+
+    /**
+     * [ĐÃ SỬA] Trước đây hardcode trả về Optional.empty(). Nay delegate sang JPA repository thực sự.
+     */
+    @Override
+    public Optional<CandidateProfile> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<CandidateProfile> searchCandidates(String keyword, DomainPageable pageable) {
+        Page<CandidateProfileJpaEntity> page = jpaRepository.searchCandidates(
+                keyword,
+                PaginationMapper.toSpringPageable(pageable)
+        );
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CandidateSkillRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.CandidateSkill;
+import com.worklify.domain.candidate.repository.CandidateSkillRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CandidateSkillJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class CandidateSkillRepositoryAdapter implements CandidateSkillRepository {
+    private final CandidateSkillJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public CandidateSkill save(CandidateSkill candidateSkill) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(candidateSkill)));
+    }
+
+    @Override
+    public List<CandidateSkill> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<CandidateSkill> findByCandidateIdAndSkillId(Long candidateId, Long skillId) {
+        return jpaRepository.findByCandidateIdAndSkillId(candidateId, skillId)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId) {
+        jpaRepository.deleteByCandidateIdAndSkillId(candidateId, skillId);
+    }
+
+    @Override
+    public void deleteByCandidateId(Long candidateId) {
+        jpaRepository.deleteByCandidateId(candidateId);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CompanyLikeRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.employer.repository.CompanyLikeRepository;
+import com.worklify.infrastructure.persistence.entity.CompanyLikeJpaEntity;
+import com.worklify.infrastructure.persistence.repository.CompanyLikeJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+@Component
+@RequiredArgsConstructor
+public class CompanyLikeRepositoryAdapter implements CompanyLikeRepository {
+
+    private final CompanyLikeJpaRepository companyLikeJpaRepository;
+
+    @Override
+    public boolean isLikedByUser(Long userId, Long companyId) {
+        return companyLikeJpaRepository.existsByUserIdAndCompanyId(userId, companyId);
+    }
+
+    @Override
+    @Transactional
+    public void addLike(Long userId, Long companyId) {
+        if (!isLikedByUser(userId, companyId)) {
+            CompanyLikeJpaEntity entity = CompanyLikeJpaEntity.builder()
+                    .userId(userId)
+                    .companyId(companyId)
+                    .build();
+            companyLikeJpaRepository.save(entity);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void removeLike(Long userId, Long companyId) {
+        companyLikeJpaRepository.deleteByUserIdAndCompanyId(userId, companyId);
+    }
+
+    @Override
+    public int countLikesByCompany(Long companyId) {
+        return companyLikeJpaRepository.countByCompanyId(companyId);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CompanyProfileRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.CandidateProfile;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.employer.model.CompanyProfile;
+import com.worklify.domain.employer.model.VerificationStatus;
+import com.worklify.domain.employer.repository.CompanyProfileRepository;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.mapper.CompanyProfileEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CompanyProfileJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+/**
+ * [ĐÃ SỬA] Loại bỏ phương thức findAll(Pageable) dùng Spring Page trực tiếp.
+ * Toàn bộ phân trang đi qua DomainPageable/DomainPage để giữ sạch ranh giới kiến trúc.
+ * Domain Repository interface không được phép khai báo kiểu Spring Data.
+ */
+@Component
+@RequiredArgsConstructor
+public class CompanyProfileRepositoryAdapter implements CompanyProfileRepository {
+    private final CompanyProfileJpaRepository jpaRepository;
+    private final CompanyProfileEntityMapper mapper;
+
+    @Override
+    public CompanyProfile save(CompanyProfile companyProfile) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(companyProfile)));
+    }
+
+    @Override
+    public Optional<CompanyProfile> findByUserId(Long userId) {
+        // Đổi từ jpaRepository.findByUserId(...) thành:
+        return jpaRepository.findFirstByUserId(userId)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<CompanyProfile> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<CompanyProfile> findByVerificationStatus(VerificationStatus status) {
+        return jpaRepository.findByVerificationStatus(status)
+                .stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DomainPage<CompanyProfile> findAll(DomainPageable pageable) {
+        return PaginationMapper.toDomainPage(
+                jpaRepository.findAll(PaginationMapper.toSpringPageable(pageable)),
+                mapper::toDomain
+        );
+    }
+
+    @Override
+    public Page<CompanyProfile> findAll(Pageable pageable) {
+        return null;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CvDocumentRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.CvDocument;
+import com.worklify.domain.candidate.repository.CvDocumentRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CvDocumentJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class CvDocumentRepositoryAdapter implements CvDocumentRepository {
+    private final CvDocumentJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public CvDocument save(CvDocument cvDocument) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(cvDocument)));
+    }
+
+    @Override
+    public Optional<CvDocument> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<CvDocument> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\DemoProductAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.demo.model.DemoProduct;
+import com.worklify.domain.demo.repository.DemoProductRepository;
+import com.worklify.infrastructure.persistence.entity.DemoProductEntity;
+import com.worklify.infrastructure.persistence.repository.DemoProductJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class DemoProductAdapter implements DemoProductRepository {
+
+    private final DemoProductJpaRepository jpaRepository;
+
+    @Override
+    public DemoProduct save(DemoProduct product) {
+        DemoProductEntity entity = new DemoProductEntity();
+        entity.setId(product.getId()); // Nếu null thì DB tự tăng
+        entity.setName(product.getName());
+        entity.setPrice(product.getPrice());
+
+        DemoProductEntity savedEntity = jpaRepository.save(entity);
+        return mapToModel(savedEntity);
+    }
+
+    @Override
+    public List<DemoProduct> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(this::mapToModel)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<DemoProduct> findById(Long id) {
+        return jpaRepository.findById(id).map(this::mapToModel);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    // Helper: Map Entity -> Model
+    private DemoProduct mapToModel(DemoProductEntity entity) {
+        DemoProduct model = new DemoProduct();
+        model.setId(entity.getId());
+        model.setName(entity.getName());
+        model.setPrice(entity.getPrice());
+        return model;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\JobPostingRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.job.model.JobPosting;
+import com.worklify.domain.job.model.JobStatus;
+import com.worklify.domain.job.repository.JobPostingRepository;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.JobPostingJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.JobPostingEntityMapper;
+import com.worklify.infrastructure.persistence.repository.JobPostingJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class JobPostingRepositoryAdapter implements JobPostingRepository {
+    private final JobPostingJpaRepository jpaRepository;
+    private final JobPostingEntityMapper mapper;
+
+    @Override
+    public JobPosting save(JobPosting jobPosting) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(jobPosting)));
+    }
+
+    @Override
+    public Optional<JobPosting> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<JobPosting> findByCompanyId(Long companyId, DomainPageable pageable) {
+        Page<JobPostingJpaEntity> page = jpaRepository.findByCompanyId(companyId, PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<JobPosting> searchJobs(String keyword, String location, JobStatus status, DomainPageable pageable) {
+        Page<JobPostingJpaEntity> page = jpaRepository.searchJobs(keyword, location, status, PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+
+    @Override
+    public long countByStatus(JobStatus status) {
+        return jpaRepository.countByStatus(status);
+    }
+
+    @Override
+    public List<JobPosting> findByStatus(JobStatus status) {
+        return jpaRepository.findByStatus(status).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public DomainPage<JobPosting> findByCompanyIdAndStatus(Long companyId, JobStatus status, DomainPageable pageable) {
+        Page<JobPostingJpaEntity> page = jpaRepository.findByCompanyIdAndStatus(
+                companyId,
+                status,
+                PaginationMapper.toSpringPageable(pageable)
+        );
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SavedJobRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.domain.job.model.SavedJob;
+import com.worklify.domain.job.repository.SavedJobRepository;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.SavedJobJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.SavedJobEntityMapper;
+import com.worklify.infrastructure.persistence.repository.SavedJobJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class SavedJobRepositoryAdapter implements SavedJobRepository {
+    private final SavedJobJpaRepository jpaRepository;
+    private final SavedJobEntityMapper mapper;
+
+    @Override
+    public SavedJob save(SavedJob savedJob) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(savedJob)));
+    }
+
+    @Override
+    public Optional<SavedJob> findByCandidateIdAndJobId(Long candidateId, Long jobId) {
+        return jpaRepository.findByCandidateIdAndJobId(candidateId, jobId).map(mapper::toDomain);
+    }
+
+    @Override
+    public DomainPage<SavedJob> findByCandidateId(Long candidateId, DomainPageable pageable) {
+        Page<SavedJobJpaEntity> page = jpaRepository.findByCandidateId(candidateId, PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+
+    @Override
+    public void delete(SavedJob savedJob) {
+        jpaRepository.delete(mapper.toEntity(savedJob));
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SkillRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.Skill;
+import com.worklify.domain.candidate.repository.SkillRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.SkillJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class SkillRepositoryAdapter implements SkillRepository {
+
+    private final SkillJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public Skill save(Skill skill) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(skill)));
+    }
+
+    @Override
+    public Optional<Skill> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Skill> findByName(String name) {
+        return jpaRepository.findByName(name).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Skill> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
+    public Optional<Skill> findByNameIgnoreCase(String name) {
+        return jpaRepository.findByNameIgnoreCase(name)
+                .map(mapper::toDomain);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SystemLogRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.admin.model.SystemLog;
+import com.worklify.domain.admin.repository.SystemLogRepository;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.SystemLogJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.SystemLogEntityMapper;
+import com.worklify.infrastructure.persistence.repository.SystemLogJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class SystemLogRepositoryAdapter implements SystemLogRepository {
+    private final SystemLogJpaRepository jpaRepository;
+    private final SystemLogEntityMapper mapper;
+
+    @Override
+    public SystemLog save(SystemLog systemLog) {
+        return mapper.toDomain(jpaRepository.save(mapper.toEntity(systemLog)));
+    }
+
+    @Override
+    public DomainPage<SystemLog> findAll(DomainPageable pageable) {
+        Page<SystemLogJpaEntity> page = jpaRepository.findAll(PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\UserRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.auth.model.User;
+import com.worklify.domain.auth.repository.UserRepository;
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import com.worklify.infrastructure.persistence.adapter.util.PaginationMapper;
+import com.worklify.infrastructure.persistence.entity.UserJpaEntity;
+import com.worklify.infrastructure.persistence.mapper.UserEntityMapper;
+import com.worklify.infrastructure.persistence.repository.UserJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import java.util.Optional;
+
+@Component
+@RequiredArgsConstructor
+public class UserRepositoryAdapter implements UserRepository {
+
+    private final UserJpaRepository jpaRepository;
+    private final UserEntityMapper mapper;
+
+    @Override
+    public User save(User user) {
+        UserJpaEntity entity = mapper.toEntity(user);
+        return mapper.toDomain(jpaRepository.save(entity));
+    }
+
+    @Override
+    public Optional<User> findById(Long id) {
+        return jpaRepository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return jpaRepository.findByEmail(email).map(mapper::toDomain);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return jpaRepository.existsByEmail(email);
+    }
+
+    @Override
+    public long count() {
+        return jpaRepository.count();
+    }
+
+    @Override
+    public DomainPage<User> findAll(DomainPageable pageable) {
+        org.springframework.data.domain.Page<UserJpaEntity> page =
+                jpaRepository.findAll(PaginationMapper.toSpringPageable(pageable));
+        return PaginationMapper.toDomainPage(page, mapper::toDomain);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\util\PaginationMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter.util;
+
+import com.worklify.domain.common.DomainPage;
+import com.worklify.domain.common.DomainPageable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class PaginationMapper {
+
+    public static Pageable toSpringPageable(DomainPageable domainPageable) {
+        if (domainPageable == null) {
+            return Pageable.unpaged();
+        }
+        return PageRequest.of(domainPageable.getPageNumber(), domainPageable.getPageSize());
+    }
+
+    public static <T, E> DomainPage<T> toDomainPage(Page<E> springPage, Function<E, T> mapperFunction) {
+        List<T> content = springPage.getContent().stream()
+                .map(mapperFunction)
+                .collect(Collectors.toList());
+
+        return new DomainPage<>(
+                content,
+                springPage.getTotalElements(),
+                springPage.getTotalPages(),
+                springPage.getNumber(),
+                springPage.getSize()
+        );
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ApplicationJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.application.model.ApplicationStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+/**
+ * [ĐÃ SỬA] Xóa field blindTestUrl vì cột này không tồn tại trong init.sql (bảng applications).
+ * Nếu sau này cần tính năng blind test, cần bổ sung migration DB trước.
+ * UniqueConstraint giữ nguyên để chống nộp đơn trùng.
+ */
+@Entity
+@Table(name = "applications",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"job_id", "candidate_id"}))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ApplicationJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "job_id", nullable = false)
+    private Long jobId;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "cv_id")
+    private Long cvId;
+
+    @Column(name = "cover_letter", columnDefinition = "TEXT")
+    private String coverLetter;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private ApplicationStatus status;
+
+    @Column(name = "applied_at", nullable = false, updatable = false)
+    private LocalDateTime appliedAt;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateProfileJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "candidate_profiles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CandidateProfileJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", unique = true, nullable = false)
+    private Long userId;
+
+    @Column(name = "full_name", nullable = false, length = 255)
+    private String fullName;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Column(length = 20)
+    private String gender;
+
+    private LocalDate dob;
+
+    @Column(length = 500)
+    private String address;
+
+    @Column(name = "summary", columnDefinition = "TEXT")
+    private String summary;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateSkillId.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import java.io.Serializable;
+import lombok.*;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CandidateSkillId implements Serializable {
+    private Long candidateId;
+    private Long skillId;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateSkillJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "candidate_skills")
+@IdClass(CandidateSkillId.class)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CandidateSkillJpaEntity {
+
+    @Id
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Id
+    @Column(name = "skill_id", nullable = false)
+    private Long skillId;
+
+    @Column(name = "level", length = 50)
+    private String level;
+
+    @Column(name = "years_of_ex")
+    private Integer yearsOfEx;
+
+    @Column(name = "note", length = 255)
+    private String note;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CompanyLikeJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "company_likes",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "company_id"}))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompanyLikeJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CompanyProfileJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.employer.model.VerificationStatus;
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "company_profiles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CompanyProfileJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id", unique = true, nullable = false)
+    private Long userId;
+
+    @Column(name = "company_name", nullable = false, length = 255)
+    private String companyName;
+
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
+    @Column(length = 255)
+    private String website;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_status", nullable = false, length = 50)
+    private VerificationStatus verificationStatus;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CvDocumentJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "cv_documents")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EntityListeners(AuditingEntityListener.class)
+public class CvDocumentJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "file_path", length = 500)
+    private String filePath;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "cv_data", columnDefinition = "JSON")
+    private String rawText;
+
+    @Column(name = "is_generated", nullable = false)
+    private Boolean isGenerated;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "thumbnail_path", length = 500)
+    private String thumbnailPath;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\DemoProductEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.Data;
+
+@Entity
+@Table(name = "demo_products")
+@Data
+public class DemoProductEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "price")
+    private Double price;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\JobPostingJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.job.model.JobStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+/**
+ * [ĐÃ SỬA] Bổ sung field workType bị thiếu, khớp với cột work_type trong bảng job_postings (init.sql)
+ * và field workType trong domain model JobPosting.
+ */
+@Entity
+@Table(name = "job_postings")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class JobPostingJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "company_id", nullable = false)
+    private Long companyId;
+
+    @Column(nullable = false, length = 255)
+    private String title;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String description;
+
+    @Column(columnDefinition = "TEXT")
+    private String requirements;
+
+    @Column(name = "salary_range", length = 100)
+    private String salaryRange;
+
+    @Column(nullable = false, length = 255)
+    private String location;
+
+    @Column(name = "work_type", length = 50)
+    private String workType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private JobStatus status;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SavedJobJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "saved_jobs",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"candidate_id", "job_id"}))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class SavedJobJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Column(name = "job_id", nullable = false)
+    private Long jobId;
+
+    @Column(name = "saved_at", nullable = false, updatable = false)
+    private LocalDateTime savedAt;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SkillJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+@Entity
+@Table(name = "skills")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class SkillJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false, length = 100)
+    private String name;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SystemLogJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+/**
+ * [ĐÃ SỬA] length của cột action tăng từ 100 lên 255 để khớp với định nghĩa trong init.sql.
+ */
+@Entity
+@Table(name = "system_logs")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class SystemLogJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "user_id")
+    private Long userId;
+
+    @Column(nullable = false, length = 255)
+    private String action;
+
+    @Column(columnDefinition = "TEXT")
+    private String details;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\UserJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.auth.model.Role;
+import com.worklify.domain.auth.model.UserStatus;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(unique = true, nullable = false, length = 191)
+    private String email;
+
+    @Column(length = 20)
+    private String phone;
+
+    @Column(name = "password_hash", nullable = false)
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private Role role;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private UserStatus status;
+
+    @Column(name = "is_mfa_enabled", nullable = false)
+    private boolean mfaEnabled;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\ApplicationEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.application.model.Application;
+import com.worklify.infrastructure.persistence.entity.ApplicationJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+/**
+ * [ĐÃ SỬA] Loại bỏ @Component thừa — @Mapper(componentModel = "spring") đã đủ để Spring quản lý Bean.
+ * Đặt @Component trùng trên @Mapper interface gây ra ambiguous bean definition.
+ */
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface ApplicationEntityMapper {
+    ApplicationJpaEntity toEntity(Application application);
+    Application toDomain(ApplicationJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\CandidateEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.candidate.model.CandidateProfile;
+import com.worklify.domain.candidate.model.CandidateSkill;
+import com.worklify.domain.candidate.model.CvDocument;
+import com.worklify.domain.candidate.model.Skill;
+import com.worklify.infrastructure.persistence.entity.CandidateProfileJpaEntity;
+import com.worklify.infrastructure.persistence.entity.CandidateSkillJpaEntity;
+import com.worklify.infrastructure.persistence.entity.CvDocumentJpaEntity;
+import com.worklify.infrastructure.persistence.entity.SkillJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface CandidateEntityMapper {
+
+    CandidateProfileJpaEntity toEntity(CandidateProfile profile);
+    CandidateProfile toDomain(CandidateProfileJpaEntity entity);
+
+    CvDocumentJpaEntity toEntity(CvDocument document);
+    CvDocument toDomain(CvDocumentJpaEntity entity);
+
+    SkillJpaEntity toEntity(Skill skill);
+    Skill toDomain(SkillJpaEntity entity);
+
+    CandidateSkillJpaEntity toEntity(CandidateSkill candidateSkill);
+    CandidateSkill toDomain(CandidateSkillJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\CompanyProfileEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.employer.model.CompanyProfile;
+import com.worklify.infrastructure.persistence.entity.CompanyProfileJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface CompanyProfileEntityMapper {
+    CompanyProfileJpaEntity toEntity(CompanyProfile profile);
+    CompanyProfile toDomain(CompanyProfileJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\JobPostingEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.job.model.JobPosting;
+import com.worklify.infrastructure.persistence.entity.JobPostingJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface JobPostingEntityMapper {
+    JobPostingJpaEntity toEntity(JobPosting jobPosting);
+    JobPosting toDomain(JobPostingJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\SavedJobEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.job.model.SavedJob;
+import com.worklify.infrastructure.persistence.entity.SavedJobJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface SavedJobEntityMapper {
+    SavedJobJpaEntity toEntity(SavedJob savedJob);
+    SavedJob toDomain(SavedJobJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\SystemLogEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.admin.model.SystemLog;
+import com.worklify.infrastructure.persistence.entity.SystemLogJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface SystemLogEntityMapper {
+    SystemLogJpaEntity toEntity(SystemLog log);
+    SystemLog toDomain(SystemLogJpaEntity entity);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\UserEntityMapper.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.mapper;
+
+import com.worklify.domain.auth.model.User;
+import com.worklify.domain.common.valueobject.EmailAddress;
+import com.worklify.domain.common.valueobject.PhoneNumber;
+import com.worklify.infrastructure.persistence.entity.UserJpaEntity;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
+
+/**
+ * [ĐÃ SỬA] Loại bỏ @Component thừa. @Mapper(componentModel = "spring") là đủ.
+ */
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface UserEntityMapper {
+
+    @Mapping(source = "passwordHash", target = "password")
+        // MapStruct tự hiểu boolean mfaEnabled (Domain) <-> boolean mfaEnabled (Entity)
+    UserJpaEntity toEntity(User user);
+
+    @Mapping(source = "password", target = "passwordHash")
+    User toDomain(UserJpaEntity entity);
+
+    default String mapEmail(EmailAddress emailAddress) {
+        return emailAddress != null ? emailAddress.value() : null;
+    }
+
+    default EmailAddress mapEmailString(String email) {
+        return email != null ? new EmailAddress(email) : null;
+    }
+
+    default String mapPhone(PhoneNumber phoneNumber) {
+        return phoneNumber != null ? phoneNumber.value() : null;
+    }
+
+    default PhoneNumber mapPhoneString(String phone) {
+        return phone != null && !phone.isBlank() ? new PhoneNumber(phone) : null;
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ApplicationJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.domain.application.model.ApplicationStatus;
+import com.worklify.infrastructure.persistence.entity.ApplicationJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEntity, Long> {
+    boolean existsByJobIdAndCandidateId(Long jobId, Long candidateId);
+    Page<ApplicationJpaEntity> findByJobId(Long jobId, Pageable pageable);
+    Page<ApplicationJpaEntity> findByCandidateId(Long candidateId, Pageable pageable);
+    long countByStatus(ApplicationStatus status);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CandidateProfileJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CandidateProfileJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface CandidateProfileJpaRepository extends JpaRepository<CandidateProfileJpaEntity, Long> {
+    Optional<CandidateProfileJpaEntity> findByUserId(Long userId);
+
+    @Query("SELECT DISTINCT c FROM CandidateProfileJpaEntity c " +
+            "LEFT JOIN CandidateSkillJpaEntity cs ON c.id = cs.candidateId " +
+            "LEFT JOIN SkillJpaEntity s ON cs.skillId = s.id " +
+            "WHERE :keyword IS NULL OR :keyword = '' " +
+            "OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(c.summary) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    Page<CandidateProfileJpaEntity> searchCandidates(
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
+    Optional<CandidateProfileJpaEntity> findFirstByUserId(Long userId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CandidateSkillJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CandidateSkillJpaEntity;
+import com.worklify.infrastructure.persistence.entity.CandidateSkillId;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface CandidateSkillJpaRepository extends JpaRepository<CandidateSkillJpaEntity, CandidateSkillId> {
+    List<CandidateSkillJpaEntity> findByCandidateId(Long candidateId);
+    Optional<CandidateSkillJpaEntity> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
+    void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
+    void deleteByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CompanyLikeJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CompanyLikeJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface CompanyLikeJpaRepository extends JpaRepository<CompanyLikeJpaEntity, Long> {
+    boolean existsByUserIdAndCompanyId(Long userId, Long companyId);
+    void deleteByUserIdAndCompanyId(Long userId, Long companyId);
+    int countByCompanyId(Long companyId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CompanyProfileJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.domain.employer.model.VerificationStatus;
+import com.worklify.infrastructure.persistence.entity.CompanyProfileJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface CompanyProfileJpaRepository extends JpaRepository<CompanyProfileJpaEntity, Long> {
+    Optional<CompanyProfileJpaEntity> findByUserId(Long userId);
+    List<CompanyProfileJpaEntity> findByVerificationStatus(VerificationStatus status);
+    Optional<CompanyProfileJpaEntity> findFirstByUserId(Long userId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CvDocumentJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CvDocumentJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CvDocumentJpaRepository extends JpaRepository<CvDocumentJpaEntity, Long> {
+    List<CvDocumentJpaEntity> findByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\DemoProductJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.DemoProductEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface DemoProductJpaRepository extends JpaRepository<DemoProductEntity, Long> {
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\JobPostingJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.domain.job.model.JobStatus;
+import com.worklify.infrastructure.persistence.entity.JobPostingJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface JobPostingJpaRepository extends JpaRepository<JobPostingJpaEntity, Long> {
+
+    Page<JobPostingJpaEntity> findByCompanyId(Long companyId, Pageable pageable);
+
+    List<JobPostingJpaEntity> findByStatus(JobStatus status);
+
+    Page<JobPostingJpaEntity> findByCompanyIdAndStatus(Long companyId, JobStatus status, Pageable pageable);
+
+    @Query("SELECT j FROM JobPostingJpaEntity j WHERE " +
+            "(:keyword IS NULL OR LOWER(j.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(j.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "(:location IS NULL OR LOWER(j.location) LIKE LOWER(CONCAT('%', :location, '%'))) AND " +
+            "j.status = :status")
+    Page<JobPostingJpaEntity> searchJobs(@Param("keyword") String keyword,
+                                         @Param("location") String location,
+                                         @Param("status") JobStatus status,
+                                         Pageable pageable);
+
+    long countByStatus(JobStatus status);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SavedJobJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.SavedJobJpaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface SavedJobJpaRepository extends JpaRepository<SavedJobJpaEntity, Long> {
+    Optional<SavedJobJpaEntity> findByCandidateIdAndJobId(Long candidateId, Long jobId);
+    Page<SavedJobJpaEntity> findByCandidateId(Long candidateId, Pageable pageable);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SkillJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.SkillJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface SkillJpaRepository extends JpaRepository<SkillJpaEntity, Long> {
+    Optional<SkillJpaEntity> findByName(String name);
+    Optional<SkillJpaEntity> findByNameIgnoreCase(String name);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SystemLogJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.SystemLogJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+
+@Repository
+public interface SystemLogJpaRepository extends JpaRepository<SystemLogJpaEntity, Long> {
+    List<SystemLogJpaEntity> findByUserId(Long userId);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\UserJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.UserJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
+    Optional<UserJpaEntity> findByEmail(String email);
+    boolean existsByEmail(String email);
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\CustomUserDetailsService.java
+================================================================================
+
+package com.worklify.infrastructure.security;
+
+import com.worklify.domain.auth.model.User;
+import com.worklify.domain.auth.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+
+@Service
+@RequiredArgsConstructor
+public class CustomUserDetailsService implements UserDetailsService {
+
+    private final UserRepository userRepository;
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng với email: " + email));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail().value(),
+                user.getPasswordHash(),
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+        );
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\JwtAuthenticationFilter.java
+================================================================================
+
+package com.worklify.infrastructure.security;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import java.io.IOException;
+
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    @Override
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
+
+        final String authHeader = request.getHeader("Authorization");
+        final String jwt;
+        final String userEmail;
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        jwt = authHeader.substring(7);
+        userEmail = jwtService.extractUsername(jwt);
+
+        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+
+            if (jwtService.isTokenValid(jwt, userDetails.getUsername())) {
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        }
+
+        filterChain.doFilter(request, response);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\JwtService.java
+================================================================================
+
+package com.worklify.infrastructure.security;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import javax.crypto.SecretKey;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import com.worklify.application.common.port.TokenProviderPort;
+
+@Service
+public class JwtService implements TokenProviderPort {
+
+    @Value("${spring.security.jwt.secret}")
+    private String secretKey;
+
+    @Value("${spring.security.jwt.expiration:86400000}")
+    private long jwtExpiration;
+
+    public long getExpirationTimeMs() {
+        return jwtExpiration;
+    }
+
+    @Override
+    public String generateToken(String email, String role, Long userId) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        extraClaims.put("role", role);
+        extraClaims.put("userId", userId);
+        return buildToken(extraClaims, email, jwtExpiration);
+    }
+
+    private String buildToken(Map<String, Object> extraClaims, String subject, long expiration) {
+        return Jwts.builder()
+                .claims(extraClaims)
+                .subject(subject)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignInKey())
+                .compact();
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    private SecretKey getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    public boolean isTokenValid(String token, String userDetailsEmail) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetailsEmail)) && !isTokenExpired(token);
+    }
+
+    private boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+}
+
+================================================================================
+FILE: d:\2025_2026_II\DuAn\da_Worklify\backend-core\infrastructure\src\main\java\com\worklify\infrastructure\storage\LocalFileStorageService.java
+================================================================================
+
+package com.worklify.infrastructure.storage;
+
+import com.worklify.application.common.port.FileStoragePort;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Objects;
+
+@Slf4j
+@Service
+public class LocalFileStorageService implements FileStoragePort {
+
+    @Value("${application.storage.local.upload-dir:./uploads}")
+    private String uploadDir;
+
+    private Path rootLocation;
+
+    @PostConstruct
+    public void init() {
+        this.rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(this.rootLocation);
+            log.info("Đã khởi tạo thư mục lưu trữ gốc tại: {}", this.rootLocation);
+        } catch (IOException e) {
+            throw new RuntimeException("Không thể khởi tạo thư mục lưu trữ. Lỗi: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public String storeFile(MultipartFile file, String subDirectory, String prefix) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Không thể lưu file rỗng.");
+        }
+
+        String originalFilename = StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
+        if (originalFilename.contains("..")) {
+            throw new IllegalArgumentException("Tên file chứa ký tự đường dẫn không hợp lệ: " + originalFilename);
+        }
+
+        String safeOriginalName = originalFilename.replaceAll("\\s+", "_");
+        String finalFileName = prefix + "_" + safeOriginalName;
+
+        try {
+            Path targetLocation = this.rootLocation.resolve(subDirectory);
+            Files.createDirectories(targetLocation);
+
+            Path targetFile = targetLocation.resolve(finalFileName);
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("Lưu file thành công: {}", targetFile);
+
+            return subDirectory + "/" + finalFileName;
+
+        } catch (IOException ex) {
+            throw new RuntimeException("Không thể lưu trữ file " + originalFilename + ". Lỗi: " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public String storeFile(MultipartFile file, String category, String subFolder, String customFileName) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("Không thể lưu file rỗng.");
+        }
+
+        try {
+            // Tạo thư mục phân cấp (VD: uploads/cv_thumbnails/11)
+            Path targetLocation = this.rootLocation.resolve(category).resolve(subFolder);
+            Files.createDirectories(targetLocation);
+
+            // Ghép tên file (VD: 38.jpg)
+            Path targetFile = targetLocation.resolve(customFileName);
+
+            // StandardCopyOption.REPLACE_EXISTING giúp ghi đè nếu user bấm xem trước nhiều lần
+            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+
+            log.info("Lưu file thành công theo cấu trúc phân cấp: {}", targetFile);
+
+            return category + "/" + subFolder + "/" + customFileName;
+        } catch (IOException ex) {
+            throw new RuntimeException("Không thể lưu trữ file. Lỗi: " + ex.getMessage(), ex);
+        }
+    }
+
+    @Override
+    public byte[] readFile(String filePath) {
+        try {
+            Path file = this.rootLocation.resolve(filePath).normalize();
+            Resource resource = new UrlResource(file.toUri());
+
+            if (resource.exists() && resource.isReadable()) {
+                return Files.readAllBytes(file);
+            } else {
+                throw new RuntimeException("Không thể đọc file hoặc file không tồn tại: " + filePath);
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException("Lỗi khi đọc file: " + filePath, ex);
+        }
+    }
+
+    @Override
+    public void deleteFile(String filePath) {
+        try {
+            Path file = this.rootLocation.resolve(filePath).normalize();
+            Files.deleteIfExists(file);
+            log.info("Đã xóa file: {}", filePath);
+        } catch (IOException ex) {
+            log.error("Không thể xóa file: {}", filePath, ex);
+            throw new RuntimeException("Lỗi khi xóa file: " + filePath, ex);
+        }
+    }
+
+    @Override
+    public void deleteUserFolder(String category, String subFolder) {
+        try {
+            // Xác định thư mục cần xóa (VD: uploads/cv_thumbnails/11)
+            Path folderPath = this.rootLocation.resolve(category).resolve(subFolder).normalize();
+
+            // Nếu thư mục tồn tại thì xóa sạch file bên trong và xóa luôn thư mục đó
+            if (Files.exists(folderPath)) {
+                FileSystemUtils.deleteRecursively(folderPath);
+                log.info("Đã dọn dẹp toàn bộ thư mục: {}", folderPath);
+            }
+        } catch (IOException ex) {
+            log.error("Không thể dọn dẹp thư mục: {}", subFolder, ex);
+            throw new RuntimeException("Lỗi khi xóa thư mục: " + subFolder, ex);
+        }
+    }
+
+    private String getFileExtension(String fileName) {
+        if (fileName == null || fileName.lastIndexOf(".") == -1) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
+    }
+}
