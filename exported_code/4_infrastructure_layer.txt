@@ -2723,7 +2723,7 @@ public interface CandidateProfileJpaRepository extends JpaRepository<CandidatePr
 
     @Query("SELECT DISTINCT c FROM CandidateProfileJpaEntity c " +
             "LEFT JOIN CandidateSkillJpaEntity cs ON c.id = cs.candidateId " +
-            "LEFT JOIN SkillJpaEntity s ON cs.skillId = s.id " +
+            "LEFT JOIN ReferenceValueJpaEntity s ON cs.skillId = s.id AND s.type = 'SKILL' " +
             "WHERE :keyword IS NULL OR :keyword = '' " +
             "OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(c.summary) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
@@ -2732,6 +2732,7 @@ public interface CandidateProfileJpaRepository extends JpaRepository<CandidatePr
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
     Optional<CandidateProfileJpaEntity> findFirstByUserId(Long userId);
 }
 

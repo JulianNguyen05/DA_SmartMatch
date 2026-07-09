@@ -581,42 +581,17 @@ FILE: ./backend-core\.idea\workspace.xml
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9db949e9-491d-40ca-9a39-5567cb4640d1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/admin/dto/SuggestionModerationRequest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/referencedata/ReferenceValueType.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/referencedata/dto/ReferenceValueResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/referencedata/model/ReferenceValue.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/referencedata/model/ReferenceValueSuggestion.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/referencedata/model/SuggestionStatus.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/referencedata/repository/ReferenceValueRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/referencedata/repository/ReferenceValueSuggestionRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ReferenceValueRepositoryAdapter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ReferenceValueSuggestionRepositoryAdapter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ReferenceValueJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ReferenceValueSuggestionJpaEntity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/ReferenceDataEntityMapper.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ReferenceValueJpaRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ReferenceValueSuggestionJpaRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/admin/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/admin/service/AdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/admin/service/impl/AdminServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/admin/service/impl/AdminServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/dto/LanguageRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/dto/LanguageRequest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/dto/LanguageResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/dto/LanguageResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/service/CandidateService.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/service/CandidateService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/service/impl/CandidateServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/application/src/main/java/com/worklify/application/candidate/service/impl/CandidateServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/candidate/model/Language.java" beforeDir="false" afterPath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/candidate/model/Language.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/candidate/model/Skill.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/domain/src/main/java/com/worklify/domain/candidate/repository/SkillRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/SkillRepositoryAdapter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/LanguageJpaEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/LanguageJpaEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/SkillJpaEntity.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/CandidateEntityMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/CandidateEntityMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/SkillJpaRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../cv_builder_all_code.md" beforeDir="false" afterPath="$PROJECT_DIR$/../cv_builder_all_code.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exported_code/1_api_layer.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exported_code/2_application_layer.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exported_code/3_domain_layer.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exported_code/4_infrastructure_layer.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/exported_code/5_configs.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gom_code.py" beforeDir="false" afterPath="$PROJECT_DIR$/gom_code.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CandidateProfileJpaRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../exported_code/1_api_layer.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../exported_code/1_api_layer.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../exported_code/2_application_layer.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../exported_code/2_application_layer.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../exported_code/3_domain_layer.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../exported_code/3_domain_layer.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../exported_code/4_infrastructure_layer.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../exported_code/4_infrastructure_layer.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../exported_code/5_configs.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../exported_code/5_configs.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worklify_db.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../worklify_db.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

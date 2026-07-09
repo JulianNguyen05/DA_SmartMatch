@@ -974,6 +974,7 @@ public class CandidateProfileResponse {
     private String githubUrl;      // MỚI
     private String summary;
     private List<String> skills;
+    private List<String> skippedSkillSuggestions;
 }
 
 ================================================================================
@@ -1479,6 +1480,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1511,7 +1513,6 @@ public class CandidateServiceImpl implements CandidateService {
         CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
                 .orElseGet(() -> CandidateProfile.create(userId, request.getFullName()));
 
-        // [SỬA] Khớp chữ ký mới của updateProfileDetails và thêm updateSocialLinks
         profile.updateProfileDetails(
                 request.getFullName(),
                 request.getHeadline(),
@@ -1526,10 +1527,12 @@ public class CandidateServiceImpl implements CandidateService {
 
         CandidateProfile saved = candidateProfileRepository.save(profile);
 
-        // Đồng bộ kỹ năng từ chuỗi phân cách dấu phẩy (nếu có)
-        syncSkillsFromCsv(saved.getId(), request.getSkills());
+        // Đồng bộ kỹ năng từ chuỗi phân cách dấu phẩy (nếu có) — gom lại skill nào bị bỏ qua để báo cho candidate
+        List<String> skippedSkills = syncSkillsFromCsv(saved.getId(), request.getSkills());
 
-        return mapToProfileResponse(saved);
+        CandidateProfileResponse response = mapToProfileResponse(saved);
+        response.setSkippedSkillSuggestions(skippedSkills);
+        return response;
     }
 
     @Override
@@ -1796,8 +1799,9 @@ public class CandidateServiceImpl implements CandidateService {
     // PRIVATE HELPERS
     // ====================================================
 
-    private void syncSkillsFromCsv(Long candidateId, String csvSkills) {
-        if (csvSkills == null || csvSkills.trim().isEmpty()) return;
+    private List<String> syncSkillsFromCsv(Long candidateId, String csvSkills) {
+        List<String> skipped = new ArrayList<>();
+        if (csvSkills == null || csvSkills.trim().isEmpty()) return skipped;
 
         candidateSkillRepository.deleteByCandidateId(candidateId);
 
@@ -1815,11 +1819,13 @@ public class CandidateServiceImpl implements CandidateService {
                 );
                 log.info("Skill '{}' chưa tồn tại, đã tạo suggestion PENDING, bỏ qua gán cho candidateId={}",
                         trimmed, candidateId);
+                skipped.add(trimmed);
                 continue;
             }
 
             candidateSkillRepository.save(new CandidateSkill(candidateId, skill.get().getId()));
         }
+        return skipped;
     }
 
     // [SỬA] Cập nhật thêm các field mới vào response
