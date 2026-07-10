@@ -10,4 +10,5 @@ import java.util.List;
 public interface LanguageJpaRepository extends JpaRepository<LanguageJpaEntity, Long> {
     List<LanguageJpaEntity> findByCandidateId(Long candidateId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsByLanguageId(Long languageId);
 }

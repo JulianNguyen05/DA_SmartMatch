@@ -4,6 +4,9 @@ import com.worklify.api.common.response.ApiResponse;
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
 import com.worklify.domain.common.SearchPageable;
 import io.swagger.v3.oas.annotations.Operation;
@@ -506,5 +509,29 @@ public class CandidateController {
                 candidateService.toggleBlockVisibility(userId, blockType, request.isVisible()),
                 "Cập nhật hiển thị block thành công"
         );
+    }
+
+    @GetMapping("/reference-values/search")
+    @Operation(summary = "Tìm kiếm giá trị danh mục dùng chung (SKILL/LANGUAGE/...) cho dropdown")
+    public ApiResponse<List<ReferenceValueResponse>> searchReferenceValues(
+            @RequestParam("type") String type,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
+        return ApiResponse.success(candidateService.searchReferenceValues(type, keyword));
+    }
+
+    @PostMapping("/{userId}/reference-values/suggestions")
+    @Operation(summary = "Gửi đề xuất thêm mới / sửa / xóa 1 giá trị danh mục cho admin duyệt")
+    public ApiResponse<SuggestionResponse> suggestReferenceValue(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody SuggestionRequest request) {
+        return ApiResponse.success(candidateService.suggestReferenceValue(userId, request), "Đã gửi đề xuất, chờ admin duyệt");
+    }
+
+    @PutMapping("/{userId}/skills/reorder")
+    @Operation(summary = "Kéo-thả sắp xếp lại thứ tự hiển thị các skill")
+    public ApiResponse<List<CandidateSkillResponse>> reorderSkills(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody SkillReorderRequest request) {
+        return ApiResponse.success(candidateService.reorderSkills(userId, request), "Cập nhật thứ tự kỹ năng thành công");
     }
 }

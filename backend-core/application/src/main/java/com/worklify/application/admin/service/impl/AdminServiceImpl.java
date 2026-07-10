@@ -3,8 +3,11 @@ package com.worklify.application.admin.service.impl;
 import com.worklify.application.admin.dto.AdminJobResponse;
 import com.worklify.application.common.exception.ResourceNotFoundException;
 import com.worklify.application.employer.dto.CompanyProfileResponse;
+import com.worklify.application.referencedata.ReferenceValueType;
 import com.worklify.domain.auth.model.User;
 import com.worklify.domain.candidate.repository.CandidateProfileRepository;
+import com.worklify.domain.candidate.repository.CandidateSkillRepository;
+import com.worklify.domain.candidate.repository.LanguageRepository;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.employer.repository.CompanyLikeRepository;
 import com.worklify.domain.employer.repository.CompanyProfileRepository;
@@ -49,7 +52,8 @@ public class AdminServiceImpl implements AdminService {
     private final CompanyProfileRepository companyProfileRepository;
     private final CompanyLikeRepository companyLikeRepository;
     private final SystemLogRepository systemLogRepository;
-    // [ĐÃ SỬA] Thay SkillRepository bằng cặp ReferenceValue/ReferenceValueSuggestion
+    private final CandidateSkillRepository candidateSkillRepository;
+    private final LanguageRepository languageRepository;
     private final ReferenceValueRepository referenceValueRepository;
     private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
     private final CandidateProfileRepository candidateProfileRepository;
@@ -156,25 +160,58 @@ public class AdminServiceImpl implements AdminService {
         ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất."));
 
-        // Phòng trường hợp giữa lúc đề xuất PENDING và lúc duyệt, đã có admin khác
-        // hoặc suggestion khác approve trùng type+name trước đó -> tránh vi phạm
-        // UNIQUE(type, name) ở bảng reference_values.
-        Optional<ReferenceValue> existing = referenceValueRepository
-                .findByTypeAndNameIgnoreCase(suggestion.getType(), suggestion.getName());
-
-        ReferenceValue approvedValue = suggestion.approve(SYSTEM_ADMIN_ID);
-        if (existing.isEmpty()) {
-            referenceValueRepository.save(approvedValue);
+        switch (suggestion.getRequestType()) {
+            case CREATE -> applyCreate(suggestion);
+            case EDIT -> applyEdit(suggestion);
+            case DELETE -> applyDelete(suggestion);
         }
 
+        // approve() chỉ chuyển trạng thái (xem ghi chú trong ReferenceValueSuggestion.java);
+        // hệ quả lên ReferenceValue đã được áp dụng ở các hàm applyXxx phía trên.
+        suggestion.approve(SYSTEM_ADMIN_ID);
         ReferenceValueSuggestion saved = referenceValueSuggestionRepository.save(suggestion);
 
         systemLogRepository.save(SystemLog.record(
-                SYSTEM_ADMIN_ID, "APPROVE_SUGGESTION",
+                SYSTEM_ADMIN_ID, "APPROVE_SUGGESTION_" + suggestion.getRequestType(),
                 "Suggestion ID: " + suggestionId + " (" + suggestion.getType() + ": " + suggestion.getName() + ")"
         ));
 
         return mapToSuggestionResponse(saved);
+    }
+
+    private void applyCreate(ReferenceValueSuggestion suggestion) {
+        Optional<ReferenceValue> existing = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(suggestion.getType(), suggestion.getName());
+        if (existing.isEmpty()) {
+            referenceValueRepository.save(ReferenceValue.create(suggestion.getType(), suggestion.getName()));
+        }
+    }
+
+    private void applyEdit(ReferenceValueSuggestion suggestion) {
+        ReferenceValue target = referenceValueRepository.findById(suggestion.getTargetReferenceValueId())
+                .orElseThrow(() -> new ResourceNotFoundException("Giá trị cần sửa không còn tồn tại."));
+        referenceValueRepository.save(
+                ReferenceValue.restore(target.getId(), target.getType(), suggestion.getName())
+        );
+    }
+
+    private void applyDelete(ReferenceValueSuggestion suggestion) {
+        Long targetId = suggestion.getTargetReferenceValueId();
+        ReferenceValue target = referenceValueRepository.findById(targetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Giá trị cần xóa không còn tồn tại."));
+
+        boolean inUse = switch (target.getType()) {
+            case ReferenceValueType.SKILL -> candidateSkillRepository.existsBySkillId(targetId);
+            case ReferenceValueType.LANGUAGE -> languageRepository.existsByLanguageId(targetId);
+            default -> false;
+        };
+        if (inUse) {
+            throw new IllegalStateException(
+                    "'" + target.getName() + "' đang được ứng viên khác sử dụng, không thể xóa. " +
+                            "Hãy từ chối đề xuất này và yêu cầu candidate chọn giá trị khác."
+            );
+        }
+        referenceValueRepository.deleteById(targetId);
     }
 
     @Override
@@ -199,6 +236,8 @@ public class AdminServiceImpl implements AdminService {
                 .type(s.getType())
                 .name(s.getName())
                 .requestedByUserId(s.getRequestedByUserId())
+                .requestType(s.getRequestType())
+                .targetReferenceValueId(s.getTargetReferenceValueId())
                 .status(s.getStatus())
                 .reviewedByAdminId(s.getReviewedByAdminId())
                 .reviewNote(s.getReviewNote())

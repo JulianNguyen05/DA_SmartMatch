@@ -111,16 +111,19 @@ CREATE TABLE reference_values (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE reference_value_suggestions (
-    id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
-    type                   VARCHAR(50) NOT NULL,
-    name                   VARCHAR(255) NOT NULL,
-    requested_by_user_id   BIGINT NOT NULL,
-    status                 VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, APPROVED, REJECTED',
-    reviewed_by_admin_id   BIGINT,
-    review_note            VARCHAR(500),
-    created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at            TIMESTAMP NULL,
-    CONSTRAINT fk_suggestion_user FOREIGN KEY (requested_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+    id                          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    type                        VARCHAR(50) NOT NULL,
+    name                        VARCHAR(255) NOT NULL,
+    requested_by_user_id        BIGINT NOT NULL,
+    request_type                VARCHAR(20) NOT NULL DEFAULT 'CREATE' COMMENT 'CREATE, EDIT, DELETE',
+    target_reference_value_id   BIGINT NULL COMMENT 'null nếu CREATE; bắt buộc nếu EDIT/DELETE',
+    status                      VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING, APPROVED, REJECTED',
+    reviewed_by_admin_id        BIGINT,
+    review_note                 VARCHAR(500),
+    created_at                  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at                 TIMESTAMP NULL,
+    CONSTRAINT fk_suggestion_user FOREIGN KEY (requested_by_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_suggestion_target FOREIGN KEY (target_reference_value_id) REFERENCES reference_values(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =========================================
@@ -132,6 +135,7 @@ CREATE TABLE candidate_skills (
     level         VARCHAR(50),
     years_of_ex   INT DEFAULT 0,
     note          VARCHAR(255),
+    display_order INT DEFAULT 0,
     PRIMARY KEY (candidate_id, skill_id),
     CONSTRAINT fk_cs_candidate FOREIGN KEY (candidate_id) REFERENCES candidate_profiles(id) ON DELETE CASCADE,
     CONSTRAINT fk_cs_skill FOREIGN KEY (skill_id) REFERENCES reference_values(id) ON DELETE CASCADE

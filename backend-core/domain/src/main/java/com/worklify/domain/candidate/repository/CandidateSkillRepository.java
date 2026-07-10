@@ -10,4 +10,6 @@ public interface CandidateSkillRepository {
     Optional<CandidateSkill> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsBySkillId(Long skillId);
+    List<CandidateSkill> saveAll(List<CandidateSkill> candidateSkills);
 }

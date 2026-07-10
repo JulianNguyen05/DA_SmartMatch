@@ -14,4 +14,5 @@ public interface CandidateSkillJpaRepository extends JpaRepository<CandidateSkil
     Optional<CandidateSkillJpaEntity> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsBySkillId(Long skillId);
 }

@@ -11,4 +11,5 @@ public interface LanguageRepository {
     List<Language> findByCandidateId(Long candidateId);
     void deleteById(Long id);
     void deleteByCandidateId(Long candidateId);
+    boolean existsByLanguageId(Long languageId);
 }

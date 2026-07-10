@@ -1,6 +1,7 @@
 package com.worklify.infrastructure.persistence.entity;
 
 import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.domain.referencedata.model.SuggestionType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,8 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * Map bảng reference_value_suggestions. Tái sử dụng trực tiếp domain enum
- * SuggestionStatus (giống cách UserJpaEntity dùng domain.auth.model.Role),
- * lưu dạng STRING (PENDING/APPROVED/REJECTED) khớp init.sql.
+ * SuggestionStatus và SuggestionType (giống cách UserJpaEntity dùng domain.auth.model.Role).
  */
 @Entity
 @Table(name = "reference_value_suggestions")
@@ -32,6 +32,13 @@ public class ReferenceValueSuggestionJpaEntity {
 
     @Column(name = "requested_by_user_id", nullable = false)
     private Long requestedByUserId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false, length = 20)
+    private SuggestionType requestType;
+
+    @Column(name = "target_reference_value_id")
+    private Long targetReferenceValueId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

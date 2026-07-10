@@ -9,12 +9,14 @@ import com.worklify.application.common.exception.ReferenceValueSuggestionPending
 import com.worklify.application.common.port.FileStoragePort;
 import com.worklify.application.referencedata.ReferenceValueType;
 import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
 import com.worklify.domain.candidate.model.*;
 import com.worklify.domain.candidate.repository.*;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.common.DomainPageable;
 import com.worklify.domain.referencedata.model.ReferenceValue;
 import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.model.SuggestionType;
 import com.worklify.domain.referencedata.repository.ReferenceValueRepository;
 import com.worklify.domain.referencedata.repository.ReferenceValueSuggestionRepository;
 import com.worklify.application.referencedata.dto.SuggestionResponse;
@@ -202,16 +204,11 @@ public class CandidateServiceImpl implements CandidateService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên với User ID: " + userId));
 
         return candidateSkillRepository.findByCandidateId(profile.getId()).stream()
+                .sorted(Comparator.comparingInt(CandidateSkill::getDisplayOrder))
                 .map(cs -> {
                     ReferenceValue skill = referenceValueRepository.findById(cs.getSkillId())
                             .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
-                    return CandidateSkillResponse.builder()
-                            .id(skill.getId())
-                            .skillName(skill.getName())
-                            .level(cs.getLevel())
-                            .yearsOfEx(cs.getYearsOfEx())
-                            .description(cs.getNote())
-                            .build();
+                    return mapToCandidateSkillResponse(cs, skill);
                 })
                 .collect(Collectors.toList());
     }
@@ -225,7 +222,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
                 .orElseGet(() -> {
                     referenceValueSuggestionRepository.save(
-                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                            ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, request.getSkillName(), userId)
                     );
                     return null;
                 });
@@ -243,17 +240,12 @@ public class CandidateServiceImpl implements CandidateService {
                 .level(request.getLevel())
                 .note(request.getDescription())
                 .yearsOfEx(0)
+                .displayOrder(nextSkillDisplayOrder(profile.getId()))
                 .build();
 
         candidateSkillRepository.save(cs);
 
-        return CandidateSkillResponse.builder()
-                .id(skill.getId())
-                .skillName(skill.getName())
-                .level(cs.getLevel())
-                .yearsOfEx(cs.getYearsOfEx())
-                .description(cs.getNote())
-                .build();
+        return mapToCandidateSkillResponse(cs, skill);
     }
 
     @Override
@@ -265,7 +257,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
                 .orElseGet(() -> {
                     referenceValueSuggestionRepository.save(
-                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                            ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, request.getSkillName(), userId)
                     );
                     return null;
                 });
@@ -290,17 +282,12 @@ public class CandidateServiceImpl implements CandidateService {
                 .level(request.getLevel())
                 .note(request.getDescription())
                 .yearsOfEx(oldCs.getYearsOfEx())
+                .displayOrder(oldCs.getDisplayOrder()) // giữ nguyên vị trí cũ khi chỉ đổi tên/level
                 .build();
 
         candidateSkillRepository.save(newCs);
 
-        return CandidateSkillResponse.builder()
-                .id(targetSkill.getId())
-                .skillName(targetSkill.getName())
-                .level(newCs.getLevel())
-                .yearsOfEx(newCs.getYearsOfEx())
-                .description(newCs.getNote())
-                .build();
+        return mapToCandidateSkillResponse(newCs, targetSkill);
     }
 
     @Override
@@ -310,7 +297,54 @@ public class CandidateServiceImpl implements CandidateService {
         referenceValueRepository.findById(skillId)
                 .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
         CandidateSkill cs = new CandidateSkill(profile.getId(), skillId);
+        cs.reorder(nextSkillDisplayOrder(profile.getId()));
         candidateSkillRepository.save(cs);
+    }
+
+    @Override
+    public List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        List<CandidateSkill> current = candidateSkillRepository.findByCandidateId(profile.getId());
+        Map<Long, CandidateSkill> bySkillId = current.stream()
+                .collect(Collectors.toMap(CandidateSkill::getSkillId, cs -> cs));
+
+        for (SkillReorderItem item : request.getItems()) {
+            CandidateSkill cs = bySkillId.get(item.getSkillId());
+            if (cs == null) {
+                throw new IllegalArgumentException("Skill không thuộc hồ sơ này: " + item.getSkillId());
+            }
+            cs.reorder(item.getDisplayOrder());
+        }
+
+        List<CandidateSkill> saved = candidateSkillRepository.saveAll(current);
+        return saved.stream()
+                .sorted(Comparator.comparingInt(CandidateSkill::getDisplayOrder))
+                .map(cs -> {
+                    ReferenceValue skill = referenceValueRepository.findById(cs.getSkillId())
+                            .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
+                    return mapToCandidateSkillResponse(cs, skill);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private int nextSkillDisplayOrder(Long candidateId) {
+        return candidateSkillRepository.findByCandidateId(candidateId).stream()
+                .mapToInt(CandidateSkill::getDisplayOrder)
+                .max()
+                .orElse(-1) + 1;
+    }
+
+    private CandidateSkillResponse mapToCandidateSkillResponse(CandidateSkill cs, ReferenceValue skill) {
+        return CandidateSkillResponse.builder()
+                .id(skill.getId())
+                .skillName(skill.getName())
+                .level(cs.getLevel())
+                .yearsOfEx(cs.getYearsOfEx())
+                .description(cs.getNote())
+                .displayOrder(cs.getDisplayOrder())
+                .build();
     }
 
     @Override
@@ -1024,23 +1058,78 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
-    public SuggestionResponse suggestReferenceValue(Long userId, String type, String name) {
-        Optional<ReferenceValue> existing = referenceValueRepository.findByTypeAndNameIgnoreCase(type, name);
+    public SuggestionResponse suggestReferenceValue(Long userId, SuggestionRequest request) {
+        SuggestionType requestType = parseRequestType(request.getRequestType());
+
+        return switch (requestType) {
+            case CREATE -> handleCreateSuggestion(userId, request);
+            case EDIT -> handleEditSuggestion(userId, request);
+            case DELETE -> handleDeleteSuggestion(userId, request);
+        };
+    }
+
+    private SuggestionResponse handleCreateSuggestion(Long userId, SuggestionRequest request) {
+        Optional<ReferenceValue> existing = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(request.getType(), request.getName());
         if (existing.isPresent()) {
-            throw new IllegalArgumentException("'" + name + "' đã tồn tại trong hệ thống, không cần đề xuất.");
+            throw new IllegalArgumentException("'" + request.getName() + "' đã tồn tại trong hệ thống, không cần đề xuất.");
         }
-
         ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
-                ReferenceValueSuggestion.create(type, name, userId)
+                ReferenceValueSuggestion.createNew(request.getType(), request.getName(), userId)
         );
+        return mapToSuggestionResponse(suggestion);
+    }
 
+    private SuggestionResponse handleEditSuggestion(Long userId, SuggestionRequest request) {
+        requireTargetId(request);
+        ReferenceValue target = referenceValueRepository.findById(request.getTargetReferenceValueId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giá trị cần sửa."));
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
+                ReferenceValueSuggestion.createEdit(target.getType(), request.getName(), userId, target.getId())
+        );
+        return mapToSuggestionResponse(suggestion);
+    }
+
+    private SuggestionResponse handleDeleteSuggestion(Long userId, SuggestionRequest request) {
+        requireTargetId(request);
+        ReferenceValue target = referenceValueRepository.findById(request.getTargetReferenceValueId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giá trị cần xóa."));
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
+                ReferenceValueSuggestion.createDelete(target.getType(), target.getName(), userId, target.getId())
+        );
+        return mapToSuggestionResponse(suggestion);
+    }
+
+    private void requireTargetId(SuggestionRequest request) {
+        if (request.getTargetReferenceValueId() == null) {
+            throw new IllegalArgumentException("targetReferenceValueId không được để trống với yêu cầu EDIT/DELETE.");
+        }
+    }
+
+    private SuggestionType parseRequestType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return SuggestionType.CREATE; // tương thích ngược request cũ chưa gửi field này
+        }
+        try {
+            return SuggestionType.valueOf(raw.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("requestType không hợp lệ: " + raw);
+        }
+    }
+
+    private SuggestionResponse mapToSuggestionResponse(ReferenceValueSuggestion s) {
         return SuggestionResponse.builder()
-                .id(suggestion.getId())
-                .type(suggestion.getType())
-                .name(suggestion.getName())
-                .requestedByUserId(suggestion.getRequestedByUserId())
-                .status(suggestion.getStatus())
-                .createdAt(suggestion.getCreatedAt())
+                .id(s.getId())
+                .type(s.getType())
+                .name(s.getName())
+                .requestedByUserId(s.getRequestedByUserId())
+                .requestType(s.getRequestType())
+                .targetReferenceValueId(s.getTargetReferenceValueId())
+                .status(s.getStatus())
+                .reviewedByAdminId(s.getReviewedByAdminId())
+                .reviewNote(s.getReviewNote())
+                .createdAt(s.getCreatedAt())
+                .reviewedAt(s.getReviewedAt())
                 .build();
     }
 
@@ -1122,4 +1211,6 @@ public class CandidateServiceImpl implements CandidateService {
                 .repeatable(layout.getBlockType().isRepeatable())
                 .build();
     }
+
+
 }

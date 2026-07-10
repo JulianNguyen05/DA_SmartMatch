@@ -3,6 +3,7 @@ package com.worklify.application.candidate.service;
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
 import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +32,7 @@ public interface CandidateService {
 
     // [MỚI] Dropdown search + đề xuất bổ sung, dùng chung cho SKILL/LANGUAGE/...
     List<ReferenceValueResponse> searchReferenceValues(String type, String keyword);
-    SuggestionResponse suggestReferenceValue(Long userId, String type, String name);
+    SuggestionResponse suggestReferenceValue(Long userId, SuggestionRequest request);
 
     CvDocumentResponse renameCv(Long userId, Long cvId, String newName);
     PageResponse<CandidateProfileResponse> searchCandidates(String keyword, DomainPageable pageable);
@@ -95,4 +96,6 @@ public interface CandidateService {
 
     // Ẩn/hiện 1 block
     ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible);
+
+    List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request);
 }

@@ -43,4 +43,9 @@ public class LanguageRepositoryAdapter implements LanguageRepository {
     public void deleteByCandidateId(Long candidateId) {
         jpaRepository.deleteByCandidateId(candidateId);
     }
+
+    @Override
+    public boolean existsByLanguageId(Long languageId) {
+        return jpaRepository.existsByLanguageId(languageId);
+    }
 }

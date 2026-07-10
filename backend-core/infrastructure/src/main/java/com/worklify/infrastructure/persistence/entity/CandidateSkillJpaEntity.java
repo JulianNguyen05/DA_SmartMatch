@@ -29,4 +29,7 @@ public class CandidateSkillJpaEntity {
 
     @Column(name = "note", length = 255)
     private String note;
+
+    @Column(name = "display_order")
+    private int displayOrder;
 }
