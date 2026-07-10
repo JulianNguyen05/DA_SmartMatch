@@ -24,10 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -41,6 +38,7 @@ public class CandidateServiceImpl implements CandidateService {
     private final CandidateSkillRepository candidateSkillRepository;
     private final ReferenceValueRepository referenceValueRepository;
     private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
+    private final CandidateProfileLayoutRepository candidateProfileLayoutRepository;
     private final FileStoragePort fileStoragePort;
     private final ObjectMapper objectMapper;
     private final EducationRepository educationRepository;
@@ -1043,6 +1041,85 @@ public class CandidateServiceImpl implements CandidateService {
                 .requestedByUserId(suggestion.getRequestedByUserId())
                 .status(suggestion.getStatus())
                 .createdAt(suggestion.getCreatedAt())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public List<ProfileLayoutItemResponse> getProfileLayout(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        return getOrInitLayout(profile.getId()).stream()
+                .sorted(Comparator.comparingInt(CandidateProfileLayout::getPosition))
+                .map(this::mapToLayoutResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProfileLayoutItemResponse> reorderProfileLayout(Long userId, ProfileLayoutReorderRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        List<CandidateProfileLayout> layouts = getOrInitLayout(profile.getId());
+        Map<BlockType, CandidateProfileLayout> byType = layouts.stream()
+                .collect(Collectors.toMap(CandidateProfileLayout::getBlockType, l -> l));
+
+        for (LayoutPositionItem item : request.getItems()) {
+            BlockType type = parseBlockType(item.getBlockType());
+            CandidateProfileLayout layout = byType.get(type);
+            if (layout == null) {
+                throw new IllegalArgumentException("Block không hợp lệ: " + item.getBlockType());
+            }
+            layout.reorder(item.getPosition());
+        }
+
+        List<CandidateProfileLayout> saved = candidateProfileLayoutRepository.saveAll(layouts);
+        return saved.stream()
+                .sorted(Comparator.comparingInt(CandidateProfileLayout::getPosition))
+                .map(this::mapToLayoutResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        BlockType type = parseBlockType(blockType);
+        List<CandidateProfileLayout> layouts = getOrInitLayout(profile.getId());
+        CandidateProfileLayout target = layouts.stream()
+                .filter(l -> l.getBlockType() == type)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Block không hợp lệ: " + blockType));
+
+        target.toggleVisibility(visible);
+        candidateProfileLayoutRepository.saveAll(List.of(target));
+        return mapToLayoutResponse(target);
+    }
+
+    // Lấy layout hiện có; nếu candidate chưa từng có layout (mở ProfilePage lần đầu) thì khởi tạo mặc định
+    private List<CandidateProfileLayout> getOrInitLayout(Long candidateId) {
+        if (!candidateProfileLayoutRepository.existsByCandidateId(candidateId)) {
+            return candidateProfileLayoutRepository.saveAll(CandidateProfileLayout.defaultFor(candidateId));
+        }
+        return candidateProfileLayoutRepository.findByCandidateId(candidateId);
+    }
+
+    private BlockType parseBlockType(String raw) {
+        try {
+            return BlockType.valueOf(raw.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("blockType không hợp lệ: " + raw);
+        }
+    }
+
+    private ProfileLayoutItemResponse mapToLayoutResponse(CandidateProfileLayout layout) {
+        return ProfileLayoutItemResponse.builder()
+                .blockType(layout.getBlockType().name())
+                .position(layout.getPosition())
+                .visible(layout.isVisible())
+                .repeatable(layout.getBlockType().isRepeatable())
                 .build();
     }
 }

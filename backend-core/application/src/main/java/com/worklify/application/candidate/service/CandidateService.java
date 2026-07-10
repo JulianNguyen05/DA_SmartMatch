@@ -86,4 +86,13 @@ public interface CandidateService {
     LanguageResponse createLanguage(Long userId, LanguageRequest request);
     LanguageResponse updateLanguage(Long userId, Long languageId, LanguageRequest request);
     void deleteLanguage(Long userId, Long languageId);
+
+    // Lấy layout hiện tại; tự khởi tạo mặc định nếu candidate mở ProfilePage lần đầu
+    List<ProfileLayoutItemResponse> getProfileLayout(Long userId);
+
+    // Kéo-thả đổi vị trí nhiều block cùng lúc
+    List<ProfileLayoutItemResponse> reorderProfileLayout(Long userId, ProfileLayoutReorderRequest request);
+
+    // Ẩn/hiện 1 block
+    ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible);
 }

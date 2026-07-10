@@ -213,6 +213,8 @@ public class CandidateController {
         return ApiResponse.success(null, "Xóa học vấn thành công");
     }
 
+
+
     // ==========================================
     // 6. QUẢN LÝ KINH NGHIỆM LÀM VIỆC (EXPERIENCES)
     // ==========================================
@@ -474,5 +476,35 @@ public class CandidateController {
             @PathVariable("skillId") Long skillId) {
         candidateService.removeSkillFromCandidate(userId, skillId);
         return ApiResponse.success(null, "Đã gỡ kỹ năng khỏi hồ sơ");
+    }
+
+    // ==========================================
+    // PROFILE LAYOUT (SANDBOX KÉO-THẢ) — [MỚI]
+    // ==========================================
+    @GetMapping("/{userId}/profile/layout")
+    @Operation(summary = "Lấy cấu hình layout ProfilePage (tự khởi tạo mặc định nếu chưa có)")
+    public ApiResponse<List<ProfileLayoutItemResponse>> getProfileLayout(
+            @PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getProfileLayout(userId));
+    }
+
+    @PutMapping("/{userId}/profile/layout/reorder")
+    @Operation(summary = "Kéo-thả đổi vị trí nhiều block cùng lúc")
+    public ApiResponse<List<ProfileLayoutItemResponse>> reorderProfileLayout(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody ProfileLayoutReorderRequest request) {
+        return ApiResponse.success(candidateService.reorderProfileLayout(userId, request), "Cập nhật bố cục thành công");
+    }
+
+    @PatchMapping("/{userId}/profile/layout/{blockType}/visibility")
+    @Operation(summary = "Ẩn/hiện 1 block trên ProfilePage")
+    public ApiResponse<ProfileLayoutItemResponse> toggleBlockVisibility(
+            @PathVariable("userId") Long userId,
+            @PathVariable("blockType") String blockType,
+            @RequestBody ToggleBlockVisibilityRequest request) {
+        return ApiResponse.success(
+                candidateService.toggleBlockVisibility(userId, blockType, request.isVisible()),
+                "Cập nhật hiển thị block thành công"
+        );
     }
 }

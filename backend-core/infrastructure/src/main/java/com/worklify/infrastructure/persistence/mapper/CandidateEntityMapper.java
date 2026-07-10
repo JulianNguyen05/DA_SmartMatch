@@ -40,4 +40,7 @@ public interface CandidateEntityMapper {
 
     LanguageJpaEntity toEntity(Language language);
     Language toDomain(LanguageJpaEntity entity);
+
+    CandidateProfileLayoutJpaEntity toEntity(CandidateProfileLayout layout);
+    CandidateProfileLayout toDomain(CandidateProfileLayoutJpaEntity entity);
 }

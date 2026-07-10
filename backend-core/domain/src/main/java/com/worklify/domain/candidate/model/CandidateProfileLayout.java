@@ -1,17 +1,24 @@
 // CandidateProfileLayout.java
 package com.worklify.domain.candidate.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Cấu hình vị trí + trạng thái hiển thị của MỘT block trên trang ProfilePage.
  *
- * Đây là entity thuộc về "trình bày" (layout), hoàn toàn tách biệt với dữ liệu
- * nghiệp vụ trong Activity/Award/Education/... — CV Builder sau này sẽ đọc thẳng
- * dữ liệu nghiệp vụ qua các Repository tương ứng, KHÔNG phụ thuộc vào layout này.
+ * Đây là entity thuộc về "trình bày" (layout), tách biệt với dữ liệu nghiệp vụ
+ * trong Activity/Award/Education/... — CV Builder đọc thẳng dữ liệu nghiệp vụ
+ * qua các Repository tương ứng, KHÔNG phụ thuộc vào layout này.
  */
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CandidateProfileLayout {
 
     /** Thứ tự mặc định khi khởi tạo layout lần đầu cho 1 candidate. */
@@ -30,22 +37,12 @@ public class CandidateProfileLayout {
             BlockType.HOBBY
     );
 
-    private final Long id;
-    private final Long candidateId;
-    private final BlockType blockType;
+    private Long id;
+    private Long candidateId;
+    private BlockType blockType;
     private int position;
     private boolean visible;
 
-    private CandidateProfileLayout(Long id, Long candidateId, BlockType blockType,
-                                   int position, boolean visible) {
-        this.id = id;
-        this.candidateId = candidateId;
-        this.blockType = blockType;
-        this.position = position;
-        this.visible = visible;
-    }
-
-    /** Tạo 1 layout item mới (chưa có id). */
     public static CandidateProfileLayout create(Long candidateId, BlockType blockType,
                                                 int position, boolean visible) {
         if (candidateId == null) {
@@ -54,16 +51,12 @@ public class CandidateProfileLayout {
         if (blockType == null) {
             throw new IllegalArgumentException("blockType không được null");
         }
-        return new CandidateProfileLayout(null, candidateId, blockType, position, visible);
-    }
-
-    /** Dựng lại từ persistence (đã có id). */
-    public static CandidateProfileLayout restore(Long id, Long candidateId, BlockType blockType,
-                                                 int position, boolean visible) {
-        if (id == null) {
-            throw new IllegalArgumentException("id không được null khi restore");
-        }
-        return new CandidateProfileLayout(id, candidateId, blockType, position, visible);
+        return CandidateProfileLayout.builder()
+                .candidateId(candidateId)
+                .blockType(blockType)
+                .position(position)
+                .visible(visible)
+                .build();
     }
 
     /**
@@ -93,37 +86,5 @@ public class CandidateProfileLayout {
     // Business Behavior: ẩn/hiện cả block
     public void toggleVisibility(boolean visible) {
         this.visible = visible;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getCandidateId() {
-        return candidateId;
-    }
-
-    public BlockType getBlockType() {
-        return blockType;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CandidateProfileLayout that)) return false;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }

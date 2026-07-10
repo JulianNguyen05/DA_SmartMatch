@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Jul 09, 2026 at 07:21 AM
+-- Generation Time: Jul 09, 2026 at 09:24 AM
 -- Server version: 8.4.8
 -- PHP Version: 8.3.30
 
@@ -183,6 +183,13 @@ CREATE TABLE `candidate_profiles` (
   `github_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `summary` text COLLATE utf8mb4_unicode_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `candidate_profiles`
+--
+
+INSERT INTO `candidate_profiles` (`id`, `user_id`, `full_name`, `avatar_url`, `headline`, `phone`, `email_contact`, `gender`, `dob`, `address`, `website_url`, `linkedin_url`, `github_url`, `summary`) VALUES
+(1, 1, 'Nguyễn Hữu Trọng', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -374,6 +381,13 @@ CREATE TABLE `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `email`, `phone`, `password_hash`, `role`, `status`, `is_mfa_enabled`, `created_at`, `updated_at`) VALUES
+(1, 'huutrong.160705@gmail.com', NULL, '$2a$10$/yZdvq6cEy6lnONIdlY7suxHVT1ZYesiiB.1c3L9Pph5TVbJo16yW', 'CANDIDATE', 'ACTIVE', 0, '2026-07-09 08:42:21', '2026-07-09 08:42:21');
+
+--
 -- Indexes for dumped tables
 --
 
@@ -382,6 +396,7 @@ CREATE TABLE `users` (
 --
 ALTER TABLE `applications`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `UKkphvsdbcird8yi4ye3ip913d7` (`job_id`,`candidate_id`),
   ADD KEY `fk_app_candidate` (`candidate_id`),
   ADD KEY `fk_app_job` (`job_id`),
   ADD KEY `fk_app_cv` (`cv_id`);
@@ -464,6 +479,7 @@ ALTER TABLE `candidate_skills`
 ALTER TABLE `company_likes`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_user_company` (`user_id`,`company_id`),
+  ADD UNIQUE KEY `UKdvh2xesu9h9a7k4wkbareclsf` (`user_id`,`company_id`),
   ADD KEY `fk_like_company` (`company_id`);
 
 --
@@ -513,6 +529,7 @@ ALTER TABLE `reference_value_suggestions`
 ALTER TABLE `saved_jobs`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_candidate_job` (`candidate_id`,`job_id`),
+  ADD UNIQUE KEY `UK6e7b2qng7km656gwv8c4cv8kj` (`candidate_id`,`job_id`),
   ADD KEY `fk_saved_job` (`job_id`);
 
 --
@@ -585,7 +602,7 @@ ALTER TABLE `candidate_languages`
 -- AUTO_INCREMENT for table `candidate_profiles`
 --
 ALTER TABLE `candidate_profiles`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `candidate_projects`
@@ -651,7 +668,7 @@ ALTER TABLE `system_logs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- Constraints for dumped tables
