@@ -391,7 +391,7 @@ public class CandidateServiceImpl implements CandidateService {
             if (skill.isEmpty()) {
                 // Không tự tạo — chỉ đề xuất, admin duyệt sau. Không gán vào candidate_skills.
                 referenceValueSuggestionRepository.save(
-                        ReferenceValueSuggestion.create(ReferenceValueType.SKILL, trimmed, candidateId)
+                        ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, trimmed, candidateId)
                 );
                 log.info("Skill '{}' chưa tồn tại, đã tạo suggestion PENDING, bỏ qua gán cho candidateId={}",
                         trimmed, candidateId);
@@ -1212,5 +1212,22 @@ public class CandidateServiceImpl implements CandidateService {
                 .build();
     }
 
+    @Override
+    @Transactional
+    public CandidateProfileFullResponse getFullProfile(Long userId) {
+        return CandidateProfileFullResponse.builder()
+                .layout(getProfileLayout(userId))
+                .profile(getProfileByUserId(userId))
+                .activities(getActivitiesByUserId(userId))
+                .awards(getAwardsByUserId(userId))
+                .skills(getSkillsByUserId(userId))
+                .certifications(getCertificationsByUserId(userId))
+                .educations(getEducationsByUserId(userId))
+                .experiences(getExperiencesByUserId(userId))
+                .hobbies(getHobbiesByUserId(userId))
+                .languages(getLanguagesByUserId(userId))
+                .projects(getProjectsByUserId(userId))
+                .build();
+    }
 
 }

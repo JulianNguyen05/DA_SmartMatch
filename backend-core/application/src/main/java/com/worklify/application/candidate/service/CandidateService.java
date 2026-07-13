@@ -98,4 +98,6 @@ public interface CandidateService {
     ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible);
 
     List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request);
+
+    CandidateProfileFullResponse getFullProfile(Long userId);
 }

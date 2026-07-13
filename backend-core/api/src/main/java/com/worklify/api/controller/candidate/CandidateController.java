@@ -534,4 +534,11 @@ public class CandidateController {
             @Valid @RequestBody SkillReorderRequest request) {
         return ApiResponse.success(candidateService.reorderSkills(userId, request), "Cập nhật thứ tự kỹ năng thành công");
     }
+
+    @GetMapping("/{userId}/profile/full")
+    @Operation(summary = "Lấy toàn bộ dữ liệu ProfilePage (layout + 9 block danh sách) trong 1 lần gọi — phục vụ sandbox kéo-thả")
+    public ApiResponse<CandidateProfileFullResponse> getFullProfile(
+            @PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getFullProfile(userId));
+    }
 }
