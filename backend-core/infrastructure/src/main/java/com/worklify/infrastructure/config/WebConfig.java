@@ -14,6 +14,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Value("${application.frontend.url:http://localhost:3000}")
     private String frontendUrl;
+    @Value("${application.storage.local.upload-dir:./uploads}")
+    private String uploadDir;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -27,10 +29,10 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadDir = Paths.get("./uploads");
-        String uploadPath = uploadDir.toFile().getAbsolutePath();
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        String uploadLocation = uploadPath.toUri().toString();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations(uploadLocation);
     }
 }

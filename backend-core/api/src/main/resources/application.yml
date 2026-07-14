@@ -32,13 +32,20 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 5MB
-      max-request-size: 5MB
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 server:
   port: 8080
   error:
     include-message: always
+  tomcat:
+    # Giới hạn ở tầng connector Tomcat, kiểm tra TRƯỚC spring.servlet.multipart.
+    # Mặc định chỉ 2MB — nếu không tăng, file lớn hơn sẽ bị Tomcat reset kết nối
+    # (ERR_CONNECTION_RESET) thay vì trả về lỗi 500 rõ ràng.
+    max-http-form-post-size: 10MB
+    # Cho phép Tomcat "nuốt" hết phần body dư khi trả lỗi, tránh đóng kết nối đột ngột
+    max-swallow-size: 10MB
 
 logging:
   level:

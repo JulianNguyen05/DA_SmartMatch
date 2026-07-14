@@ -4,6 +4,7 @@ import { Upload } from 'lucide-react';
 import Modal from '../../common/Modal';
 import Button from '../../common/Button';
 import candidateService from '../../../features/candidate/candidateService';
+import { getFileUrl } from '../../../utils/fileUrl';
 
 const AvatarModal = ({ userId, currentAvatarUrl, isOpen, onClose, onSaved, onToast }) => {
   const [file, setFile] = useState(null);
@@ -41,7 +42,10 @@ const AvatarModal = ({ userId, currentAvatarUrl, isOpen, onClose, onSaved, onToa
     }
   };
 
-  const displayUrl = previewUrl || currentAvatarUrl;
+  // previewUrl là blob: URL cục bộ (từ URL.createObjectURL khi vừa chọn ảnh
+  // mới) — giữ nguyên, không qua getFileUrl(). currentAvatarUrl là đường dẫn
+  // tương đối do backend trả về, cần ghép thành URL đầy đủ trỏ về backend.
+  const displayUrl = previewUrl || getFileUrl(currentAvatarUrl);
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Ảnh đại diện">

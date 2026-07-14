@@ -5,6 +5,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
+import { getFileUrl } from '../../../utils/fileUrl';
 
 // dataKey: field tương ứng trong response của candidateService.getFullProfile()
 // repeatable: true nếu block chứa danh sách nhiều item (khớp BlockType.isRepeatable() backend)
@@ -24,25 +25,22 @@ export const BLOCK_META = {
 };
 
 // ─── Màu nền header cho từng block trong sandbox neobrutalism ──────────────
-// Chọn màu phẳng, bão hòa cao, mỗi block một tông riêng để dễ phân biệt khi
-// nhìn tổng thể lưới (giống bảng màu "sticky note" trên một tấm bảng ghim).
 export const BLOCK_COLOR = {
-  PERSONAL_INFO: '#5B8DEF', // xanh dương thương hiệu Worklify
-  AVATAR: '#2DD4BF', // teal thương hiệu Worklify
-  SOCIAL_LINKS: '#B794F4', // tím nhạt
-  EXPERIENCE: '#FB923C', // cam
-  EDUCATION: '#FDE047', // vàng
-  SKILL: '#4ADE80', // xanh lá
-  PROJECT: '#F472B6', // hồng
-  CERTIFICATION: '#22D3EE', // cyan
-  AWARD: '#F87171', // đỏ
-  ACTIVITY: '#818CF8', // chàm
-  LANGUAGE: '#38BDF8', // xanh da trời
-  HOBBY: '#BEF264', // chanh
+  PERSONAL_INFO: '#5B8DEF',
+  AVATAR: '#2DD4BF',
+  SOCIAL_LINKS: '#B794F4',
+  EXPERIENCE: '#FB923C',
+  EDUCATION: '#FDE047',
+  SKILL: '#4ADE80',
+  PROJECT: '#F472B6',
+  CERTIFICATION: '#22D3EE',
+  AWARD: '#F87171',
+  ACTIVITY: '#818CF8',
+  LANGUAGE: '#38BDF8',
+  HOBBY: '#BEF264',
 };
 
 // ─── Kích thước mặc định trên lưới 12 cột khi chưa có layout đã lưu ────────
-// w/h tính theo đơn vị cột/hàng của react-grid-layout (xem ProfileLayoutSandbox)
 export const DEFAULT_GRID_SIZE = {
   PERSONAL_INFO: { w: 6, h: 5 },
   AVATAR: { w: 3, h: 5 },
@@ -112,8 +110,12 @@ export const renderBlockSummary = (blockType, profileData) => {
   }
 
   if (blockType === 'AVATAR') {
-    return profile?.avatarUrl
-      ? <img src={profile.avatarUrl} alt="avatar" className="w-12 h-12 border-2 border-black object-cover" />
+    // profile.avatarUrl là đường dẫn TƯƠNG ĐỐI do backend trả về (vd "avatars/1_x.jpg")
+    // -> phải ghép thành URL đầy đủ trỏ về backend, nếu không ảnh sẽ vỡ (404)
+    // vì trình duyệt tự ghép vào origin của frontend (localhost:5173).
+    const avatarSrc = getFileUrl(profile?.avatarUrl);
+    return avatarSrc
+      ? <img src={avatarSrc} alt="avatar" className="w-12 h-12 border-2 border-black object-cover" />
       : <EmptyHint text="Chưa có ảnh đại diện" />;
   }
 
