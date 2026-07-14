@@ -12,8 +12,7 @@ import SkillEditorModal from '../../../components/candidate-profile/modals/Skill
 import LanguageEditorModal from '../../../components/candidate-profile/modals/LanguageEditorModal';
 import ProfileInfoModal from '../../../components/candidate-profile/modals/ProfileInfoModal';
 import AvatarModal from '../../../components/candidate-profile/modals/AvatarModal';
-import ProfileToCvPicker from '../../../components/candidate-profile/modals/ProfileToCvPicker';
-import { FileText } from 'lucide-react';
+import { LayoutGrid, Pencil, Check } from 'lucide-react';
 
 const ProfilePage = () => {
   const userId = authService.getCurrentUser()?.userId;
@@ -23,7 +22,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [editingBlockType, setEditingBlockType] = useState(null); // block đang mở modal, null = đóng hết
-  const [isCvPickerOpen, setIsCvPickerOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false); // false = chỉ xem portfolio, true = kéo-thả/resize được
 
   const showToast = useCallback(({ type, message }) => setToast({ show: true, type, message }), []);
 
@@ -80,23 +79,43 @@ const ProfilePage = () => {
   const isAvatarBlock = editingBlockType === 'AVATAR';
 
   return (
-    <div className="flex flex-col h-full space-y-6 max-w-4xl mx-auto">
-      <header className="bg-white px-6 py-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Hồ Sơ Năng Lực</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Kéo-thả để sắp xếp thứ tự hiển thị, bấm biểu tượng bút chì để chỉnh sửa từng mục
-          </p>
+    <div className="w-full h-full min-h-screen bg-white">
+      {/* ─── Header: báo đây là trang portfolio + nút bật/tắt chỉnh sửa ─── */}
+      <header className="flex items-center justify-between gap-4 px-4 sm:px-6 py-4 border-b-[3px] border-black bg-white sticky top-0 z-40">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="shrink-0 p-2 bg-black text-white border-[3px] border-black">
+            <LayoutGrid size={18} strokeWidth={2.5} />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 leading-none">
+              Portfolio ứng viên
+            </p>
+            <h1 className="text-lg sm:text-xl font-black uppercase tracking-tight text-black truncate">
+              {profileData?.profile?.fullName || 'Portfolio của bạn'}
+            </h1>
+          </div>
         </div>
+
         <button
-          onClick={() => setIsCvPickerOpen(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shrink-0"
+          type="button"
+          onClick={() => setIsEditMode((prev) => !prev)}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-black uppercase border-[3px] border-black transition-colors shrink-0
+            ${isEditMode ? 'bg-black text-white' : 'bg-white text-black hover:bg-black hover:text-white'}`}
+          style={{ boxShadow: '4px 4px 0px 0px #111111' }}
         >
-          <FileText size={16} /> Tạo CV từ hồ sơ
+          {isEditMode ? (
+            <><Check size={16} strokeWidth={3} /> Xong</>
+          ) : (
+            <><Pencil size={16} strokeWidth={3} /> Chỉnh sửa</>
+          )}
         </button>
       </header>
 
-      {toast.show && <Toast type={toast.type} message={toast.message} onClose={() => setToast({ show: false })} />}
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50">
+          <Toast type={toast.type} message={toast.message} onClose={() => setToast({ show: false })} />
+        </div>
+      )}
 
       {layout.length > 0 ? (
         <ProfileLayoutSandbox
@@ -105,9 +124,12 @@ const ProfilePage = () => {
           onReorder={handleReorder}
           onToggleVisibility={handleToggleVisibility}
           onEdit={setEditingBlockType}
+          isEditMode={isEditMode}
         />
       ) : (
-        <div className="text-center py-20 text-gray-400">Chưa có dữ liệu bố cục.</div>
+        <div className="h-full min-h-[60vh] flex items-center justify-center text-gray-400">
+          Chưa có dữ liệu bố cục.
+        </div>
       )}
 
       {/* ─── 7 block danh sách đơn giản (config-driven) ─── */}
@@ -168,14 +190,6 @@ const ProfilePage = () => {
           onClose={() => setEditingBlockType(null)}
           onSaved={fetchFullProfile}
           onToast={showToast}
-        />
-      )}
-      {/* ─── Tạo CV từ hồ sơ (tiến độ 10) ─── */}
-      {isCvPickerOpen && (
-        <ProfileToCvPicker
-          profileData={profileData}
-          isOpen={true}
-          onClose={() => setIsCvPickerOpen(false)}
         />
       )}
     </div>

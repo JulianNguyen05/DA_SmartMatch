@@ -1,4 +1,4 @@
-// src/components/candidate-profile/blockConfig.js
+// src/components/candidate-profile/shared/blockConfig.jsx
 // ════════════════════════════════════════════════════════════════════════════
 // Cấu hình trung tâm cho 12 loại block ProfilePage — PHẢI khớp đúng enum
 // BlockType bên backend (domain.candidate.model.BlockType).
@@ -21,6 +21,41 @@ export const BLOCK_META = {
   ACTIVITY: { label: 'Hoạt động', repeatable: true, dataKey: 'activities' },
   LANGUAGE: { label: 'Ngôn ngữ', repeatable: true, dataKey: 'languages' },
   HOBBY: { label: 'Sở thích', repeatable: true, dataKey: 'hobbies' },
+};
+
+// ─── Màu nền header cho từng block trong sandbox neobrutalism ──────────────
+// Chọn màu phẳng, bão hòa cao, mỗi block một tông riêng để dễ phân biệt khi
+// nhìn tổng thể lưới (giống bảng màu "sticky note" trên một tấm bảng ghim).
+export const BLOCK_COLOR = {
+  PERSONAL_INFO: '#5B8DEF', // xanh dương thương hiệu Worklify
+  AVATAR: '#2DD4BF', // teal thương hiệu Worklify
+  SOCIAL_LINKS: '#B794F4', // tím nhạt
+  EXPERIENCE: '#FB923C', // cam
+  EDUCATION: '#FDE047', // vàng
+  SKILL: '#4ADE80', // xanh lá
+  PROJECT: '#F472B6', // hồng
+  CERTIFICATION: '#22D3EE', // cyan
+  AWARD: '#F87171', // đỏ
+  ACTIVITY: '#818CF8', // chàm
+  LANGUAGE: '#38BDF8', // xanh da trời
+  HOBBY: '#BEF264', // chanh
+};
+
+// ─── Kích thước mặc định trên lưới 12 cột khi chưa có layout đã lưu ────────
+// w/h tính theo đơn vị cột/hàng của react-grid-layout (xem ProfileLayoutSandbox)
+export const DEFAULT_GRID_SIZE = {
+  PERSONAL_INFO: { w: 6, h: 5 },
+  AVATAR: { w: 3, h: 5 },
+  SOCIAL_LINKS: { w: 3, h: 5 },
+  EXPERIENCE: { w: 6, h: 7 },
+  EDUCATION: { w: 6, h: 6 },
+  SKILL: { w: 4, h: 6 },
+  PROJECT: { w: 4, h: 6 },
+  CERTIFICATION: { w: 4, h: 6 },
+  AWARD: { w: 4, h: 6 },
+  ACTIVITY: { w: 4, h: 6 },
+  LANGUAGE: { w: 4, h: 6 },
+  HOBBY: { w: 4, h: 6 },
 };
 
 /** Lấy danh sách item của 1 block danh sách từ profileData (response getFullProfile) */
@@ -69,23 +104,23 @@ export const renderBlockSummary = (blockType, profileData) => {
   if (blockType === 'PERSONAL_INFO') {
     if (!profile?.fullName) return <EmptyHint text="Chưa cập nhật thông tin cá nhân" />;
     return (
-      <div className="text-sm text-gray-600">
-        <span className="font-semibold text-gray-800">{profile.fullName}</span>
-        {profile.headline && <span className="text-gray-400"> · {profile.headline}</span>}
+      <div className="text-sm text-gray-700">
+        <span className="font-bold text-gray-900">{profile.fullName}</span>
+        {profile.headline && <span className="text-gray-500"> · {profile.headline}</span>}
       </div>
     );
   }
 
   if (blockType === 'AVATAR') {
     return profile?.avatarUrl
-      ? <img src={profile.avatarUrl} alt="avatar" className="w-10 h-10 rounded-full object-cover" />
+      ? <img src={profile.avatarUrl} alt="avatar" className="w-12 h-12 border-2 border-black object-cover" />
       : <EmptyHint text="Chưa có ảnh đại diện" />;
   }
 
   if (blockType === 'SOCIAL_LINKS') {
     const links = [profile?.websiteUrl, profile?.linkedinUrl, profile?.githubUrl].filter(Boolean);
     return links.length
-      ? <div className="text-sm text-gray-500">{links.length} liên kết đã thêm</div>
+      ? <div className="text-sm text-gray-600">{links.length} liên kết đã thêm</div>
       : <EmptyHint text="Chưa thêm liên kết nào" />;
   }
 
@@ -97,7 +132,7 @@ export const renderBlockSummary = (blockType, profileData) => {
   const remaining = items.length - preview.length;
 
   return (
-    <ul className="text-sm text-gray-600 space-y-1">
+    <ul className="text-sm text-gray-700 space-y-1">
       {preview.map((item, idx) => (
         <li key={item.id ?? idx} className="truncate">• {describeItem(blockType, item) || '(chưa đặt tên)'}</li>
       ))}
