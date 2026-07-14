@@ -5,7 +5,7 @@ import Modal from '../common/Modal';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import candidateService from '../../features/candidate/candidateService';
-import { BLOCK_FORM_CONFIGS } from './blockFormConfig';
+import { BLOCK_FORM_CONFIGS } from '../shared/blockFormConfig';
 
 /**
  * Modal CRUD generic cho 7 block danh sách "đơn giản" (Experience, Education,

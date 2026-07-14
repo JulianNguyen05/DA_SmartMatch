@@ -4,14 +4,14 @@ import Toast from '../../../components/common/Toast';
 import candidateService from '../../../features/candidate/candidateService';
 import authService from '../../../features/auth/authService';
 import { LoadingSpinner } from '../../../components/shared/cvProfileShared';
-import ProfileLayoutSandbox from '../../../components/candidate-profile/ProfileLayoutSandbox';
-import { getBlockItems } from '../../../components/candidate-profile/blockConfig';
-import { BLOCK_FORM_CONFIGS } from '../../../components/candidate-profile/blockFormConfig';
+import ProfileLayoutSandbox from '../../../components/candidate-profile/sandbox/ProfileLayoutSandbox';
+import { getBlockItems } from '../../../components/candidate-profile/shared/blockConfig';
+import { BLOCK_FORM_CONFIGS } from '../../../components/candidate-profile/shared/blockFormConfig';
 import BlockListEditorModal from '../../../components/candidate-profile/BlockListEditorModal';
 import SkillEditorModal from '../../../components/candidate-profile/SkillEditorModal';
 import LanguageEditorModal from '../../../components/candidate-profile/LanguageEditorModal';
 import ProfileInfoModal from '../../../components/candidate-profile/ProfileInfoModal';
-import AvatarModal from '../../../components/candidate-profile/AvatarModal';
+import AvatarModal from '../../../components/candidate-profile/modals/AvatarModal';
 import ProfileToCvPicker from '../../../components/candidate-profile/ProfileToCvPicker';
 import { FileText } from 'lucide-react';
 

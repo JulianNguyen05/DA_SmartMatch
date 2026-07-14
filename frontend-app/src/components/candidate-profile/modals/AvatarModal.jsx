@@ -1,9 +1,9 @@
 // src/components/candidate-profile/AvatarModal.jsx
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
-import candidateService from '../../features/candidate/candidateService';
+import Modal from '../../common/Modal';
+import Button from '../../common/Button';
+import candidateService from '../../../features/candidate/candidateService';
 
 const AvatarModal = ({ userId, currentAvatarUrl, isOpen, onClose, onSaved, onToast }) => {
   const [file, setFile] = useState(null);
