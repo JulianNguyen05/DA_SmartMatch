@@ -3,7 +3,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Eye, EyeOff, Pencil } from 'lucide-react';
-import { BLOCK_META, renderBlockSummary, getBlockItems } from './blockConfig';
+import { BLOCK_META, renderBlockSummary, getBlockItems } from '../shared/blockConfig';
 
 /**
  * Card đại diện cho 1 block trên sandbox ProfilePage.

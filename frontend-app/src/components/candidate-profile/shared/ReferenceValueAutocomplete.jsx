@@ -1,7 +1,7 @@
 // src/components/candidate-profile/ReferenceValueAutocomplete.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Search, Loader2, Send } from 'lucide-react';
-import candidateService from '../../features/candidate/candidateService';
+import candidateService from '../../../features/candidate/candidateService';
 
 /**
  * Ô tìm kiếm + chọn 1 giá trị từ danh mục dùng chung (SKILL/LANGUAGE).

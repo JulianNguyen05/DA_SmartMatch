@@ -7,12 +7,12 @@ import { LoadingSpinner } from '../../../components/shared/cvProfileShared';
 import ProfileLayoutSandbox from '../../../components/candidate-profile/sandbox/ProfileLayoutSandbox';
 import { getBlockItems } from '../../../components/candidate-profile/shared/blockConfig';
 import { BLOCK_FORM_CONFIGS } from '../../../components/candidate-profile/shared/blockFormConfig';
-import BlockListEditorModal from '../../../components/candidate-profile/BlockListEditorModal';
-import SkillEditorModal from '../../../components/candidate-profile/SkillEditorModal';
-import LanguageEditorModal from '../../../components/candidate-profile/LanguageEditorModal';
-import ProfileInfoModal from '../../../components/candidate-profile/ProfileInfoModal';
+import BlockListEditorModal from '../../../components/candidate-profile/modals/BlockListEditorModal';
+import SkillEditorModal from '../../../components/candidate-profile/modals/SkillEditorModal';
+import LanguageEditorModal from '../../../components/candidate-profile/modals/LanguageEditorModal';
+import ProfileInfoModal from '../../../components/candidate-profile/modals/ProfileInfoModal';
 import AvatarModal from '../../../components/candidate-profile/modals/AvatarModal';
-import ProfileToCvPicker from '../../../components/candidate-profile/ProfileToCvPicker';
+import ProfileToCvPicker from '../../../components/candidate-profile/modals/ProfileToCvPicker';
 import { FileText } from 'lucide-react';
 
 const ProfilePage = () => {

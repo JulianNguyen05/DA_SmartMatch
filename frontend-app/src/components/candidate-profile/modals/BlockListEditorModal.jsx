@@ -1,10 +1,10 @@
 // src/components/candidate-profile/BlockListEditorModal.jsx
 import React, { useState } from 'react';
 import { Plus, Pencil, Trash2, ArrowLeft } from 'lucide-react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
-import Input from '../common/Input';
-import candidateService from '../../features/candidate/candidateService';
+import Modal from '../../common/Modal';
+import Button from '../../common/Button';
+import Input from '../../common/Input';
+import candidateService from '../../../features/candidate/candidateService';
 import { BLOCK_FORM_CONFIGS } from '../shared/blockFormConfig';
 
 /**

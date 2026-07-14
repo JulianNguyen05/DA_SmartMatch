@@ -1,10 +1,10 @@
 // src/components/candidate-profile/SkillEditorModal.jsx
 import React, { useState } from 'react';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
-import candidateService from '../../features/candidate/candidateService';
-import ReferenceValueAutocomplete from './ReferenceValueAutocomplete';
+import Modal from '../../common/Modal';
+import Button from '../../common/Button';
+import candidateService from '../../../features/candidate/candidateService';
+import ReferenceValueAutocomplete from '../shared/ReferenceValueAutocomplete';
 
 const LEVEL_OPTIONS = ['Cơ bản', 'Trung bình', 'Thành thạo', 'Chuyên gia'];
 

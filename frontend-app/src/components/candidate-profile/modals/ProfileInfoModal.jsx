@@ -1,9 +1,9 @@
 // src/components/candidate-profile/ProfileInfoModal.jsx
 import React, { useState, useEffect } from 'react';
-import Modal from '../common/Modal';
-import Button from '../common/Button';
-import Input from '../common/Input';
-import candidateService from '../../features/candidate/candidateService';
+import Modal from '../../common/Modal';
+import Button from '../../common/Button';
+import Input from '../../common/Input';
+import candidateService from '../../../features/candidate/candidateService';
 
 // PERSONAL_INFO và SOCIAL_LINKS cùng lưu qua 1 API POST /profile (CandidateProfileRequest),
 // nên gộp chung 1 modal — mở từ block nào cũng ra form này.
