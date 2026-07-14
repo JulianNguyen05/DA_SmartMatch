@@ -12,6 +12,8 @@ import SkillEditorModal from '../../../components/candidate-profile/SkillEditorM
 import LanguageEditorModal from '../../../components/candidate-profile/LanguageEditorModal';
 import ProfileInfoModal from '../../../components/candidate-profile/ProfileInfoModal';
 import AvatarModal from '../../../components/candidate-profile/AvatarModal';
+import ProfileToCvPicker from '../../../components/candidate-profile/ProfileToCvPicker';
+import { FileText } from 'lucide-react';
 
 const ProfilePage = () => {
   const userId = authService.getCurrentUser()?.userId;
@@ -21,6 +23,7 @@ const ProfilePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
   const [editingBlockType, setEditingBlockType] = useState(null); // block đang mở modal, null = đóng hết
+  const [isCvPickerOpen, setIsCvPickerOpen] = useState(false);
 
   const showToast = useCallback(({ type, message }) => setToast({ show: true, type, message }), []);
 
@@ -78,11 +81,19 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col h-full space-y-6 max-w-4xl mx-auto">
-      <header className="bg-white px-6 py-5 rounded-2xl shadow-sm border border-gray-100">
-        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Hồ Sơ Năng Lực</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Kéo-thả để sắp xếp thứ tự hiển thị, bấm biểu tượng bút chì để chỉnh sửa từng mục
-        </p>
+      <header className="bg-white px-6 py-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Hồ Sơ Năng Lực</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Kéo-thả để sắp xếp thứ tự hiển thị, bấm biểu tượng bút chì để chỉnh sửa từng mục
+          </p>
+        </div>
+        <button
+          onClick={() => setIsCvPickerOpen(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors shrink-0"
+        >
+          <FileText size={16} /> Tạo CV từ hồ sơ
+        </button>
       </header>
 
       {toast.show && <Toast type={toast.type} message={toast.message} onClose={() => setToast({ show: false })} />}
@@ -157,6 +168,14 @@ const ProfilePage = () => {
           onClose={() => setEditingBlockType(null)}
           onSaved={fetchFullProfile}
           onToast={showToast}
+        />
+      )}
+      {/* ─── Tạo CV từ hồ sơ (tiến độ 10) ─── */}
+      {isCvPickerOpen && (
+        <ProfileToCvPicker
+          profileData={profileData}
+          isOpen={true}
+          onClose={() => setIsCvPickerOpen(false)}
         />
       )}
     </div>

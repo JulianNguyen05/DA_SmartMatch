@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 import Modal from "../../../components/common/Modal";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Palette,
   Eye,
@@ -116,6 +116,7 @@ const wlBuilderStyles = `
 const CVBuilderPage = () => {
   const { id: cvId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("layout");
   const [isPanelOpen, setIsPanelOpen] = useState(true);
   const [activeDragId, setActiveDragId] = useState(null);
@@ -195,14 +196,38 @@ const CVBuilderPage = () => {
 
   useEffect(() => {
     const fetchCvData = async () => {
-      if (!cvId) {
-        const initialStr = JSON.stringify({
-          title: "CV chưa có tên",
-          data: cvData,
-        });
-        setInitialDataStr(initialStr);
-        return;
+    if (!cvId) {
+      const prefillData = location.state?.prefillData;
+      const prefillTemplate = location.state?.prefillTemplate || "simple";
+
+      let initialCvData = {
+        settings: defaultTemplateConfig.defaultSettings,
+        layout: defaultTemplateConfig.defaultLayout,
+        data: defaultTemplateConfig.defaultData,
+      };
+
+      if (prefillData) {
+        const tplConfig = TEMPLATE_REGISTRY[prefillTemplate]?.config || defaultTemplateConfig;
+        initialCvData = {
+          settings: { ...tplConfig.defaultSettings, template: prefillTemplate },
+          layout: tplConfig.defaultLayout,
+          // prefillData đã spread lên defaultData rỗng ở ProfileToCvPicker, nên merge
+          // lại với defaultData THẬT của template đã chọn để không thiếu field nào
+          // (vd sectionTitles, references...) mà prefillData không đụng tới.
+          data: { ...tplConfig.defaultData, ...prefillData },
+        };
+        setCvData(initialCvData);
+        // Xóa location.state để F5 lại trang không bị điền lại dữ liệu cũ ngoài ý muốn
+        window.history.replaceState({}, document.title);
       }
+
+      const initialStr = JSON.stringify({
+        title: "CV chưa có tên",
+        data: initialCvData,
+      });
+      setInitialDataStr(initialStr);
+      return;
+    }
 
       const currentUser = authService.getCurrentUser();
       if (!currentUser?.userId) return;
