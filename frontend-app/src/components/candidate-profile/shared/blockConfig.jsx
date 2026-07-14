@@ -5,6 +5,7 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
+import { Phone, Mail, Calendar, MapPin, Globe, Link2, Code2 } from 'lucide-react';
 import { getFileUrl } from '../../../utils/fileUrl';
 
 // dataKey: field tương ứng trong response của candidateService.getFullProfile()
@@ -41,8 +42,9 @@ export const BLOCK_COLOR = {
 };
 
 // ─── Kích thước mặc định trên lưới 12 cột khi chưa có layout đã lưu ────────
+// PERSONAL_INFO cao hơn 1 chút (5 → 6 hàng) để đủ chỗ cho các chip + phần giới thiệu.
 export const DEFAULT_GRID_SIZE = {
-  PERSONAL_INFO: { w: 6, h: 5 },
+  PERSONAL_INFO: { w: 6, h: 6 },
   AVATAR: { w: 3, h: 5 },
   SOCIAL_LINKS: { w: 3, h: 5 },
   EXPERIENCE: { w: 6, h: 7 },
@@ -91,6 +93,21 @@ const describeItem = (blockType, item) => {
   }
 };
 
+/** dd/mm/yyyy từ chuỗi ISO "yyyy-mm-dd" (tránh lệch múi giờ so với new Date().toLocaleDateString) */
+const formatDob = (dob) => {
+  if (!dob) return '';
+  const [y, m, d] = dob.split('-');
+  return d && m && y ? `${d}/${m}/${y}` : dob;
+};
+
+/** Thẻ nhỏ viền đen kèm icon — đơn vị hiển thị lặp lại cho info chip / social link chip */
+const InfoChip = ({ icon: Icon, text, maxWidth = '160px' }) => (
+  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-black bg-white border-2 border-black px-2 py-1 leading-none">
+    <Icon size={12} strokeWidth={2.5} className="shrink-0" />
+    <span className="truncate" style={{ maxWidth }}>{text}</span>
+  </span>
+);
+
 /**
  * Render nội dung tóm tắt cho 1 block (dùng trong ProfileBlockCard).
  * Với block đơn (PERSONAL_INFO/AVATAR/SOCIAL_LINKS) đọc trực tiếp profileData.profile.
@@ -101,28 +118,75 @@ export const renderBlockSummary = (blockType, profileData) => {
 
   if (blockType === 'PERSONAL_INFO') {
     if (!profile?.fullName) return <EmptyHint text="Chưa cập nhật thông tin cá nhân" />;
+
+    const chips = [
+      profile.phone && { icon: Phone, text: profile.phone },
+      profile.emailContact && { icon: Mail, text: profile.emailContact },
+      (profile.gender || profile.dob) && {
+        icon: Calendar,
+        text: [profile.gender, formatDob(profile.dob)].filter(Boolean).join(' · '),
+      },
+      profile.address && { icon: MapPin, text: profile.address },
+    ].filter(Boolean);
+
     return (
-      <div className="text-sm text-gray-700">
-        <span className="font-bold text-gray-900">{profile.fullName}</span>
-        {profile.headline && <span className="text-gray-500"> · {profile.headline}</span>}
+      <div className="space-y-3">
+        {/* Tên + chức danh */}
+        <div className="pb-2.5 border-b-2 border-black/10">
+          <p className="text-sm font-black text-black leading-tight">{profile.fullName}</p>
+          {profile.headline && (
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mt-0.5">{profile.headline}</p>
+          )}
+        </div>
+
+        {/* Chip thông tin liên hệ */}
+        {chips.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {chips.map((chip, idx) => <InfoChip key={idx} icon={chip.icon} text={chip.text} />)}
+          </div>
+        )}
+
+        {/* Giới thiệu bản thân */}
+        {profile.summary && (
+          <div className="border-2 border-dashed border-gray-300 px-2.5 py-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Giới thiệu</p>
+            <p className="text-xs text-gray-600 leading-snug line-clamp-3">{profile.summary}</p>
+          </div>
+        )}
       </div>
     );
   }
 
   if (blockType === 'AVATAR') {
-    // profile.avatarUrl là đường dẫn TƯƠNG ĐỐI do backend trả về (vd "avatars/1_x.jpg")
-    // -> phải ghép thành URL đầy đủ trỏ về backend, nếu không ảnh sẽ vỡ (404)
-    // vì trình duyệt tự ghép vào origin của frontend (localhost:5173).
+    // Ảnh co giãn theo đúng khung cha (card sandbox) thay vì kích thước cố
+    // định nhỏ — card resize to/nhỏ thế nào thì ảnh theo thế đó.
     const avatarSrc = getFileUrl(profile?.avatarUrl);
     return avatarSrc
-      ? <img src={avatarSrc} alt="avatar" className="w-12 h-12 border-2 border-black object-cover" />
+      ? (
+        <div className="w-full h-full min-h-[80px]">
+          <img
+            src={avatarSrc}
+            alt="avatar"
+            className="w-full h-full object-cover border-[3px] border-black"
+          />
+        </div>
+      )
       : <EmptyHint text="Chưa có ảnh đại diện" />;
   }
 
   if (blockType === 'SOCIAL_LINKS') {
-    const links = [profile?.websiteUrl, profile?.linkedinUrl, profile?.githubUrl].filter(Boolean);
-    return links.length
-      ? <div className="text-sm text-gray-600">{links.length} liên kết đã thêm</div>
+    const chips = [
+      profile?.websiteUrl && { icon: Globe, text: profile.websiteUrl },
+      profile?.linkedinUrl && { icon: Link2, text: profile.linkedinUrl },
+      profile?.githubUrl && { icon: Code2, text: profile.githubUrl },
+    ].filter(Boolean);
+
+    return chips.length
+      ? (
+        <div className="flex flex-wrap gap-1.5">
+          {chips.map((chip, idx) => <InfoChip key={idx} icon={chip.icon} text={chip.text} maxWidth="180px" />)}
+        </div>
+      )
       : <EmptyHint text="Chưa thêm liên kết nào" />;
   }
 

@@ -1,10 +1,11 @@
-// src/components/candidate-profile/AvatarModal.jsx
+// src/components/candidate-profile/modals/AvatarModal.jsx
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
-import Modal from '../../common/Modal';
-import Button from '../../common/Button';
+import NeoModal from '../../common/neo/NeoModal';
+import NeoButton from '../../common/neo/NeoButton';
 import candidateService from '../../../features/candidate/candidateService';
 import { getFileUrl } from '../../../utils/fileUrl';
+import { BLOCK_COLOR } from '../shared/blockConfig';
 
 const AvatarModal = ({ userId, currentAvatarUrl, isOpen, onClose, onSaved, onToast }) => {
   const [file, setFile] = useState(null);
@@ -42,33 +43,46 @@ const AvatarModal = ({ userId, currentAvatarUrl, isOpen, onClose, onSaved, onToa
     }
   };
 
-  // previewUrl là blob: URL cục bộ (từ URL.createObjectURL khi vừa chọn ảnh
-  // mới) — giữ nguyên, không qua getFileUrl(). currentAvatarUrl là đường dẫn
-  // tương đối do backend trả về, cần ghép thành URL đầy đủ trỏ về backend.
+  // previewUrl là blob: URL cục bộ (vừa chọn ảnh mới) — giữ nguyên, KHÔNG qua
+  // getFileUrl(). currentAvatarUrl là đường dẫn tương đối do backend trả về,
+  // cần ghép thành URL đầy đủ trỏ về backend.
   const displayUrl = previewUrl || getFileUrl(currentAvatarUrl);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Ảnh đại diện">
-      <div className="p-6 min-w-[360px] flex flex-col items-center gap-4">
+    <NeoModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title="Ảnh đại diện"
+      accentColor={BLOCK_COLOR.AVATAR}
+    >
+      <div className="p-6 min-w-[320px] sm:min-w-[360px] flex flex-col items-center gap-4">
         {displayUrl ? (
-          <img src={displayUrl} alt="avatar preview" className="w-32 h-32 rounded-full object-cover border border-gray-200" />
+          <img
+            src={displayUrl}
+            alt="avatar preview"
+            className="w-40 h-40 object-cover border-[3px] border-black"
+            style={{ boxShadow: '4px 4px 0px 0px #111111' }}
+          />
         ) : (
-          <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center text-gray-300">
-            <Upload size={28} />
+          <div
+            className="w-40 h-40 bg-white border-[3px] border-black flex items-center justify-center text-black"
+            style={{ boxShadow: '4px 4px 0px 0px #111111' }}
+          >
+            <Upload size={28} strokeWidth={2.5} />
           </div>
         )}
 
-        <label className="cursor-pointer text-sm font-semibold text-indigo-600 hover:text-indigo-800">
+        <label className="cursor-pointer text-xs font-black uppercase tracking-wide text-black border-b-[3px] border-black pb-0.5 hover:opacity-70 transition-opacity">
           Chọn ảnh khác
           <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
         </label>
 
-        <div className="flex justify-end gap-2 w-full pt-2">
-          <Button variant="outline" onClick={handleClose} className="flex-1">Hủy</Button>
-          <Button onClick={handleSubmit} isLoading={isSubmitting} className="flex-1">Lưu</Button>
+        <div className="flex justify-end gap-2.5 w-full pt-2">
+          <NeoButton variant="outline" onClick={handleClose} className="flex-1">Hủy</NeoButton>
+          <NeoButton onClick={handleSubmit} isLoading={isSubmitting} className="flex-1">Lưu</NeoButton>
         </div>
       </div>
-    </Modal>
+    </NeoModal>
   );
 };
 

@@ -1,14 +1,14 @@
 // src/components/candidate-profile/LanguageEditorModal.jsx
 import React, { useState } from 'react';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
-import Modal from '../../common/Modal';
-import Button from '../../common/Button';
+import NeoModal from '../../common/neo/NeoModal';
+import NeoButton from '../../common/neo/NeoButton';
 import candidateService from '../../../features/candidate/candidateService';
 import ReferenceValueAutocomplete from '../shared/ReferenceValueAutocomplete';
 
 const PROFICIENCY_OPTIONS = ['Cơ bản', 'Trung cấp', 'Thành thạo', 'Bản ngữ'];
 
-const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast }) => {
+const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast, accentColor = '#34D399' }) => {
   const [mode, setMode] = useState('list');
   const [selected, setSelected] = useState(null);
   const [proficiency, setProficiency] = useState('Trung cấp');
@@ -66,22 +66,40 @@ const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Ngôn ngữ">
+    <NeoModal isOpen={isOpen} onClose={handleClose} title="Ngôn ngữ" accentColor={accentColor}>
       <div className="p-5 min-w-[420px] max-w-[560px]">
         {mode === 'list' ? (
           <>
-            <div className="space-y-2 max-h-[420px] overflow-y-auto">
-              {items.length === 0 && <p className="text-sm text-gray-400 italic text-center py-8">Chưa có ngôn ngữ nào.</p>}
+            <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-0.5">
+              {items.length === 0 && (
+                <p className="text-sm font-bold text-gray-400 uppercase tracking-wide text-center py-8 border-[3px] border-dashed border-gray-300">
+                  Chưa có ngôn ngữ nào.
+                </p>
+              )}
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 p-3 bg-white border-[3px] border-black"
+                  style={{ boxShadow: '3px 3px 0px 0px #111111' }}
+                >
                   <div className="min-w-0 flex items-center gap-2">
-                    <span className="text-sm font-semibold text-gray-800">{item.languageName}</span>
-                    <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">{item.proficiency}</span>
+                    <span className="text-sm font-black text-black">{item.languageName}</span>
+                    <span className="text-[10px] font-black uppercase tracking-wide bg-[#34D399] text-black border-2 border-black px-2 py-0.5">
+                      {item.proficiency}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => openEditForm(item)} className="text-xs text-indigo-600 hover:underline px-2">Sửa</button>
-                    <button onClick={() => handleDelete(item)} className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg">
-                      <Trash2 size={15} />
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      onClick={() => openEditForm(item)}
+                      className="px-2.5 py-1 text-[11px] font-black uppercase bg-white border-2 border-black text-black hover:bg-black hover:text-white transition-colors"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="p-1.5 bg-white border-2 border-black text-black hover:bg-[#F87171] transition-colors"
+                    >
+                      <Trash2 size={14} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
@@ -90,21 +108,21 @@ const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast 
 
             <button
               onClick={() => { resetToList(); setMode('form'); }}
-              className="w-full mt-4 py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-semibold
-                hover:text-indigo-600 hover:border-indigo-400 hover:bg-indigo-50/50 transition-all flex items-center justify-center gap-2"
+              className="w-full mt-4 py-3 border-[3px] border-dashed border-black text-black font-black uppercase tracking-wide text-sm
+                hover:bg-black hover:text-white transition-colors flex items-center justify-center gap-2"
             >
-              <Plus size={16} /> Thêm ngôn ngữ
+              <Plus size={16} strokeWidth={3} /> Thêm ngôn ngữ
             </button>
           </>
         ) : (
           <>
-            <button onClick={resetToList} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-4">
-              <ArrowLeft size={15} /> Quay lại danh sách
+            <button onClick={resetToList} className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wide text-black hover:opacity-60 mb-4">
+              <ArrowLeft size={15} strokeWidth={3} /> Quay lại danh sách
             </button>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngôn ngữ *</label>
+                <label className="block text-xs font-black uppercase tracking-wide text-black mb-1.5">Ngôn ngữ *</label>
                 <ReferenceValueAutocomplete
                   type="LANGUAGE"
                   userId={userId}
@@ -116,15 +134,17 @@ const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Mức độ thành thạo</label>
+                <label className="block text-xs font-black uppercase tracking-wide text-black mb-2">Mức độ thành thạo</label>
                 <div className="grid grid-cols-2 gap-2">
                   {PROFICIENCY_OPTIONS.map((p) => (
                     <button
                       key={p}
                       type="button"
                       onClick={() => setProficiency(p)}
-                      className={`py-2 px-3 rounded-lg text-sm font-medium border transition-all ${
-                        proficiency === p ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                      className={`py-2.5 px-3 text-sm font-black uppercase tracking-wide border-[3px] border-black transition-all duration-100 ${
+                        proficiency === p
+                          ? 'bg-black text-white'
+                          : 'bg-white text-black hover:shadow-[3px_3px_0px_0px_#111111] hover:-translate-x-[1px] hover:-translate-y-[1px]'
                       }`}
                     >
                       {p}
@@ -135,13 +155,13 @@ const LanguageEditorModal = ({ userId, items, isOpen, onClose, onSaved, onToast 
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={resetToList}>Hủy</Button>
-              <Button onClick={handleSubmit} isLoading={isSubmitting}>Lưu</Button>
+              <NeoButton variant="outline" onClick={resetToList}>Hủy</NeoButton>
+              <NeoButton onClick={handleSubmit} isLoading={isSubmitting}>Lưu</NeoButton>
             </div>
           </>
         )}
       </div>
-    </Modal>
+    </NeoModal>
   );
 };
 

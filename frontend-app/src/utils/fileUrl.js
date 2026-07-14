@@ -1,8 +1,11 @@
 // src/utils/fileUrl.js
-// Backend trả về đường dẫn TƯƠNG ĐỐI cho file tĩnh (avatar, logo công ty, cv...),
-// ví dụ "avatars/1_xxx.jpg" — khớp với cách LocalFileStorageService.storeFile()
-// trả về (subDirectory + "/" + finalFileName) và được WebMvcConfig map ra URL
-// công khai dưới "/uploads/**".
+// Backend trả về đường dẫn TƯƠNG ĐỐI cho file tĩnh (avatar, logo công ty, cv...).
+// Thực tế đã quan sát: giá trị có thể tới ở 1 trong 2 dạng tuỳ chỗ gọi:
+//   - "avatars/1_xxx.jpg"          (không có tiền tố "uploads/")
+//   - "uploads/avatars/1_xxx.jpg"  (đã có sẵn tiền tố "uploads/")
+// Cả 2 đều được WebConfig map ra cùng 1 nơi vật lý qua "/uploads/**", nên hàm
+// này CHUẨN HÓA: luôn bỏ tiền tố "uploads/" nếu có sẵn, rồi mới thêm lại đúng
+// 1 lần — tránh bị lặp đôi thành "/uploads/uploads/...".
 //
 // axiosClient.baseURL lại có hậu tố "/api/v1" (dùng cho gọi API), nên KHÔNG thể
 // dùng thẳng cho file tĩnh — cần bỏ "/api/v1" để lấy đúng origin của backend.
@@ -14,7 +17,7 @@ const BACKEND_ORIGIN = RAW_API_BASE.replace(/\/api\/v1\/?$/, '');
  * Ghép đường dẫn tương đối (backend trả về) thành URL đầy đủ để dùng trong
  * <img src>, <a href>... Trả về null nếu không có path.
  *
- * @param {string} relativePath - vd "avatars/1_xxx.jpg" hoặc "companies/logos/logo1.jpg"
+ * @param {string} relativePath - vd "avatars/1_x.jpg" hoặc "uploads/avatars/1_x.jpg"
  * @returns {string|null}
  */
 export const getFileUrl = (relativePath) => {
@@ -23,7 +26,10 @@ export const getFileUrl = (relativePath) => {
   // Nếu backend đổi ý trả URL tuyệt đối trong tương lai thì vẫn chạy đúng
   if (/^https?:\/\//i.test(relativePath)) return relativePath;
 
-  const cleanPath = relativePath.replace(/^\/+/, '');
+  const cleanPath = relativePath
+    .replace(/^\/+/, '')       // bỏ dấu "/" ở đầu nếu có
+    .replace(/^uploads\/+/i, ''); // bỏ tiền tố "uploads/" nếu backend đã trả sẵn
+
   return `${BACKEND_ORIGIN}/uploads/${cleanPath}`;
 };
 

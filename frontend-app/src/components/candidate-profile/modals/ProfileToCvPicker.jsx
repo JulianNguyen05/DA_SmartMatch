@@ -2,8 +2,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText } from 'lucide-react';
-import Modal from '../../common/Modal';
-import Button from '../../common/Button';
+import NeoModal from '../../common/neo/NeoModal';
+import NeoButton from '../../common/neo/NeoButton';
 import { getBlockItems, BLOCK_META } from '../shared/blockConfig';
 import { mapProfileToCvData } from '../../cv-builder/shared/mapProfileToCvData';
 
@@ -72,17 +72,19 @@ const ProfileToCvPicker = ({ profileData, isOpen, onClose }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Tạo CV từ hồ sơ">
+    <NeoModal isOpen={isOpen} onClose={onClose} title="Tạo CV từ hồ sơ" accentColor="#C4B5FD">
       <div className="p-5 min-w-[460px] max-w-[600px]">
         <div className="mb-5">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Chọn mẫu CV</label>
+          <label className="block text-xs font-black uppercase tracking-wide text-black mb-2">Chọn mẫu CV</label>
           <div className="flex gap-2">
             {TEMPLATE_OPTIONS.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setTemplate(t.value)}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
-                  template === t.value ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300'
+                className={`flex-1 py-2.5 text-sm font-black uppercase tracking-wide border-[3px] border-black transition-all duration-100 ${
+                  template === t.value
+                    ? 'bg-black text-white'
+                    : 'bg-white text-black hover:shadow-[3px_3px_0px_0px_#111111] hover:-translate-x-[1px] hover:-translate-y-[1px]'
                 }`}
               >
                 {t.label}
@@ -91,12 +93,12 @@ const ProfileToCvPicker = ({ profileData, isOpen, onClose }) => {
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-sm font-medium text-gray-600 mb-3">
           Thông tin cá nhân, ảnh đại diện và liên kết mạng xã hội luôn được đưa vào CV.
           Chọn thêm nội dung bên dưới:
         </p>
 
-        <div className="space-y-4 max-h-[360px] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
           {PICKABLE_BLOCK_TYPES.map((type) => {
             const items = getBlockItems(type, profileData);
             if (items.length === 0) return null;
@@ -104,21 +106,24 @@ const ProfileToCvPicker = ({ profileData, isOpen, onClose }) => {
             const allChecked = items.every((i) => selected[type]?.has(i.id));
 
             return (
-              <div key={type} className="border border-gray-100 rounded-xl p-3">
+              <div key={type} className="border-[3px] border-black p-3 bg-white">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-gray-700">{meta.label}</span>
-                  <button onClick={() => toggleAll(type, items)} className="text-xs text-indigo-600 hover:underline">
+                  <span className="text-xs font-black uppercase tracking-wide text-black">{meta.label}</span>
+                  <button
+                    onClick={() => toggleAll(type, items)}
+                    className="text-[11px] font-black uppercase tracking-wide text-black underline decoration-2 underline-offset-2 hover:opacity-60"
+                  >
                     {allChecked ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
                   </button>
                 </div>
                 <div className="space-y-1.5">
                   {items.map((item) => (
-                    <label key={item.id} className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <label key={item.id} className="flex items-center gap-2.5 text-sm font-medium text-black cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selected[type]?.has(item.id) || false}
                         onChange={() => toggleItem(type, item.id)}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 border-2 border-black accent-black cursor-pointer shrink-0"
                       />
                       <span className="truncate">
                         {item.skillName || item.companyName || item.schoolName || item.projectName ||
@@ -132,14 +137,14 @@ const ProfileToCvPicker = ({ profileData, isOpen, onClose }) => {
           })}
         </div>
 
-        <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-gray-100">
-          <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={handleCreate}>
-            <FileText size={16} className="mr-1.5 inline" /> Tạo CV
-          </Button>
+        <div className="flex justify-end gap-2 mt-6 pt-4 border-t-[3px] border-black">
+          <NeoButton variant="outline" onClick={onClose}>Hủy</NeoButton>
+          <NeoButton onClick={handleCreate}>
+            <FileText size={16} className="mr-1.5 inline" strokeWidth={2.5} /> Tạo CV
+          </NeoButton>
         </div>
       </div>
-    </Modal>
+    </NeoModal>
   );
 };
 
