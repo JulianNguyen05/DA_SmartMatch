@@ -49,7 +49,7 @@ const buildDefaultGrid = (layoutItems) => {
  * @param {boolean}  isEditMode   - true = đang chỉnh sửa bố cục, false = chỉ xem portfolio
  */
 const ProfileLayoutSandbox = ({
-  layout, profileData, onReorder, onToggleVisibility, onEdit, isEditMode,
+  layout, profileData, onReorder, onToggleVisibility, onEdit, isEditMode, userID, onSaved, onToast,
 }) => {
   const userId = authService.getCurrentUser()?.userId;
   const storageKey = `${STORAGE_PREFIX}_${userId}`;
@@ -166,6 +166,9 @@ const ProfileLayoutSandbox = ({
                 onToggleVisibility={onToggleVisibility}
                 onEdit={onEdit}
                 isEditMode={isEditMode}
+                userId={userId}   
+                onSaved={onSaved} 
+                onToast={onToast} 
               />
             </div>
           );

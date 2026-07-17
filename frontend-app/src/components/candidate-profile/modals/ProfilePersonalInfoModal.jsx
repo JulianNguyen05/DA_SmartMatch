@@ -1,4 +1,4 @@
-// src/components/candidate-profile/ProfileInfoModal.jsx
+// src/components/candidate-profile/ProfilePersonalInfoModal.jsx
 import React, { useState, useEffect } from 'react';
 import NeoModal from '../../common/neo/NeoModal';
 import NeoButton from '../../common/neo/NeoButton';
@@ -6,13 +6,17 @@ import NeoInput from '../../common/neo/NeoInput';
 import candidateService from '../../../features/candidate/candidateService';
 
 // PERSONAL_INFO và SOCIAL_LINKS cùng lưu qua 1 API POST /profile (CandidateProfileRequest),
-// nên gộp chung 1 modal — mở từ block nào cũng ra form này.
+// nhưng tách UI thành 2 modal riêng để khớp đúng với 2 card trên ProfilePage — tránh
+// việc sửa 1 phần mà tưởng cả 2 phần đều được cập nhật.
+// Form vẫn giữ TOÀN BỘ field của profile trong state (kể cả websiteUrl/linkedinUrl/githubUrl)
+// để khi submit không vô tình ghi đè mất phần social link mà người dùng đã lưu trước đó,
+// chỉ là modal này KHÔNG hiển thị input cho các field đó.
 const EMPTY_FORM = {
   fullName: '', headline: '', phone: '', emailContact: '', gender: 'Nam', dob: '', address: '',
   websiteUrl: '', linkedinUrl: '', githubUrl: '', summary: '',
 };
 
-const ProfileInfoModal = ({ userId, profile, isOpen, onClose, onSaved, onToast, accentColor = '#2DD4BF' }) => {
+const ProfilePersonalInfoModal = ({ userId, profile, isOpen, onClose, onSaved, onToast, accentColor = '#5B8DEF' }) => {
   const [form, setForm] = useState(EMPTY_FORM);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,7 +34,7 @@ const ProfileInfoModal = ({ userId, profile, isOpen, onClose, onSaved, onToast, 
     setIsSubmitting(true);
     try {
       await candidateService.createOrUpdateProfile(userId, { ...form, dob: form.dob || null });
-      onToast?.({ type: 'success', message: 'Cập nhật hồ sơ thành công!' });
+      onToast?.({ type: 'success', message: 'Cập nhật thông tin cá nhân thành công!' });
       onSaved?.();
       onClose();
     } catch (error) {
@@ -80,11 +84,6 @@ const ProfileInfoModal = ({ userId, profile, isOpen, onClose, onSaved, onToast, 
           />
         </div>
 
-        <p className="text-xs font-black text-gray-400 uppercase tracking-widest pt-3 border-t-[3px] border-black">Liên kết mạng xã hội</p>
-        <NeoInput label="Website / Portfolio" value={form.websiteUrl} onChange={(e) => handleChange('websiteUrl', e.target.value)} placeholder="https://..." />
-        <NeoInput label="LinkedIn" value={form.linkedinUrl} onChange={(e) => handleChange('linkedinUrl', e.target.value)} placeholder="https://linkedin.com/in/..." />
-        <NeoInput label="GitHub" value={form.githubUrl} onChange={(e) => handleChange('githubUrl', e.target.value)} placeholder="https://github.com/..." />
-
         <div className="flex justify-end gap-2 pt-2">
           <NeoButton variant="outline" onClick={onClose}>Hủy</NeoButton>
           <NeoButton onClick={handleSubmit} isLoading={isSubmitting}>Lưu</NeoButton>
@@ -94,4 +93,4 @@ const ProfileInfoModal = ({ userId, profile, isOpen, onClose, onSaved, onToast, 
   );
 };
 
-export default ProfileInfoModal;
+export default ProfilePersonalInfoModal;

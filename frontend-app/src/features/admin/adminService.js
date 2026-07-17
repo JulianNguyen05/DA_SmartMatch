@@ -8,7 +8,6 @@ const adminService = {
   },
 
   // Kiểm duyệt tin tuyển dụng
-// Kiểm duyệt tin tuyển dụng
   moderateJob: async (jobId, action, reason = '') => {
     const response = await axiosClient.patch(`/admin/jobs/${jobId}/moderate`, {
       action: action,
@@ -44,13 +43,33 @@ const adminService = {
     return response.data;
   },
 
-// Lấy danh sách tin chờ duyệt (Đã sửa URL)
-// Lấy danh sách tin chờ duyệt (Đã xóa hẳn /api/v1)
+  // Lấy danh sách tin chờ duyệt
   getPendingJobs: async () => {
-    // Gọi đúng Endpoint của Admin thay vì gọi chung với public search
-    const response = await axiosClient.get(`/admin/jobs/pending`); // <-- Chỉ để /admin/jobs/pending
+    const response = await axiosClient.get(`/admin/jobs/pending`);
     return response.data;
-  }
+  },
+
+  // ==========================================
+  // [MỚI] DUYỆT ĐỀ XUẤT SKILL/LANGUAGE (ReferenceValueSuggestion)
+  // ==========================================
+
+  // status: 'PENDING' | 'APPROVED' | 'REJECTED' | undefined (undefined -> BE mặc định PENDING)
+  getSuggestions: async (status) => {
+    const response = await axiosClient.get('/admin/suggestions', {
+      params: status ? { status } : {},
+    });
+    return response.data;
+  },
+
+  approveSuggestion: async (suggestionId) => {
+    const response = await axiosClient.patch(`/admin/suggestions/${suggestionId}/approve`);
+    return response.data;
+  },
+
+  rejectSuggestion: async (suggestionId, reviewNote = '') => {
+    const response = await axiosClient.patch(`/admin/suggestions/${suggestionId}/reject`, { reviewNote });
+    return response.data;
+  },
 };
 
 export default adminService;

@@ -1,8 +1,12 @@
-/* Import Tailwind CSS v4 */
+/* 1. Tải Font chữ TRƯỚC */
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap');
+
+/* 2. Import Tailwind CSS v4 SAU */
 @import "tailwindcss";
 
-/* Cấu hình cơ bản (Tùy chọn) */
-html, body {
+/* 3. Cấu hình cơ bản (Tùy chọn) */
+html,
+body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -28,8 +32,23 @@ html, body {
 }
 
 /* Force tất cả màu Tailwind sang rgb thay vì oklch */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   --tw-text-opacity: 1;
   --tw-bg-opacity: 1;
   --tw-border-opacity: 1;
+}
+
+@theme {
+  /* Blueprint Dossier — 1 màu mực chính, không còn bảng màu cầu vồng theo block */
+  --color-ink: #2563EB;
+  --color-ink-dark: #1E40AF;
+  --color-ink-light: #EFF4FF;
+  --color-paper: #FAFAF8;
+  --color-graphite: #1C2333;
+
+  --font-display: 'Be Vietnam Pro', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-tag: 'JetBrains Mono', ui-monospace, monospace;
 }

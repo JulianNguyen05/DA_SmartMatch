@@ -2,14 +2,20 @@
 // ════════════════════════════════════════════════════════════════════════════
 // Cấu hình trung tâm cho 12 loại block ProfilePage — PHẢI khớp đúng enum
 // BlockType bên backend (domain.candidate.model.BlockType).
+//
+// [Blueprint Dossier] Không còn 1 màu riêng/block (BLOCK_COLOR cầu vồng cũ) —
+// giờ chỉ có 1 màu mực chính (--color-ink, xem index.css), block phân biệt
+// bằng ICON (BLOCK_ICON) đặt cạnh nhãn góc kiểu chú thích bản vẽ kỹ thuật.
 // ════════════════════════════════════════════════════════════════════════════
 
 import React from 'react';
-import { Phone, Mail, Calendar, MapPin, Globe, Link2, Code2 } from 'lucide-react';
+import {
+  User, Image as ImageIcon, Link2, Briefcase, GraduationCap, Sparkles,
+  FolderKanban, BadgeCheck, Trophy, Users, Languages, Heart,
+  Phone, Mail, Calendar, MapPin, Globe, Code2,
+} from 'lucide-react';
 import { getFileUrl } from '../../../utils/fileUrl';
 
-// dataKey: field tương ứng trong response của candidateService.getFullProfile()
-// repeatable: true nếu block chứa danh sách nhiều item (khớp BlockType.isRepeatable() backend)
 export const BLOCK_META = {
   PERSONAL_INFO: { label: 'Thông tin cá nhân', repeatable: false, dataKey: null },
   AVATAR: { label: 'Ảnh đại diện', repeatable: false, dataKey: null },
@@ -25,24 +31,21 @@ export const BLOCK_META = {
   HOBBY: { label: 'Sở thích', repeatable: true, dataKey: 'hobbies' },
 };
 
-// ─── Màu nền header cho từng block trong sandbox neobrutalism ──────────────
-export const BLOCK_COLOR = {
-  PERSONAL_INFO: '#5B8DEF',
-  AVATAR: '#2DD4BF',
-  SOCIAL_LINKS: '#B794F4',
-  EXPERIENCE: '#FB923C',
-  EDUCATION: '#FDE047',
-  SKILL: '#4ADE80',
-  PROJECT: '#F472B6',
-  CERTIFICATION: '#22D3EE',
-  AWARD: '#F87171',
-  ACTIVITY: '#818CF8',
-  LANGUAGE: '#38BDF8',
-  HOBBY: '#BEF264',
+// Ký hiệu 3-4 chữ dùng trong nhãn góc kiểu bản vẽ (VD "EXP · 02")
+export const BLOCK_TAG = {
+  PERSONAL_INFO: 'INFO', AVATAR: 'IMG', SOCIAL_LINKS: 'LINK',
+  EXPERIENCE: 'EXP', EDUCATION: 'EDU', SKILL: 'SKL', PROJECT: 'PRJ',
+  CERTIFICATION: 'CERT', AWARD: 'AWD', ACTIVITY: 'ACT', LANGUAGE: 'LANG', HOBBY: 'HOB',
+};
+
+export const BLOCK_ICON = {
+  PERSONAL_INFO: User, AVATAR: ImageIcon, SOCIAL_LINKS: Link2,
+  EXPERIENCE: Briefcase, EDUCATION: GraduationCap, SKILL: Sparkles,
+  PROJECT: FolderKanban, CERTIFICATION: BadgeCheck, AWARD: Trophy,
+  ACTIVITY: Users, LANGUAGE: Languages, HOBBY: Heart,
 };
 
 // ─── Kích thước mặc định trên lưới 12 cột khi chưa có layout đã lưu ────────
-// PERSONAL_INFO cao hơn 1 chút (5 → 6 hàng) để đủ chỗ cho các chip + phần giới thiệu.
 export const DEFAULT_GRID_SIZE = {
   PERSONAL_INFO: { w: 6, h: 6 },
   AVATAR: { w: 3, h: 5 },
@@ -65,34 +68,6 @@ export const getBlockItems = (blockType, profileData) => {
   return profileData?.[meta.dataKey] || [];
 };
 
-const MAX_PREVIEW_ITEMS = 3;
-
-/** Chuỗi mô tả ngắn 1 dòng cho từng loại item — dùng để render preview trên card */
-const describeItem = (blockType, item) => {
-  switch (blockType) {
-    case 'EXPERIENCE':
-      return [item.position, item.companyName].filter(Boolean).join(' tại ');
-    case 'EDUCATION':
-      return [item.schoolName, item.major].filter(Boolean).join(' — ');
-    case 'SKILL':
-      return item.level ? `${item.skillName} (${item.level})` : item.skillName;
-    case 'PROJECT':
-      return [item.projectName, item.role].filter(Boolean).join(' — ');
-    case 'CERTIFICATION':
-      return [item.name, item.issuingOrg].filter(Boolean).join(' — ');
-    case 'AWARD':
-      return [item.title, item.issuer].filter(Boolean).join(' — ');
-    case 'ACTIVITY':
-      return [item.organization, item.role].filter(Boolean).join(' — ');
-    case 'LANGUAGE':
-      return item.proficiency ? `${item.languageName} (${item.proficiency})` : item.languageName;
-    case 'HOBBY':
-      return item.name;
-    default:
-      return '';
-  }
-};
-
 /** dd/mm/yyyy từ chuỗi ISO "yyyy-mm-dd" (tránh lệch múi giờ so với new Date().toLocaleDateString) */
 const formatDob = (dob) => {
   if (!dob) return '';
@@ -100,18 +75,18 @@ const formatDob = (dob) => {
   return d && m && y ? `${d}/${m}/${y}` : dob;
 };
 
-/** Thẻ nhỏ viền đen kèm icon — đơn vị hiển thị lặp lại cho info chip / social link chip */
+/** Thẻ nhỏ viền mảnh kèm icon — dùng cho info chip / social link chip trong PERSONAL_INFO/SOCIAL_LINKS */
 const InfoChip = ({ icon: Icon, text, maxWidth = '160px' }) => (
-  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-black bg-white border-2 border-black px-2 py-1 leading-none">
-    <Icon size={12} strokeWidth={2.5} className="shrink-0" />
+  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-graphite bg-white border border-graphite/15 rounded-md px-2 py-1 leading-none font-body">
+    <Icon size={12} strokeWidth={2} className="shrink-0 text-graphite/50" />
     <span className="truncate" style={{ maxWidth }}>{text}</span>
   </span>
 );
 
 /**
- * Render nội dung tóm tắt cho 1 block (dùng trong ProfileBlockCard).
- * Với block đơn (PERSONAL_INFO/AVATAR/SOCIAL_LINKS) đọc trực tiếp profileData.profile.
- * Với block danh sách, hiện tối đa MAX_PREVIEW_ITEMS dòng + "còn N mục khác".
+ * [Chỉ dùng cho block CHƯA chuyển sang inline-editing: PERSONAL_INFO/AVATAR/SOCIAL_LINKS
+ * ở chế độ xem, hoặc SKILL/LANGUAGE trước khi làm bước 2]. 7 block danh sách đơn giản
+ * (Experience, Education...) giờ dùng InlineEntryList, KHÔNG còn gọi hàm này nữa.
  */
 export const renderBlockSummary = (blockType, profileData) => {
   const profile = profileData?.profile;
@@ -130,45 +105,31 @@ export const renderBlockSummary = (blockType, profileData) => {
     ].filter(Boolean);
 
     return (
-      <div className="space-y-3">
-        {/* Tên + chức danh */}
-        <div className="pb-2.5 border-b-2 border-black/10">
-          <p className="text-sm font-black text-black leading-tight">{profile.fullName}</p>
+      <div className="space-y-3 font-body">
+        <div className="pb-2.5 border-b border-graphite/10">
+          <p className="text-sm font-semibold text-graphite leading-tight font-display">{profile.fullName}</p>
           {profile.headline && (
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wide mt-0.5">{profile.headline}</p>
+            <p className="text-xs font-medium text-graphite/50 mt-0.5">{profile.headline}</p>
           )}
         </div>
-
-        {/* Chip thông tin liên hệ */}
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {chips.map((chip, idx) => <InfoChip key={idx} icon={chip.icon} text={chip.text} />)}
           </div>
         )}
-
-        {/* Giới thiệu bản thân */}
         {profile.summary && (
-          <div className="border-2 border-dashed border-gray-300 px-2.5 py-2">
-            <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">Giới thiệu</p>
-            <p className="text-xs text-gray-600 leading-snug line-clamp-3">{profile.summary}</p>
-          </div>
+          <p className="text-xs text-graphite/60 leading-snug line-clamp-3">{profile.summary}</p>
         )}
       </div>
     );
   }
 
   if (blockType === 'AVATAR') {
-    // Ảnh co giãn theo đúng khung cha (card sandbox) thay vì kích thước cố
-    // định nhỏ — card resize to/nhỏ thế nào thì ảnh theo thế đó.
     const avatarSrc = getFileUrl(profile?.avatarUrl);
     return avatarSrc
       ? (
         <div className="w-full h-full min-h-[80px]">
-          <img
-            src={avatarSrc}
-            alt="avatar"
-            className="w-full h-full object-cover border-[3px] border-black"
-          />
+          <img src={avatarSrc} alt="avatar" className="w-full h-full object-cover rounded-lg" />
         </div>
       )
       : <EmptyHint text="Chưa có ảnh đại diện" />;
@@ -182,31 +143,11 @@ export const renderBlockSummary = (blockType, profileData) => {
     ].filter(Boolean);
 
     return chips.length
-      ? (
-        <div className="flex flex-wrap gap-1.5">
-          {chips.map((chip, idx) => <InfoChip key={idx} icon={chip.icon} text={chip.text} maxWidth="180px" />)}
-        </div>
-      )
+      ? <div className="flex flex-wrap gap-1.5 font-body">{chips.map((chip, idx) => <InfoChip key={idx} icon={chip.icon} text={chip.text} maxWidth="180px" />)}</div>
       : <EmptyHint text="Chưa thêm liên kết nào" />;
   }
 
-  // Block danh sách
-  const items = getBlockItems(blockType, profileData);
-  if (items.length === 0) return <EmptyHint text="Chưa có dữ liệu" />;
-
-  const preview = items.slice(0, MAX_PREVIEW_ITEMS);
-  const remaining = items.length - preview.length;
-
-  return (
-    <ul className="text-sm text-gray-700 space-y-1">
-      {preview.map((item, idx) => (
-        <li key={item.id ?? idx} className="truncate">• {describeItem(blockType, item) || '(chưa đặt tên)'}</li>
-      ))}
-      {remaining > 0 && (
-        <li className="text-xs text-gray-400 italic">+ còn {remaining} mục khác</li>
-      )}
-    </ul>
-  );
+  return <EmptyHint text="Đang cập nhật" />;
 };
 
-const EmptyHint = ({ text }) => <p className="text-sm text-gray-300 italic">{text}</p>;
+const EmptyHint = ({ text }) => <p className="text-sm text-graphite/30 italic font-body">{text}</p>;

@@ -59,6 +59,7 @@ import CompanyModerationPage from "../pages/admin/CompanyModerationPage";
 import CategoryManagementPage from "../pages/admin/CategoryManagementPage";
 import ReportExportPage from "../pages/admin/ReportExportPage";
 import DemoProductManagementPage from "../pages/admin/DemoProductManagementPage";
+import SuggestionModerationPage from "../pages/admin/SuggestionModerationPage";
 
 // ==========================================
 // CONFIGURATION ROUTER
@@ -132,6 +133,7 @@ export const router = createBrowserRouter([
       { path: "jobs-moderation", element: <JobModerationPage /> },
       { path: "company-moderation", element: <CompanyModerationPage /> },
       { path: "categories", element: <CategoryManagementPage /> },
+      { path: "suggestions", element: <SuggestionModerationPage /> },
       { path: "reports", element: <ReportExportPage /> },
       { path: "demo-products", element: <DemoProductManagementPage /> },
     ],
