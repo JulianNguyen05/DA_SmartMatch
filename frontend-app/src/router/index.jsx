@@ -82,6 +82,7 @@ export const router = createBrowserRouter([
       { path: "candidate/dashboard", element: <CandidateDashboard /> },
       { path: "candidate/cv-manager", element: <CVManagerPage /> },
       { path: "candidate/cv-templates", element: <CVTemplatesPage /> },
+      { path: "candidate/cv-builder", element: <CVBuilderPage /> },
       { path: "candidate/cv-builder/:id", element: <CVBuilderPage /> },
       { path: "candidate/applications", element: <MyApplicationsPage /> },
       { path: "candidate/profile", element: <CandidateProfile /> },

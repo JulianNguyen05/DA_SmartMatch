@@ -4,6 +4,18 @@ import authService from '../../../features/auth/authService';
 import candidateService from '../../../features/candidate/candidateService';
 import Toast from '../../../components/common/Toast';
 import { LayoutGrid, Briefcase, LayoutTemplate, GraduationCap } from 'lucide-react';
+import { mapProfileToCvData } from '../../../components/cv-builder/shared/mapProfileToCvData';
+import { SIMPLE_TEMPLATE_CONFIG } from '../../../components/cv-builder/templates/SimpleTemplate';
+import { HARVARD_TEMPLATE_CONFIG } from '../../../components/cv-builder/templates/HarvardTemplate';
+import { PROFESSIONAL_TEMPLATE_CONFIG } from '../../../components/cv-builder/templates/ProfessionalTemplate';
+
+// Tra config (defaultData/defaultSettings/defaultLayout) theo id mẫu — dùng để build
+// prefillData đúng schema của TỪNG mẫu (không phải object tự chế như trước).
+const TEMPLATE_CONFIG_REGISTRY = {
+  simple: SIMPLE_TEMPLATE_CONFIG,
+  professional: PROFESSIONAL_TEMPLATE_CONFIG,
+  harvard: HARVARD_TEMPLATE_CONFIG,
+};
 
 // 1. CẤU HÌNH DỮ LIỆU CHÍNH XÁC 3 MẪU CV (Đã bỏ mảng colors, chỉ giữ 1 màu mặc định)
 const TEMPLATES = [
@@ -50,6 +62,11 @@ const CVTemplatesPage = () => {
     : TEMPLATES.filter(t => t.categories.includes(activeCategory));
 
   // 2. HÀM XỬ LÝ KHI CHỌN MẪU CV
+  // Không tạo CV rỗng ngay tại đây nữa — lấy hồ sơ ứng viên (getFullProfile), map sang
+  // đúng schema cvData.data của mẫu đã chọn (mapProfileToCvData), rồi điều hướng sang
+  // CVBuilderPage kèm prefillData qua location.state. CVBuilderPage (khi không có cvId
+  // trên URL) sẽ tự đọc location.state.prefillData để điền sẵn, và chỉ THỰC SỰ tạo CV
+  // trong DB khi người dùng bấm "Lưu thay đổi" ở đó.
   const handleUseTemplate = async (template) => {
     const currentUser = authService?.getCurrentUser ? authService.getCurrentUser() : null;
     const userId = currentUser?.userId || currentUser?.id;
@@ -62,49 +79,26 @@ const CVTemplatesPage = () => {
     setIsLoading(true);
     setError(null);
 
+    const tplConfig = TEMPLATE_CONFIG_REGISTRY[template.id] || SIMPLE_TEMPLATE_CONFIG;
+    let prefillData;
+
     try {
-      const defaultCVData = {
-        settings: {
-          template: template.id,
-          color: template.color, // Lấy trực tiếp màu mặc định của mẫu
-          font: 'Roboto',
-          fontSize: 'medium'
-        },
-        personalInfo: {
-          fullName: currentUser.fullName || '',
-          jobTitle: '',
-          email: currentUser.email || '',
-          phone: currentUser.phone || '',
-          address: '',
-          avatar: ''
-        },
-        objective: '',
-        experiences: [],
-        educations: [],
-        skills: []
-      };
-
-      const payload = {
-        fileName: 'CV Chưa đặt tên',
-        title: 'CV Chưa đặt tên', 
-        rawText: JSON.stringify(defaultCVData) 
-      };
-
-      const response = await candidateService.createCv(userId, payload);
-      const newCvId = response?.data?.id || response?.id; 
-
-      if (newCvId) {
-        navigate(`/candidate/cv-builder/${newCvId}`);
-      } else {
-        throw new Error('Không nhận được ID của CV mới từ máy chủ.');
-      }
-
+      const profileRes = await candidateService.getFullProfile(userId);
+      // candidateService trả nguyên response.data (bao gồm envelope {code, message, data}
+      // của backend) — CandidateProfileFullResponse thật sự nằm ở field "data" bên trong.
+      const profileFull = profileRes?.data || profileRes;
+      prefillData = mapProfileToCvData(profileFull, tplConfig.defaultData);
     } catch (err) {
-      console.error(err);
-      setError('Đã xảy ra lỗi khi khởi tạo CV. Vui lòng thử lại.');
-    } finally {
-      setIsLoading(false);
+      // Chưa có hồ sơ ứng viên (chưa từng điền ProfilePage) hoặc lỗi mạng tạm thời —
+      // vẫn cho tạo CV bình thường, chỉ là không có gì để điền sẵn (prefillData undefined
+      // -> CVBuilderPage tự dùng defaultData rỗng của mẫu như trước giờ).
+      console.warn('Không lấy được hồ sơ để điền sẵn CV, tạo CV trống:', err);
     }
+
+    setIsLoading(false);
+    navigate('/candidate/cv-builder', {
+      state: { prefillData, prefillTemplate: template.id },
+    });
   };
 
   return (
