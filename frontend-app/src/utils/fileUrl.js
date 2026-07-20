@@ -23,8 +23,12 @@ const BACKEND_ORIGIN = RAW_API_BASE.replace(/\/api\/v1\/?$/, '');
 export const getFileUrl = (relativePath) => {
   if (!relativePath) return null;
 
-  // Nếu backend đổi ý trả URL tuyệt đối trong tương lai thì vẫn chạy đúng
-  if (/^https?:\/\//i.test(relativePath)) return relativePath;
+  // Nếu backend đổi ý trả URL tuyệt đối trong tương lai thì vẫn chạy đúng.
+  // "data:" và "blob:" là URI ảnh preview tạo trực tiếp trên trình duyệt (vd
+  // FileReader.readAsDataURL khi người dùng vừa chọn ảnh mới trong CV editor,
+  // chưa kịp upload lên server) — PHẢI trả nguyên, không được ghép thêm tiền
+  // tố BACKEND_ORIGIN/uploads/ vào, nếu không sẽ tạo ra 1 URL rác không tồn tại.
+  if (/^(https?|data|blob):/i.test(relativePath)) return relativePath;
 
   const cleanPath = relativePath
     .replace(/^\/+/, '')       // bỏ dấu "/" ở đầu nếu có

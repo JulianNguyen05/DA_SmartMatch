@@ -4,6 +4,7 @@ import EditableTimelineList from '../shared/EditableTimelineList';
 import EditableRowList from '../shared/EditableRowList';
 import EditableTagList from '../shared/EditableTagList';
 import EditableParagraphList from '../shared/EditableParagraphList';
+import { getFileUrl } from '../../../utils/fileUrl'; // TODO: chỉnh lại path cho đúng cấu trúc thư mục thật
 import {
   commonEditableClass,
   handleHTMLBlur,
@@ -353,7 +354,7 @@ const SECTION_RENDERER = {
           onMouseLeave={() => setIsHovered(false)}
         >
           <img
-            src={data?.url || 'http://localhost:8080/uploads/logos/user.jpg'}
+            src={getFileUrl(data?.url) || 'http://localhost:8080/uploads/logos/user.jpg'}
             alt="Avatar"
             style={{
               width: '100%', height: '100%',

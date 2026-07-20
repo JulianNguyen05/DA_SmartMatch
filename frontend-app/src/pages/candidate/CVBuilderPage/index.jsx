@@ -730,7 +730,12 @@ const CVBuilderPage = () => {
             {uiState.isSaving && <Loader className="w-4 h-4 animate-spin" />}
             {uiState.isSaving
               ? "Đang lưu..."
-              : isDirty
+              // CV chưa có cvId nghĩa là CHƯA từng được lưu lên server dù local
+              // state trùng với baseline khởi tạo (isDirty=false) — không được
+              // hiển thị "Đã lưu" trong trường hợp này, kẻo gây hiểu lầm là đã
+              // lưu thành công. Chỉ coi là "Đã lưu" khi CV đã có cvId (tức đã lưu
+              // ít nhất 1 lần) và hiện không còn thay đổi nào chưa lưu.
+              : isDirty || !cvId
                 ? "Lưu thay đổi"
                 : "Đã lưu"}
           </button>
