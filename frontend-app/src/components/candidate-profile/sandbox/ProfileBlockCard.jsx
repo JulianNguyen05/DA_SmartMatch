@@ -1,39 +1,86 @@
 // src/components/candidate-profile/sandbox/ProfileBlockCard.jsx
 import React from 'react';
-import { GripVertical, Eye, EyeOff, Pencil } from 'lucide-react';
-import { BLOCK_META, BLOCK_TAG, BLOCK_ICON, renderBlockSummary, getBlockItems } from '../shared/blockConfig';
+import { GripVertical, Eye, EyeOff } from 'lucide-react';
+import { BLOCK_META, BLOCK_TAG, BLOCK_ICON, getBlockItems } from '../shared/blockConfig';
 import { BLOCK_FORM_CONFIGS } from '../shared/blockFormConfig';
 import InlineEntryList from '../shared/InlineEntryList';
 import InlineReferenceEntryList from '../shared/InlineReferenceEntryList';
+import InlinePersonalInfoCard from '../shared/InlinePersonalInfoCard';
+import InlineSocialLinksCard from '../shared/InlineSocialLinksCard';
+import InlineAvatarCard from '../shared/InlineAvatarCard';
 
-// 7 block danh sách đơn giản (Bước 1) + SKILL/LANGUAGE (Bước 2) đã chuyển sang
-// nhập trực tiếp trong card. PERSONAL_INFO/AVATAR/SOCIAL_LINKS vẫn dùng preview
-// + nút sửa cho tới Bước 3.
-const INLINE_BLOCK_TYPES = [...Object.keys(BLOCK_FORM_CONFIGS), 'SKILL', 'LANGUAGE'];
 const REFERENCE_BLOCK_TYPES = ['SKILL', 'LANGUAGE'];
+const LIST_BLOCK_TYPES = Object.keys(BLOCK_FORM_CONFIGS); // Experience, Education, Project, Certification, Award, Activity, Hobby
 
 /**
  * Card đại diện cho 1 block trên sandbox ProfilePage — style Blueprint Dossier:
  * nền trắng, viền mảnh, nhãn góc kiểu chú thích bản vẽ kỹ thuật (VD "EXP · 02").
  * Kéo-thả/resize do react-grid-layout quản lý qua class "block-drag-handle".
  *
+ * Cả 12 block giờ đều nhập TRỰC TIẾP trong card (không còn modal) — component
+ * này chỉ đóng vai trò khung + rẽ nhánh sang đúng "Inline*" component theo blockType.
+ *
  * @param {object}   layoutItem   - { blockType, visible }
  * @param {object}   profileData  - toàn bộ response getFullProfile
  * @param {number}   userId
  * @param {Function} onToggleVisibility - (blockType, nextVisible) => void
- * @param {Function} onEdit       - (blockType) => void — chỉ dùng cho block CHƯA chuyển inline
- * @param {Function} onSaved      - () => void — refetch profileData sau khi InlineEntryList lưu
+ * @param {Function} onSaved      - () => void — refetch profileData sau khi 1 field được lưu
  * @param {Function} onToast      - ({ type, message }) => void
- * @param {boolean}  isEditMode   - true = đang chỉnh bố cục (hiện tay cầm kéo + nút ẩn/hiện)
+ * @param {boolean}  isEditMode   - true = đang chỉnh bố cục (hiện tay cầm kéo, nút ẩn/hiện, form nhập)
+ *                                  false = chỉ xem portfolio (tĩnh, không input)
  */
 const ProfileBlockCard = ({
-  layoutItem, profileData, userId, onToggleVisibility, onEdit, onSaved, onToast, isEditMode,
+  layoutItem, profileData, userId, onToggleVisibility, onSaved, onToast, isEditMode,
 }) => {
   const { blockType, visible } = layoutItem;
   const meta = BLOCK_META[blockType] || { label: blockType, repeatable: false };
   const Icon = BLOCK_ICON[blockType];
-  const isInline = INLINE_BLOCK_TYPES.includes(blockType);
   const itemCount = meta.repeatable ? getBlockItems(blockType, profileData).length : null;
+  const readOnly = !isEditMode;
+
+  const renderContent = () => {
+    if (blockType === 'PERSONAL_INFO') {
+      return (
+        <InlinePersonalInfoCard
+          userId={userId} profile={profileData?.profile}
+          onSaved={onSaved} onToast={onToast} readOnly={readOnly}
+        />
+      );
+    }
+    if (blockType === 'SOCIAL_LINKS') {
+      return (
+        <InlineSocialLinksCard
+          userId={userId} profile={profileData?.profile}
+          onSaved={onSaved} onToast={onToast} readOnly={readOnly}
+        />
+      );
+    }
+    if (blockType === 'AVATAR') {
+      return (
+        <InlineAvatarCard
+          userId={userId} avatarUrl={profileData?.profile?.avatarUrl}
+          onSaved={onSaved} onToast={onToast} readOnly={readOnly}
+        />
+      );
+    }
+    if (REFERENCE_BLOCK_TYPES.includes(blockType)) {
+      return (
+        <InlineReferenceEntryList
+          blockType={blockType} userId={userId} items={getBlockItems(blockType, profileData)}
+          onSaved={onSaved} onToast={onToast} readOnly={readOnly}
+        />
+      );
+    }
+    if (LIST_BLOCK_TYPES.includes(blockType)) {
+      return (
+        <InlineEntryList
+          blockType={blockType} userId={userId} items={getBlockItems(blockType, profileData)}
+          onSaved={onSaved} onToast={onToast} readOnly={readOnly}
+        />
+      );
+    }
+    return null;
+  };
 
   return (
     <div
@@ -41,7 +88,7 @@ const ProfileBlockCard = ({
         transition-opacity ${visible ? '' : 'opacity-40 saturate-0'}`}
       style={{ boxShadow: '0 1px 2px rgba(28,35,51,0.04), 0 1px 8px rgba(28,35,51,0.03)' }}
     >
-      {/* ─── Header: nhãn góc kiểu bản vẽ kỹ thuật, không còn dải màu to ─── */}
+      {/* ─── Header: nhãn góc kiểu bản vẽ kỹ thuật ─── */}
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-graphite/10 shrink-0 bg-paper/60">
         {isEditMode && (
           <span
@@ -62,17 +109,6 @@ const ProfileBlockCard = ({
           {BLOCK_TAG[blockType]}{itemCount !== null ? ` · ${String(itemCount).padStart(2, '0')}` : ''}
         </span>
 
-        {isEditMode && !isInline && (
-          <button
-            type="button"
-            onClick={() => onEdit(blockType)}
-            className="p-1 text-graphite/40 hover:text-ink transition-colors shrink-0"
-            title="Chỉnh sửa"
-          >
-            <Pencil size={13} strokeWidth={2} />
-          </button>
-        )}
-
         {isEditMode && (
           <button
             type="button"
@@ -85,29 +121,9 @@ const ProfileBlockCard = ({
         )}
       </div>
 
-      {/* ─── Nội dung ─── */}
+      {/* ─── Nội dung: form nhập trực tiếp (isEditMode) hoặc text tĩnh (chế độ xem) ─── */}
       <div className="px-3.5 py-3 flex-1 min-h-0 overflow-y-auto">
-        {REFERENCE_BLOCK_TYPES.includes(blockType) ? (
-          <InlineReferenceEntryList
-            blockType={blockType}
-            userId={userId}
-            items={getBlockItems(blockType, profileData)}
-            onSaved={onSaved}
-            onToast={onToast}
-            readOnly={!isEditMode}
-          />
-        ) : isInline ? (
-          <InlineEntryList
-            blockType={blockType}
-            userId={userId}
-            items={getBlockItems(blockType, profileData)}
-            onSaved={onSaved}
-            onToast={onToast}
-            readOnly={!isEditMode}
-          />
-        ) : (
-          renderBlockSummary(blockType, profileData)
-        )}
+        {renderContent()}
       </div>
     </div>
   );

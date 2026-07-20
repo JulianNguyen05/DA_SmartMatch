@@ -220,19 +220,73 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
   );
 };
 
-/** Chế độ xem tĩnh (portfolio) — chỉ text, không input */
+/** dd/mm/yyyy từ chuỗi ISO "yyyy-mm-dd" (tránh lệch múi giờ so với new Date().toLocaleDateString) */
+const formatDateVN = (iso) => {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return d && m && y ? `${d}/${m}/${y}` : iso;
+};
+
+/** Chế độ xem tĩnh (portfolio) — hiện đầy đủ: tiêu đề, khoảng thời gian, meta, mô tả */
 const ReadOnlyView = ({ config, items }) => {
   if (items.length === 0) return <p className="text-sm text-graphite/30 italic font-body">Chưa có dữ liệu</p>;
+
+  const dateFields = config.fields.filter((f) => f.type === 'date');
+  const checkboxField = config.fields.find((f) => f.type === 'checkbox');
+  const textareaField = config.fields.find((f) => f.type === 'textarea');
+  const metaFields = config.fields.filter(
+    (f) => f.name !== config.titleField && f.name !== config.subtitleField
+      && f.type !== 'date' && f.type !== 'checkbox' && f.type !== 'textarea'
+  );
+
+  const formatRange = (item) => {
+    if (dateFields.length === 0) return null;
+    const [start, end] = dateFields;
+    const startVal = start && item[start.name];
+    const endVal = end && item[end.name];
+    const isCurrent = checkboxField && item[checkboxField.name];
+
+    if (!startVal && !endVal && !isCurrent) return null;
+    if (isCurrent) return `${startVal ? formatDateVN(startVal) : '?'} – ${checkboxField.label}`;
+    if (start && end) return `${startVal ? formatDateVN(startVal) : '?'} – ${endVal ? formatDateVN(endVal) : 'Hiện tại'}`;
+    return startVal ? formatDateVN(startVal) : formatDateVN(endVal);
+  };
+
   return (
-    <div className="space-y-3">
-      {items.map((item) => (
-        <div key={item.id} className="pl-3 border-l-2 border-ink/25">
-          <p className="text-sm font-semibold text-graphite font-display">{item[config.titleField]}</p>
-          {config.subtitleField && item[config.subtitleField] && (
-            <p className="text-xs text-graphite/50 font-body">{item[config.subtitleField]}</p>
-          )}
-        </div>
-      ))}
+    <div className="space-y-4">
+      {items.map((item) => {
+        const metaText = metaFields
+          .map((f) => {
+            if (f.type === 'select') {
+              const opt = f.options?.find((o) => o.value === item[f.name]);
+              return opt && opt.value ? opt.label : null;
+            }
+            return item[f.name];
+          })
+          .filter(Boolean);
+        const range = formatRange(item);
+
+        return (
+          <div key={item.id} className="pl-3 border-l-2 border-ink/25">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-sm font-semibold text-graphite font-display">{item[config.titleField]}</p>
+              {range && <span className="text-[11px] text-ink font-tag shrink-0 whitespace-nowrap">{range}</span>}
+            </div>
+
+            {(config.subtitleField && item[config.subtitleField]) || metaText.length > 0 ? (
+              <p className="text-xs text-graphite/50 font-body">
+                {[config.subtitleField && item[config.subtitleField], ...metaText].filter(Boolean).join(' · ')}
+              </p>
+            ) : null}
+
+            {textareaField && item[textareaField.name] && (
+              <p className="text-xs text-graphite/60 leading-relaxed mt-1 font-body">
+                {item[textareaField.name]}
+              </p>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };

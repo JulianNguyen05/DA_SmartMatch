@@ -5,12 +5,6 @@ import candidateService from '../../../features/candidate/candidateService';
 import authService from '../../../features/auth/authService';
 import { LoadingSpinner } from '../../../components/shared/cvProfileShared';
 import ProfileLayoutSandbox from '../../../components/candidate-profile/sandbox/ProfileLayoutSandbox';
-import { getBlockItems } from '../../../components/candidate-profile/shared/blockConfig';
-import { BLOCK_FORM_CONFIGS } from '../../../components/candidate-profile/shared/blockFormConfig';
-import BlockListEditorModal from '../../../components/candidate-profile/modals/BlockListEditorModal';
-import ProfilePersonalInfoModal from '../../../components/candidate-profile/modals/ProfilePersonalInfoModal';
-import ProfileSocialLinksModal from '../../../components/candidate-profile/modals/ProfileSocialLinksModal';
-import AvatarModal from '../../../components/candidate-profile/modals/AvatarModal';
 import { LayoutGrid, Pencil, Check } from 'lucide-react';
 
 const ProfilePage = () => {
@@ -20,12 +14,11 @@ const ProfilePage = () => {
   const [layout, setLayout] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
-  const [editingBlockType, setEditingBlockType] = useState(null); // block đang mở modal, null = đóng hết
-  const [isEditMode, setIsEditMode] = useState(false); // false = chỉ xem portfolio, true = kéo-thả/resize được
+  const [isEditMode, setIsEditMode] = useState(false); // false = chỉ xem portfolio, true = kéo-thả/resize + nhập trực tiếp
 
   const showToast = useCallback(({ type, message }) => setToast({ show: true, type, message }), []);
 
-  // ─── Tải dữ liệu (dùng lại cho cả lần đầu và mỗi khi modal/InlineEntryList lưu thành công) ─
+  // ─── Tải dữ liệu (dùng lại cho lần đầu + mỗi khi 1 field trong card được lưu) ─
   const fetchFullProfile = useCallback(async () => {
     if (!userId) return;
     try {
@@ -70,16 +63,6 @@ const ProfilePage = () => {
 
   if (isLoading) return <LoadingSpinner text="Đang tải hồ sơ..." />;
 
-  // Xác định loại modal cần mở dựa trên blockType — CHỈ còn áp dụng cho 5 block
-  // chưa chuyển sang inline (SKILL/LANGUAGE/PERSONAL_INFO/SOCIAL_LINKS/AVATAR).
-  // 7 block danh sách đơn giản giờ nhập trực tiếp qua InlineEntryList trong card,
-  // nhưng vẫn giữ BlockListEditorModal ở đây phòng khi editingBlockType bị set
-  // nhầm từ nơi khác — sẽ dọn hẳn ở Bước 4.
-  const isGenericBlock = editingBlockType && BLOCK_FORM_CONFIGS[editingBlockType];
-  const isPersonalInfoBlock = editingBlockType === 'PERSONAL_INFO';
-  const isSocialLinksBlock = editingBlockType === 'SOCIAL_LINKS';
-  const isAvatarBlock = editingBlockType === 'AVATAR';
-
   return (
     <div className="w-full h-full min-h-screen bg-paper">
       {/* ─── Header: Blueprint Dossier — nền trắng, viền mảnh, 1 màu mực ─── */}
@@ -107,7 +90,7 @@ const ProfilePage = () => {
           {isEditMode ? (
             <><Check size={16} strokeWidth={2} /> Xong</>
           ) : (
-            <><Pencil size={16} strokeWidth={2} /> Chỉnh sửa bố cục</>
+            <><Pencil size={16} strokeWidth={2} /> Chỉnh sửa hồ sơ</>
           )}
         </button>
       </header>
@@ -124,7 +107,6 @@ const ProfilePage = () => {
           profileData={profileData}
           onReorder={handleReorder}
           onToggleVisibility={handleToggleVisibility}
-          onEdit={setEditingBlockType}
           isEditMode={isEditMode}
           userId={userId}
           onSaved={fetchFullProfile}
@@ -134,55 +116,6 @@ const ProfilePage = () => {
         <div className="h-full min-h-[60vh] flex items-center justify-center text-graphite/30 font-body">
           Chưa có dữ liệu bố cục.
         </div>
-      )}
-
-      {/* ─── 7 block danh sách đơn giản — DỰ PHÒNG, sẽ xóa hẳn ở Bước 4 ─── */}
-      {isGenericBlock && (
-        <BlockListEditorModal
-          blockType={editingBlockType}
-          userId={userId}
-          items={getBlockItems(editingBlockType, profileData)}
-          isOpen={true}
-          onClose={() => setEditingBlockType(null)}
-          onSaved={fetchFullProfile}
-          onToast={showToast}
-        />
-      )}
-
-      {/* ─── PERSONAL_INFO — sẽ chuyển inline ở Bước 3 ─── */}
-      {isPersonalInfoBlock && (
-        <ProfilePersonalInfoModal
-          userId={userId}
-          profile={profileData?.profile}
-          isOpen={true}
-          onClose={() => setEditingBlockType(null)}
-          onSaved={fetchFullProfile}
-          onToast={showToast}
-        />
-      )}
-
-      {/* ─── SOCIAL_LINKS — sẽ chuyển inline ở Bước 3 ─── */}
-      {isSocialLinksBlock && (
-        <ProfileSocialLinksModal
-          userId={userId}
-          profile={profileData?.profile}
-          isOpen={true}
-          onClose={() => setEditingBlockType(null)}
-          onSaved={fetchFullProfile}
-          onToast={showToast}
-        />
-      )}
-
-      {/* ─── Avatar — sẽ chuyển inline ở Bước 3 ─── */}
-      {isAvatarBlock && (
-        <AvatarModal
-          userId={userId}
-          currentAvatarUrl={profileData?.profile?.avatarUrl}
-          isOpen={true}
-          onClose={() => setEditingBlockType(null)}
-          onSaved={fetchFullProfile}
-          onToast={showToast}
-        />
       )}
     </div>
   );

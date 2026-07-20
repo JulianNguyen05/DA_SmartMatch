@@ -45,11 +45,10 @@ const buildDefaultGrid = (layoutItems) => {
  * @param {object}   profileData  - response getFullProfile (chứa profile + 9 danh sách)
  * @param {Function} onReorder    - (newLayoutArray) => void — gọi sau khi kéo-thả/resize xong
  * @param {Function} onToggleVisibility - (blockType, nextVisible) => void
- * @param {Function} onEdit       - (blockType) => void
  * @param {boolean}  isEditMode   - true = đang chỉnh sửa bố cục, false = chỉ xem portfolio
  */
 const ProfileLayoutSandbox = ({
-  layout, profileData, onReorder, onToggleVisibility, onEdit, isEditMode, userID, onSaved, onToast,
+  layout, profileData, onReorder, onToggleVisibility, isEditMode, userID, onSaved, onToast,
 }) => {
   const userId = authService.getCurrentUser()?.userId;
   const storageKey = `${STORAGE_PREFIX}_${userId}`;
@@ -164,7 +163,6 @@ const ProfileLayoutSandbox = ({
                 layoutItem={layoutItem}
                 profileData={profileData}
                 onToggleVisibility={onToggleVisibility}
-                onEdit={onEdit}
                 isEditMode={isEditMode}
                 userId={userId}   
                 onSaved={onSaved} 
