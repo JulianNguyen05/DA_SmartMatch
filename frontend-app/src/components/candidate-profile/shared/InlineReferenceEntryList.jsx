@@ -115,13 +115,13 @@ const InlineReferenceEntryList = ({ blockType, userId, items, onSaved, onToast, 
   };
 
   if (readOnly) {
-    if (localItems.length === 0) return <p className="text-sm text-graphite/30 italic font-body">Chưa có dữ liệu</p>;
+    if (localItems.length === 0) return <p className="text-[17px] text-graphite/55 italic font-body">Chưa có dữ liệu</p>;
     return (
       <div className="flex flex-wrap gap-1.5">
         {localItems.map((item) => (
-          <span key={item.id} className="inline-flex items-center gap-1 text-xs font-medium text-graphite bg-ink-light rounded-md px-2 py-1 font-body">
+          <span key={item.id} className="inline-flex items-center gap-1 text-[15px] font-medium text-graphite bg-ink-light rounded-md px-2 py-1 font-body">
             {item[config.nameField]}
-            <span className="text-graphite/40">· {item[config.extraField.name]}</span>
+            <span className="text-graphite/60">· {item[config.extraField.name]}</span>
           </span>
         ))}
       </div>
@@ -146,14 +146,14 @@ const InlineReferenceEntryList = ({ blockType, userId, items, onSaved, onToast, 
           <select
             value={item[config.extraField.name] || config.extraField.default}
             onChange={(e) => handleExtraChange(index, e.target.value)}
-            className="shrink-0 bg-ink-light text-ink text-xs font-medium font-body rounded-md px-2 py-2 border-none outline-none"
+            className="shrink-0 bg-ink-light text-ink text-[15px] font-medium font-body rounded-md px-2 py-2 border-none outline-none"
           >
             {config.extraField.options.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
           </select>
           <button
             type="button"
             onClick={() => handleDelete(index)}
-            className="shrink-0 p-1.5 text-graphite/25 opacity-0 group-hover/entry:opacity-100 hover:text-red-500 transition-all"
+            className="shrink-0 p-1.5 text-graphite/45 opacity-0 group-hover/entry:opacity-100 hover:text-red-500 transition-all"
             title="Xóa"
           >
             <Trash2 size={14} />
@@ -164,7 +164,7 @@ const InlineReferenceEntryList = ({ blockType, userId, items, onSaved, onToast, 
       <button
         type="button"
         onClick={handleAdd}
-        className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-ink-dark font-body"
+        className="flex items-center gap-1.5 text-[15px] font-medium text-ink hover:text-ink-dark font-body"
       >
         <Plus size={13} /> Thêm {config.label}
       </button>

@@ -31,12 +31,12 @@ const InlineSocialLinksCard = ({ userId, profile, onSaved, onToast, readOnly = f
 
   if (readOnly) {
     const chips = fields.filter((f) => profile?.[f.name]);
-    if (chips.length === 0) return <p className="text-sm text-graphite/30 italic font-body">Chưa thêm liên kết nào</p>;
+    if (chips.length === 0) return <p className="text-[17px] text-graphite/55 italic font-body">Chưa thêm liên kết nào</p>;
     return (
       <div className="flex flex-wrap gap-1.5 font-body">
         {chips.map((f) => (
-          <span key={f.name} className="inline-flex items-center gap-1.5 text-[11px] font-medium text-graphite bg-ink-light rounded-md px-2 py-1">
-            <f.icon size={12} className="text-graphite/50" />
+          <span key={f.name} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-graphite bg-ink-light rounded-md px-2 py-1">
+            <f.icon size={12} className="text-graphite/70" />
             <span className="truncate max-w-[160px]">{profile[f.name]}</span>
           </span>
         ))}
@@ -48,13 +48,13 @@ const InlineSocialLinksCard = ({ userId, profile, onSaved, onToast, readOnly = f
     <div className="space-y-2 font-body">
       {fields.map((f) => (
         <div key={f.name} className="flex items-center gap-2">
-          <f.icon size={13} className="text-graphite/30 shrink-0" />
+          <f.icon size={13} className="text-graphite/55 shrink-0" />
           <input
             value={form[f.name] || ''}
             onChange={(e) => handleChange(f.name, e.target.value)}
             onBlur={handleBlur}
             placeholder={f.placeholder}
-            className="w-full min-w-0 bg-transparent border-none outline-none text-xs text-graphite/70
+            className="w-full min-w-0 bg-transparent border-none outline-none text-[15px] text-graphite/90
               placeholder:text-graphite/25 focus:bg-ink-light rounded px-1 -mx-1"
           />
         </div>

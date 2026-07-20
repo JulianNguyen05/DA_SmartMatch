@@ -77,8 +77,8 @@ const formatDob = (dob) => {
 
 /** Thẻ nhỏ viền mảnh kèm icon — dùng cho info chip / social link chip trong PERSONAL_INFO/SOCIAL_LINKS */
 const InfoChip = ({ icon: Icon, text, maxWidth = '160px' }) => (
-  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-graphite bg-white border border-graphite/15 rounded-md px-2 py-1 leading-none font-body">
-    <Icon size={12} strokeWidth={2} className="shrink-0 text-graphite/50" />
+  <span className="inline-flex items-center gap-1.5 text-[14px] font-medium text-graphite bg-white border border-graphite/15 rounded-md px-2 py-1 leading-none font-body">
+    <Icon size={12} strokeWidth={2} className="shrink-0 text-graphite/70" />
     <span className="truncate" style={{ maxWidth }}>{text}</span>
   </span>
 );
@@ -107,9 +107,9 @@ export const renderBlockSummary = (blockType, profileData) => {
     return (
       <div className="space-y-3 font-body">
         <div className="pb-2.5 border-b border-graphite/10">
-          <p className="text-sm font-semibold text-graphite leading-tight font-display">{profile.fullName}</p>
+          <p className="text-[17px] font-semibold text-graphite leading-tight font-display">{profile.fullName}</p>
           {profile.headline && (
-            <p className="text-xs font-medium text-graphite/50 mt-0.5">{profile.headline}</p>
+            <p className="text-[15px] font-medium text-graphite/70 mt-0.5">{profile.headline}</p>
           )}
         </div>
         {chips.length > 0 && (
@@ -118,7 +118,7 @@ export const renderBlockSummary = (blockType, profileData) => {
           </div>
         )}
         {profile.summary && (
-          <p className="text-xs text-graphite/60 leading-snug line-clamp-3">{profile.summary}</p>
+          <p className="text-[15px] text-graphite/80 leading-snug line-clamp-3">{profile.summary}</p>
         )}
       </div>
     );
@@ -150,4 +150,4 @@ export const renderBlockSummary = (blockType, profileData) => {
   return <EmptyHint text="Đang cập nhật" />;
 };
 
-const EmptyHint = ({ text }) => <p className="text-sm text-graphite/30 italic font-body">{text}</p>;
+const EmptyHint = ({ text }) => <p className="text-[17px] text-graphite/55 italic font-body">{text}</p>;

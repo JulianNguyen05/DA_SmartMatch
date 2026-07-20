@@ -116,7 +116,7 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
           <button
             type="button"
             onClick={() => handleDelete(index)}
-            className="absolute -right-1 top-0 p-1 text-graphite/25 opacity-0 group-hover/entry:opacity-100 hover:text-red-500 transition-all"
+            className="absolute -right-1 top-0 p-1 text-graphite/45 opacity-0 group-hover/entry:opacity-100 hover:text-red-500 transition-all"
             title="Xóa mục này"
           >
             <Trash2 size={13} />
@@ -130,15 +130,15 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
                 onChange={(e) => updateLocalField(index, titleField.name, e.target.value)}
                 onBlur={() => handleFieldBlur(index)}
                 placeholder={titleField.label}
-                className="flex-1 min-w-0 bg-transparent border-none outline-none text-sm font-semibold text-graphite
+                className="flex-1 min-w-0 bg-transparent border-none outline-none text-[17px] font-semibold text-graphite
                   font-display placeholder:text-graphite/30 placeholder:font-normal focus:bg-ink-light rounded px-1 -mx-1"
               />
             )}
             {dateFields.length > 0 && (
-              <div className="flex items-center gap-1 shrink-0 text-[11px] text-ink font-tag">
+              <div className="flex items-center gap-1 shrink-0 text-[14px] text-ink font-tag">
                 {dateFields.map((f, i) => (
                   <React.Fragment key={f.name}>
-                    {i > 0 && <span className="text-graphite/30">–</span>}
+                    {i > 0 && <span className="text-graphite/55">–</span>}
                     <input
                       type="date"
                       value={item[f.name] || ''}
@@ -157,13 +157,13 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
             <div className="flex flex-wrap items-center gap-x-1 gap-y-1 mt-0.5">
               {metaFields.map((f, i) => (
                 <React.Fragment key={f.name}>
-                  {i > 0 && <span className="text-graphite/20 text-xs">·</span>}
+                  {i > 0 && <span className="text-graphite/40 text-[15px]">·</span>}
                   {f.type === 'select' ? (
                     <select
                       value={item[f.name] || ''}
                       onChange={(e) => { updateLocalField(index, f.name, e.target.value); }}
                       onBlur={() => handleFieldBlur(index)}
-                      className="bg-transparent border-none outline-none text-xs text-graphite/60 font-body focus:bg-ink-light rounded px-0.5"
+                      className="bg-transparent border-none outline-none text-[15px] text-graphite/80 font-body focus:bg-ink-light rounded px-0.5"
                     >
                       {f.options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                     </select>
@@ -173,7 +173,7 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
                       onChange={(e) => updateLocalField(index, f.name, e.target.value)}
                       onBlur={() => handleFieldBlur(index)}
                       placeholder={f.label}
-                      className="bg-transparent border-none outline-none text-xs text-graphite/60 font-body
+                      className="bg-transparent border-none outline-none text-[15px] text-graphite/80 font-body
                         placeholder:text-graphite/25 focus:bg-ink-light rounded px-0.5 min-w-[60px]"
                       style={{ width: `${Math.max((item[f.name]?.length || f.label.length) * 6.5, 60)}px` }}
                     />
@@ -181,7 +181,7 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
                 </React.Fragment>
               ))}
               {checkboxField && (
-                <label className="flex items-center gap-1 text-xs text-graphite/50 font-body ml-1 cursor-pointer">
+                <label className="flex items-center gap-1 text-[15px] text-graphite/70 font-body ml-1 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={!!item[checkboxField.name]}
@@ -202,7 +202,7 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
               onBlur={() => handleFieldBlur(index)}
               placeholder={textareaField.label}
               rows={2}
-              className="w-full mt-1.5 bg-transparent border-none outline-none resize-none text-xs text-graphite/70 font-body
+              className="w-full mt-1.5 bg-transparent border-none outline-none resize-none text-[15px] text-graphite/90 font-body
                 leading-relaxed placeholder:text-graphite/25 focus:bg-ink-light rounded px-1 -mx-1"
             />
           )}
@@ -212,7 +212,7 @@ const InlineEntryList = ({ blockType, userId, items, onSaved, onToast, readOnly 
       <button
         type="button"
         onClick={handleAdd}
-        className="flex items-center gap-1.5 text-xs font-medium text-ink hover:text-ink-dark font-body"
+        className="flex items-center gap-1.5 text-[15px] font-medium text-ink hover:text-ink-dark font-body"
       >
         <Plus size={13} /> Thêm {config.label.toLowerCase()}
       </button>
@@ -229,7 +229,7 @@ const formatDateVN = (iso) => {
 
 /** Chế độ xem tĩnh (portfolio) — hiện đầy đủ: tiêu đề, khoảng thời gian, meta, mô tả */
 const ReadOnlyView = ({ config, items }) => {
-  if (items.length === 0) return <p className="text-sm text-graphite/30 italic font-body">Chưa có dữ liệu</p>;
+  if (items.length === 0) return <p className="text-[17px] text-graphite/55 italic font-body">Chưa có dữ liệu</p>;
 
   const dateFields = config.fields.filter((f) => f.type === 'date');
   const checkboxField = config.fields.find((f) => f.type === 'checkbox');
@@ -269,18 +269,18 @@ const ReadOnlyView = ({ config, items }) => {
         return (
           <div key={item.id} className="pl-3 border-l-2 border-ink/25">
             <div className="flex items-start justify-between gap-3">
-              <p className="text-sm font-semibold text-graphite font-display">{item[config.titleField]}</p>
-              {range && <span className="text-[11px] text-ink font-tag shrink-0 whitespace-nowrap">{range}</span>}
+              <p className="text-[17px] font-semibold text-graphite font-display">{item[config.titleField]}</p>
+              {range && <span className="text-[14px] text-ink font-tag shrink-0 whitespace-nowrap">{range}</span>}
             </div>
 
             {(config.subtitleField && item[config.subtitleField]) || metaText.length > 0 ? (
-              <p className="text-xs text-graphite/50 font-body">
+              <p className="text-[15px] text-graphite/70 font-body">
                 {[config.subtitleField && item[config.subtitleField], ...metaText].filter(Boolean).join(' · ')}
               </p>
             ) : null}
 
             {textareaField && item[textareaField.name] && (
-              <p className="text-xs text-graphite/60 leading-relaxed mt-1 font-body">
+              <p className="text-[15px] text-graphite/80 leading-relaxed mt-1 font-body">
                 {item[textareaField.name]}
               </p>
             )}

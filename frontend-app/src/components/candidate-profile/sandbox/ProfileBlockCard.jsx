@@ -92,7 +92,7 @@ const ProfileBlockCard = ({
       <div className="flex items-center gap-1.5 px-3 py-2 border-b border-graphite/10 shrink-0 bg-paper/60">
         {isEditMode && (
           <span
-            className="block-drag-handle flex items-center cursor-grab active:cursor-grabbing text-graphite/25 hover:text-ink shrink-0"
+            className="block-drag-handle flex items-center cursor-grab active:cursor-grabbing text-graphite/45 hover:text-ink shrink-0"
             title="Kéo để di chuyển"
           >
             <GripVertical size={15} strokeWidth={2} />
@@ -101,11 +101,11 @@ const ProfileBlockCard = ({
 
         {Icon && <Icon size={13} strokeWidth={2} className="text-ink shrink-0" />}
 
-        <h3 className="flex-1 text-[11px] font-semibold text-graphite/70 uppercase tracking-wider truncate font-body">
+        <h3 className="flex-1 text-[14px] font-semibold text-graphite/90 uppercase tracking-wider truncate font-body">
           {meta.label}
         </h3>
 
-        <span className="text-[10px] font-medium text-ink bg-ink-light rounded px-1.5 py-0.5 shrink-0 font-tag">
+        <span className="text-[13px] font-medium text-ink bg-ink-light rounded px-1.5 py-0.5 shrink-0 font-tag">
           {BLOCK_TAG[blockType]}{itemCount !== null ? ` · ${String(itemCount).padStart(2, '0')}` : ''}
         </span>
 
@@ -113,7 +113,7 @@ const ProfileBlockCard = ({
           <button
             type="button"
             onClick={() => onToggleVisibility(blockType, !visible)}
-            className="p-1 text-graphite/40 hover:text-ink transition-colors shrink-0"
+            className="p-1 text-graphite/60 hover:text-ink transition-colors shrink-0"
             title={visible ? 'Ẩn khỏi ProfilePage' : 'Hiện trên ProfilePage'}
           >
             {visible ? <Eye size={13} strokeWidth={2} /> : <EyeOff size={13} strokeWidth={2} />}

@@ -30,7 +30,7 @@ const InlineAvatarCard = ({ userId, avatarUrl, onSaved, onToast, readOnly = fals
   if (readOnly) {
     return displaySrc
       ? <div className="w-full h-full min-h-[80px]"><img src={displaySrc} alt="avatar" className="w-full h-full object-cover rounded-lg" /></div>
-      : <p className="text-sm text-graphite/30 italic font-body">Chưa có ảnh đại diện</p>;
+      : <p className="text-[17px] text-graphite/55 italic font-body">Chưa có ảnh đại diện</p>;
   }
 
   return (
@@ -41,7 +41,7 @@ const InlineAvatarCard = ({ userId, avatarUrl, onSaved, onToast, readOnly = fals
       {displaySrc ? (
         <img src={displaySrc} alt="avatar" className="w-full h-full object-cover" />
       ) : (
-        <div className="w-full h-full flex items-center justify-center text-graphite/25">
+        <div className="w-full h-full flex items-center justify-center text-graphite/45">
           <Upload size={22} />
         </div>
       )}
@@ -50,7 +50,7 @@ const InlineAvatarCard = ({ userId, avatarUrl, onSaved, onToast, readOnly = fals
         {isUploading ? (
           <Loader2 size={18} className="text-white animate-spin" />
         ) : (
-          <span className="text-white text-xs font-medium opacity-0 group-hover/avatar:opacity-100 transition-opacity font-body">
+          <span className="text-white text-[15px] font-medium opacity-0 group-hover/avatar:opacity-100 transition-opacity font-body">
             Đổi ảnh
           </span>
         )}

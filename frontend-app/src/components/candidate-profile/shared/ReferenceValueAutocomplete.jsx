@@ -78,7 +78,7 @@ const ReferenceValueAutocomplete = ({ type, userId, value, onSelect, onToast, pl
   return (
     <div ref={wrapperRef} className="relative font-body">
       <div className="relative">
-        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-graphite/30" />
+        <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-graphite/55" />
         <input
           value={keyword}
           onChange={handleChange}
@@ -86,10 +86,10 @@ const ReferenceValueAutocomplete = ({ type, userId, value, onSelect, onToast, pl
           placeholder={placeholder || 'Gõ để tìm kiếm...'}
           className={`w-full rounded-md text-graphite outline-none transition-colors
             bg-ink-light/60 focus:bg-white border border-transparent focus:border-ink/30
-            ${compact ? 'pl-7 pr-7 py-1.5 text-xs' : 'pl-9 pr-8 py-2.5 text-sm'}`}
+            ${compact ? 'pl-7 pr-7 py-1.5 text-[15px]' : 'pl-9 pr-8 py-2.5 text-[17px]'}`}
         />
         {isSearching && (
-          <Loader2 size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-graphite/30 animate-spin" />
+          <Loader2 size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-graphite/55 animate-spin" />
         )}
       </div>
 
@@ -101,19 +101,19 @@ const ReferenceValueAutocomplete = ({ type, userId, value, onSelect, onToast, pl
                 key={item.id}
                 type="button"
                 onClick={() => handlePick(item)}
-                className="w-full text-left px-3 py-2 text-xs font-medium text-graphite hover:bg-ink-light hover:text-ink"
+                className="w-full text-left px-3 py-2 text-[15px] font-medium text-graphite hover:bg-ink-light hover:text-ink"
               >
                 {item.name}
               </button>
             ))
           ) : !isSearching ? (
             <div className="px-3 py-2.5">
-              <p className="text-[11px] text-graphite/40 mb-1.5">Không tìm thấy "{keyword.trim()}".</p>
+              <p className="text-[14px] text-graphite/60 mb-1.5">Không tìm thấy "{keyword.trim()}".</p>
               <button
                 type="button"
                 onClick={handleSuggest}
                 disabled={isSuggesting}
-                className="flex items-center gap-1.5 text-[11px] font-semibold text-ink hover:text-ink-dark disabled:opacity-50"
+                className="flex items-center gap-1.5 text-[14px] font-semibold text-ink hover:text-ink-dark disabled:opacity-50"
               >
                 <Send size={11} />
                 {isSuggesting ? 'Đang gửi...' : `Gửi đề xuất thêm "${keyword.trim()}"`}

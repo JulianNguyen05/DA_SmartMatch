@@ -25,7 +25,7 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
   };
 
   if (readOnly) {
-    if (!profile?.fullName) return <p className="text-sm text-graphite/30 italic font-body">Chưa cập nhật thông tin cá nhân</p>;
+    if (!profile?.fullName) return <p className="text-[17px] text-graphite/55 italic font-body">Chưa cập nhật thông tin cá nhân</p>;
     const chips = [
       profile.phone && { icon: Phone, text: profile.phone },
       profile.emailContact && { icon: Mail, text: profile.emailContact },
@@ -35,19 +35,19 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
     return (
       <div className="space-y-2.5 font-body">
         <div>
-          <p className="text-sm font-semibold text-graphite font-display">{profile.fullName}</p>
-          {profile.headline && <p className="text-xs text-graphite/50">{profile.headline}</p>}
+          <p className="text-[17px] font-semibold text-graphite font-display">{profile.fullName}</p>
+          {profile.headline && <p className="text-[15px] text-graphite/70">{profile.headline}</p>}
         </div>
         {chips.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {chips.map((c, i) => (
-              <span key={i} className="inline-flex items-center gap-1 text-[11px] text-graphite/60 bg-ink-light rounded px-1.5 py-0.5">
+              <span key={i} className="inline-flex items-center gap-1 text-[14px] text-graphite/80 bg-ink-light rounded px-1.5 py-0.5">
                 <c.icon size={11} /> {c.text}
               </span>
             ))}
           </div>
         )}
-        {profile.summary && <p className="text-xs text-graphite/50 line-clamp-3">{profile.summary}</p>}
+        {profile.summary && <p className="text-[15px] text-graphite/70 line-clamp-3">{profile.summary}</p>}
       </div>
     );
   }
@@ -59,7 +59,7 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
         onChange={(e) => handleChange('fullName', e.target.value)}
         onBlur={handleBlur}
         placeholder="Họ và tên"
-        className="w-full bg-transparent border-none outline-none text-sm font-semibold text-graphite
+        className="w-full bg-transparent border-none outline-none text-[17px] font-semibold text-graphite
           font-display placeholder:text-graphite/30 placeholder:font-normal focus:bg-ink-light rounded px-1 -mx-1"
       />
       <input
@@ -67,7 +67,7 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
         onChange={(e) => handleChange('headline', e.target.value)}
         onBlur={handleBlur}
         placeholder="Chức danh / vị trí mong muốn"
-        className="w-full bg-transparent border-none outline-none text-xs text-graphite/60
+        className="w-full bg-transparent border-none outline-none text-[15px] text-graphite/80
           placeholder:text-graphite/25 focus:bg-ink-light rounded px-1 -mx-1"
       />
 
@@ -75,12 +75,12 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
         <IconField icon={Phone} value={form.phone} onChange={(v) => handleChange('phone', v)} onBlur={handleBlur} placeholder="Số điện thoại" />
         <IconField icon={Mail} value={form.emailContact} onChange={(v) => handleChange('emailContact', v)} onBlur={handleBlur} placeholder="Email" type="email" />
         <div className="flex items-center gap-1.5">
-          <Calendar size={12} className="text-graphite/30 shrink-0" />
+          <Calendar size={12} className="text-graphite/55 shrink-0" />
           <select
             value={form.gender || 'Nam'}
             onChange={(e) => { handleChange('gender', e.target.value); }}
             onBlur={handleBlur}
-            className="bg-transparent border-none outline-none text-xs text-graphite/60 focus:bg-ink-light rounded px-0.5"
+            className="bg-transparent border-none outline-none text-[15px] text-graphite/80 focus:bg-ink-light rounded px-0.5"
           >
             <option>Nam</option><option>Nữ</option><option>Khác</option>
           </select>
@@ -89,7 +89,7 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
             value={form.dob || ''}
             onChange={(e) => handleChange('dob', e.target.value)}
             onBlur={handleBlur}
-            className="bg-transparent border-none outline-none text-xs text-graphite/60 focus:bg-ink-light rounded px-0.5 min-w-0"
+            className="bg-transparent border-none outline-none text-[15px] text-graphite/80 focus:bg-ink-light rounded px-0.5 min-w-0"
           />
         </div>
         <IconField icon={MapPin} value={form.address} onChange={(v) => handleChange('address', v)} onBlur={handleBlur} placeholder="Địa chỉ" />
@@ -101,7 +101,7 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
         onBlur={handleBlur}
         placeholder="Giới thiệu bản thân..."
         rows={2}
-        className="w-full mt-1 bg-transparent border-none outline-none resize-none text-xs text-graphite/60
+        className="w-full mt-1 bg-transparent border-none outline-none resize-none text-[15px] text-graphite/80
           leading-relaxed placeholder:text-graphite/25 focus:bg-ink-light rounded px-1 -mx-1"
       />
     </div>
@@ -110,14 +110,14 @@ const InlinePersonalInfoCard = ({ userId, profile, onSaved, onToast, readOnly = 
 
 const IconField = ({ icon: Icon, value, onChange, onBlur, placeholder, type = 'text' }) => (
   <div className="flex items-center gap-1.5 min-w-0">
-    <Icon size={12} className="text-graphite/30 shrink-0" />
+    <Icon size={12} className="text-graphite/55 shrink-0" />
     <input
       type={type}
       value={value || ''}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
       placeholder={placeholder}
-      className="w-full min-w-0 bg-transparent border-none outline-none text-xs text-graphite/60
+      className="w-full min-w-0 bg-transparent border-none outline-none text-[15px] text-graphite/80
         placeholder:text-graphite/25 focus:bg-ink-light rounded px-0.5"
     />
   </div>
