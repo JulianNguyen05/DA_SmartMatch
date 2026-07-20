@@ -3,6 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Globe, Link2, Code2 } from 'lucide-react';
 import candidateService from '../../../features/candidate/candidateService';
 
+/** Thêm https:// nếu người dùng nhập thiếu protocol, để href mở đúng thay vì bị hiểu là link nội bộ (VD "trongnguyen.dev" -> "/social/trongnguyen.dev") */
+const ensureProtocol = (url) => {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+};
+
 const InlineSocialLinksCard = ({ userId, profile, onSaved, onToast, readOnly = false }) => {
   const [form, setForm] = useState(() => ({ ...profile }));
 
@@ -24,9 +30,9 @@ const InlineSocialLinksCard = ({ userId, profile, onSaved, onToast, readOnly = f
   };
 
   const fields = [
-    { name: 'websiteUrl', icon: Globe, placeholder: 'Website / Portfolio' },
-    { name: 'linkedinUrl', icon: Link2, placeholder: 'LinkedIn' },
-    { name: 'githubUrl', icon: Code2, placeholder: 'GitHub' },
+    { name: 'websiteUrl', icon: Globe, label: 'Website', placeholder: 'Website / Portfolio' },
+    { name: 'linkedinUrl', icon: Link2, label: 'LinkedIn', placeholder: 'LinkedIn' },
+    { name: 'githubUrl', icon: Code2, label: 'GitHub', placeholder: 'GitHub' },
   ];
 
   if (readOnly) {
@@ -35,10 +41,18 @@ const InlineSocialLinksCard = ({ userId, profile, onSaved, onToast, readOnly = f
     return (
       <div className="flex flex-wrap gap-1.5 font-body">
         {chips.map((f) => (
-          <span key={f.name} className="inline-flex items-center gap-1.5 text-[14px] font-medium text-graphite bg-ink-light rounded-md px-2 py-1">
-            <f.icon size={12} className="text-graphite/70" />
-            <span className="truncate max-w-[160px]">{profile[f.name]}</span>
-          </span>
+          <a
+            key={f.name}
+            href={ensureProtocol(profile[f.name])}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={profile[f.name]}
+            className="inline-flex items-center gap-1.5 text-[14px] font-medium text-graphite bg-ink-light rounded-md px-2.5 py-1.5
+              hover:bg-ink hover:text-white transition-colors"
+          >
+            <f.icon size={14} className="shrink-0" />
+            {f.label}
+          </a>
         ))}
       </div>
     );
