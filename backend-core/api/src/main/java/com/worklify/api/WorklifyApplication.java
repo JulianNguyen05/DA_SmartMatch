@@ -5,17 +5,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Lớp khởi động (Entry point) của toàn bộ hệ thống Backend Worklify.
  */
-@SpringBootApplication(scanBasePackages = {"com.worklify"}) // ĐÃ SỬA: Quét toàn bộ Bean ở các module của Worklify
-@EnableJpaRepositories(basePackages = {"com.worklify.infrastructure.persistence.repository"}) // ĐÃ SỬA: Đường dẫn Repo mới
-@EntityScan(basePackages = {"com.worklify.infrastructure.persistence.entity"}) // ĐÃ SỬA: Đường dẫn Entity mới
-@EnableTransactionManagement // Kích hoạt quản lý giao dịch (@Transactional)
-@EnableJpaAuditing // Kích hoạt tính năng tự động ghi nhận thời gian (JPA Auditing)
-// [ĐÃ XÓA] @EnableAsync vì hệ thống không còn dùng RabbitMQ và AI nữa
+@SpringBootApplication(scanBasePackages = {"com.worklify"})
+@EnableJpaRepositories(basePackages = {"com.worklify.infrastructure.persistence.repository"})
+@EntityScan(basePackages = {"com.worklify.infrastructure.persistence.entity"})
+@EnableTransactionManagement
+@EnableJpaAuditing
+@EnableAsync // Bật lại: cần cho @Async trong DomainEventRabbitMqDispatcher
 public class WorklifyApplication {
 
     public static void main(String[] args) {

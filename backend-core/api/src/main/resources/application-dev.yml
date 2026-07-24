@@ -13,6 +13,13 @@ spring:
       hibernate:
         format_sql: true
 
+  # Chạy trên IDE gọi vào RabbitMQ Docker qua cổng map ra ngoài (giống cách datasource ở trên gọi MySQL qua 3307)
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: worklify
+    password: worklify_password
+
 logging:
   level:
     com.worklify: DEBUG

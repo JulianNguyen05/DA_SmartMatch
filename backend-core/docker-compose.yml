@@ -32,6 +32,20 @@ services:
     networks:
       - worklify-network
 
+  # [MỚI] RabbitMQ cho luồng nộp đơn -> AI matching (queue ai.submit / ai.result)
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: worklify-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: worklify
+      RABBITMQ_DEFAULT_PASS: worklify_password
+    ports:
+      - "5672:5672"   # AMQP protocol - backend-core và backend-ml kết nối qua đây
+      - "15672:15672" # Management UI: http://localhost:15672 (login: worklify / worklify_password)
+    networks:
+      - worklify-network
+
 networks:
   worklify-network:
     driver: bridge

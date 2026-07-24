@@ -6,7 +6,12 @@ spring:
     password: worklify_password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  # ĐÃ XÓA RABBITMQ
+  # Ở Prod trong Docker, gọi RabbitMQ qua tên container "rabbitmq" và port nội bộ 5672
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: worklify
+    password: worklify_password
 
   jpa:
     hibernate:
