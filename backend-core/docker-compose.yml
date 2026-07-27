@@ -60,7 +60,7 @@ services:
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      CLUSTER_ID: worklify-kafka-cluster-1
+      CLUSTER_ID: WjbVt-WSS2KSYIcufjmR-w
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     ports:
       - "29092:29092" # Map ra ngoài máy host để backend-core chạy trên IDE kết nối vào (giống cách RabbitMQ map 5672)

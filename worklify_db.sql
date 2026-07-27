@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Jul 24, 2026 at 07:28 AM
+-- Generation Time: Jul 27, 2026 at 08:28 AM
 -- Server version: 8.4.8
 -- PHP Version: 8.3.30
 
@@ -43,7 +43,7 @@ CREATE TABLE `applications` (
 --
 
 INSERT INTO `applications` (`id`, `candidate_id`, `job_id`, `cv_id`, `cover_letter`, `status`, `applied_at`, `blind_test_url`) VALUES
-(8, 1, 1, 3, 'Kính gửi Bộ phận Tuyển dụng, tôi rất quan tâm đến vị trí này và tin rằng kỹ năng của mình sẽ phù hợp với yêu cầu của công ty. Mong nhận được phản hồi từ quý công ty.', 'PENDING', '2026-07-24 07:12:20', NULL);
+(9, 1, 1, 3, 'Kính gửi Bộ phận Tuyển dụng, tôi rất quan tâm đến vị trí này và tin rằng kỹ năng của mình sẽ phù hợp với yêu cầu của công ty. Mong nhận được phản hồi từ quý công ty.', 'PENDING', '2026-07-24 07:30:41', NULL);
 
 -- --------------------------------------------------------
 
@@ -740,7 +740,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT for table `candidate_activities`
