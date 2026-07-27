@@ -13,6 +13,9 @@ spring:
     username: worklify
     password: worklify_password
 
+  kafka:
+    bootstrap-servers: kafka:9092
+
   jpa:
     hibernate:
       # Validate để đảm bảo an toàn dữ liệu trên Production

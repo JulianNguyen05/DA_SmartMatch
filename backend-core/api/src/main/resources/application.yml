@@ -56,6 +56,7 @@ springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
+    persist-authorization: true
     path: /swagger-ui.html       # Đường dẫn truy cập UI
     tags-sorter: alpha           # BẮT BUỘC: Sắp xếp các Tag (1, 2, 3...) theo thứ tự A-Z
     operations-sorter: method    # Sắp xếp các API trong 1 Tag theo thứ tự: DELETE, GET, POST, PUT

@@ -4,6 +4,7 @@ import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.jobapplication.dto.ApplicationRequest;
 import com.worklify.application.jobapplication.dto.ApplicationResponse;
 import com.worklify.application.jobapplication.service.JobApplicationService;
+import com.worklify.domain.application.event.ApplicationSubmittedEvent;
 import com.worklify.domain.application.model.Application;
 import com.worklify.domain.application.model.ApplicationStatus;
 import com.worklify.domain.application.repository.ApplicationRepository;
@@ -21,6 +22,7 @@ import com.worklify.domain.job.model.JobPosting;
 import com.worklify.domain.job.model.JobStatus;
 import com.worklify.domain.job.repository.JobPostingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +39,7 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     private final CvDocumentRepository cvDocumentRepository;
     private final UserRepository userRepository;
     private final CandidateProfileRepository candidateProfileRepository;
+    private final ApplicationEventPublisher eventPublisher; // [MỚI] để bắn ApplicationSubmittedEvent qua RabbitMQ
 
     @Override
     public ApplicationResponse applyJob(Long candidateId, ApplicationRequest request) {
@@ -55,6 +58,15 @@ public class JobApplicationServiceImpl implements JobApplicationService {
         );
 
         Application savedApplication = applicationRepository.save(application);
+
+        // [MỚI] Bắn domain event -> DomainEventRabbitMqDispatcher sẽ bắt event này
+        // và gửi sang queue "worklify.ai.submit.queue" cho backend-ml xử lý matching.
+        eventPublisher.publishEvent(new ApplicationSubmittedEvent(
+                savedApplication.getId(),
+                candidateId,
+                request.getJobId(),
+                savedApplication.getAppliedAt()
+        ));
 
         return mapToResponse(savedApplication);
     }

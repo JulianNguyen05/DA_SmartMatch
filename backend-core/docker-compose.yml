@@ -46,6 +46,42 @@ services:
     networks:
       - worklify-network
 
+  # [MỚI] Kafka cho demo Activity Tracking (topic job.view.events) - chạy song song, độc lập với RabbitMQ
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: worklify-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      CLUSTER_ID: worklify-kafka-cluster-1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "29092:29092" # Map ra ngoài máy host để backend-core chạy trên IDE kết nối vào (giống cách RabbitMQ map 5672)
+    networks:
+      - worklify-network
+
+  # [MỚI] Kafka UI - tương đương RabbitMQ Management UI (http://localhost:15672)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: worklify-kafka-ui
+    restart: unless-stopped
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: worklify
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      - "8090:8080"
+    networks:
+      - worklify-network
+
 networks:
   worklify-network:
     driver: bridge

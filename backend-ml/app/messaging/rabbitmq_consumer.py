@@ -17,7 +17,7 @@ import json
 import logging
 import random
 import threading
-from datetime import datetime, timezone
+from datetime import datetime
 
 import pika
 
@@ -55,7 +55,10 @@ def _on_ai_submit_message(channel, method, properties, body):
             "jobId": payload.get("jobId"),
             "candidateId": payload.get("candidateId"),
             "matchScore": score,
-            "processedAt": datetime.now(timezone.utc).isoformat(),
+            # QUAN TRỌNG: dùng giờ local, KHÔNG kèm timezone (naive datetime),
+            # vì phía Java deserialize sang java.time.LocalDateTime — kiểu này
+            # không có timezone, nếu chuỗi có "+00:00" sẽ bị lỗi parse.
+            "processedAt": datetime.now().isoformat(),
         }
 
         channel.basic_publish(
