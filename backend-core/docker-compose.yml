@@ -62,6 +62,9 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       CLUSTER_ID: WjbVt-WSS2KSYIcufjmR-w
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
     ports:
       - "29092:29092" # Map ra ngoài máy host để backend-core chạy trên IDE kết nối vào (giống cách RabbitMQ map 5672)
     networks:
