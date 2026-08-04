@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Jul 27, 2026 at 08:28 AM
+-- Generation Time: Aug 04, 2026 at 06:53 AM
 -- Server version: 8.4.8
 -- PHP Version: 8.3.30
 
@@ -43,7 +43,7 @@ CREATE TABLE `applications` (
 --
 
 INSERT INTO `applications` (`id`, `candidate_id`, `job_id`, `cv_id`, `cover_letter`, `status`, `applied_at`, `blind_test_url`) VALUES
-(9, 1, 1, 3, 'Kính gửi Bộ phận Tuyển dụng, tôi rất quan tâm đến vị trí này và tin rằng kỹ năng của mình sẽ phù hợp với yêu cầu của công ty. Mong nhận được phản hồi từ quý công ty.', 'PENDING', '2026-07-24 07:30:41', NULL);
+(15, 1, 1, 6, 'string', 'PENDING', '2026-07-29 07:35:23', NULL);
 
 -- --------------------------------------------------------
 
@@ -145,7 +145,7 @@ CREATE TABLE `candidate_educations` (
 --
 
 INSERT INTO `candidate_educations` (`id`, `candidate_id`, `school_name`, `major`, `degree`, `start_date`, `end_date`, `is_current`, `gpa`, `description`, `display_order`, `created_at`, `updated_at`) VALUES
-(2, 1, 'Đại học Khoa học Tự nhiên TP.HCM', 'Công nghệ thông tin', 'Đại học', '2014-09-01', '2018-07-30', 0, 3.40, 'Tốt nghiệp loại Khá. Từng đạt giải Nhì cuộc thi Hackathon trường.', 0, '2026-07-20 01:39:10', '2026-07-20 02:01:52');
+(2, 1, 'Đại học Khoa học Tự nhiên TP.HCM', 'Công nghệ thông tin', 'Đại học', '2014-09-01', '2018-07-30', 0, 3.40, 'Tốt nghiệp loại Khá. Từng đạt giải Nhì cuộc thi Hackathon trường.', 0, '2026-07-20 01:39:10', '2026-07-30 02:55:54');
 
 -- --------------------------------------------------------
 
@@ -271,18 +271,18 @@ CREATE TABLE `candidate_profile_layouts` (
 --
 
 INSERT INTO `candidate_profile_layouts` (`id`, `candidate_id`, `block_type`, `position`, `visible`, `created_at`, `updated_at`) VALUES
-(1, 1, 'PERSONAL_INFO', 1, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(2, 1, 'AVATAR', 0, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(3, 1, 'SOCIAL_LINKS', 3, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(4, 1, 'EXPERIENCE', 4, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(5, 1, 'EDUCATION', 2, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(6, 1, 'SKILL', 5, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(7, 1, 'PROJECT', 6, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(8, 1, 'CERTIFICATION', 9, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(9, 1, 'AWARD', 7, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(10, 1, 'ACTIVITY', 11, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(11, 1, 'LANGUAGE', 8, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36'),
-(12, 1, 'HOBBY', 10, 1, '2026-07-13 07:02:57', '2026-07-20 02:22:36');
+(1, 1, 'PERSONAL_INFO', 2, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(2, 1, 'AVATAR', 0, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(3, 1, 'SOCIAL_LINKS', 3, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(4, 1, 'EXPERIENCE', 4, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(5, 1, 'EDUCATION', 1, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(6, 1, 'SKILL', 5, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(7, 1, 'PROJECT', 6, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(8, 1, 'CERTIFICATION', 9, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(9, 1, 'AWARD', 7, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(10, 1, 'ACTIVITY', 11, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(11, 1, 'LANGUAGE', 8, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13'),
+(12, 1, 'HOBBY', 10, 1, '2026-07-13 07:02:57', '2026-07-30 02:56:13');
 
 -- --------------------------------------------------------
 
@@ -371,7 +371,9 @@ CREATE TABLE `company_profiles` (
 --
 
 INSERT INTO `company_profiles` (`id`, `user_id`, `company_name`, `logo_url`, `website`, `description`, `verification_status`) VALUES
-(1, 3, 'Công ty Cổ phần Công nghệ Worklify', 'https://example.com/logo.png', 'https://worklify.vn', 'Công ty chuyên cung cấp nền tảng tuyển dụng thông minh.', 'APPROVED');
+(1, 3, 'Công ty Cổ phần Công nghệ Worklify', 'https://example.com/logo.png', 'https://worklify.vn', 'Công ty chuyên cung cấp nền tảng tuyển dụng thông minh.', 'APPROVED'),
+(2, 4, 'TechNova Solutions', 'https://example.com/technova_logo.png', 'https://technova.vn', 'TechNova là công ty công nghệ tiên phong trong lĩnh vực AI và phát triển phần mềm doanh nghiệp tại Việt Nam.', 'APPROVED'),
+(3, 5, 'Công ty A', '/uploads/companies/logos/logo_owner_5_2854679.jpg', '', 'Đây là giới thiệu của công ty A', 'APPROVED');
 
 -- --------------------------------------------------------
 
@@ -450,7 +452,17 @@ CREATE TABLE `job_postings` (
 --
 
 INSERT INTO `job_postings` (`id`, `company_id`, `title`, `description`, `requirements`, `salary_range`, `location`, `work_type`, `status`, `created_at`, `expires_at`) VALUES
-(1, 1, 'Senior Backend Developer (Python/FastAPI)', 'Tham gia phát triển Core API và các microservices cho hệ thống tuyển dụng bằng AI.', 'Ít nhất 3 năm kinh nghiệm làm việc với Python, FastAPI và MySQL. Có kinh nghiệm với RabbitMQ và Docker là một lợi thế.', '1500 - 2500 USD', 'Quận 1, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-24 06:39:32', '2026-12-31 23:59:59');
+(1, 1, 'Senior Backend Developer (Python/FastAPI)', 'Tham gia phát triển Core API và các microservices cho hệ thống tuyển dụng bằng AI.', 'Ít nhất 3 năm kinh nghiệm làm việc với Python, FastAPI và MySQL. Có kinh nghiệm với RabbitMQ và Docker là một lợi thế.', '1500 - 2500 USD', 'Quận 1, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-24 06:39:32', '2026-12-31 23:59:59'),
+(2, 2, 'Frontend Developer (ReactJS)', 'Tham gia phát triển giao diện người dùng cho nền tảng quản trị doanh nghiệp.', 'Có ít nhất 2 năm kinh nghiệm làm việc với ReactJS, Redux. Nắm vững HTML/CSS/JavaScript.', '1000 - 1500 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-12-31 23:59:59'),
+(3, 2, 'Java Backend Developer (Spring Boot)', 'Xây dựng và duy trì hệ thống Backend Microservices chịu tải cao.', 'Tối thiểu 3 năm kinh nghiệm Java/Spring Boot. Ưu tiên ứng viên có kinh nghiệm với Kafka, Redis.', '1500 - 2500 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-11-30 23:59:59'),
+(4, 2, 'UI/UX Designer', 'Thiết kế trải nghiệm và giao diện người dùng cho ứng dụng Mobile và Web.', 'Sử dụng thành thạo Figma. Có tư duy thẩm mỹ tốt, am hiểu về UX Research là một lợi thế.', '800 - 1200 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-10-15 23:59:59'),
+(5, 2, 'DevOps Engineer', 'Quản lý, vận hành và tối ưu hóa quy trình CI/CD, hệ thống hạ tầng Cloud.', 'Kinh nghiệm với AWS, Docker, Kubernetes, Jenkins/GitLab CI.', '2000 - 3000 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-12-31 23:59:59'),
+(6, 2, 'Data Scientist (AI/ML)', 'Nghiên cứu và phát triển các mô hình học máy ứng dụng vào phân tích dữ liệu khách hàng.', 'Thành thạo Python, các thư viện Pandas, Scikit-learn, TensorFlow hoặc PyTorch.', '2000 - 3500 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-12-31 23:59:59'),
+(7, 2, 'Mobile App Developer (Flutter)', 'Phát triển ứng dụng di động đa nền tảng (iOS/Android) bằng Flutter framework.', 'Ít nhất 1 năm kinh nghiệm làm Flutter. Đã từng public app lên App Store và Google Play.', '1000 - 1800 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-09-30 23:59:59'),
+(8, 2, 'QA/QC Tester (Manual & Automation)', 'Đảm bảo chất lượng sản phẩm phần mềm trước khi phát hành đến tay người dùng.', 'Kinh nghiệm 2 năm QA/QC. Biết sử dụng Selenium, Postman là một điểm cộng.', '700 - 1000 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-10-31 23:59:59'),
+(9, 2, 'Product Manager', 'Quản lý vòng đời phát triển sản phẩm, làm việc với các đội Dev, Design, Marketing.', 'Có kinh nghiệm quản lý sản phẩm phần mềm B2B/B2C, kỹ năng giao tiếp và phân tích số liệu tốt.', '2500 - 4000 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-12-31 23:59:59'),
+(10, 2, 'System Analyst (BA)', 'Phân tích yêu cầu khách hàng, viết tài liệu đặc tả hệ thống (SRS) cho team phát triển.', 'Kinh nghiệm làm BA từ 2 năm trở lên. Kỹ năng vẽ biểu đồ UML, BPMN tốt.', '1200 - 2000 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-11-15 23:59:59'),
+(11, 2, 'IT Support Specialist', 'Hỗ trợ xử lý các vấn đề kỹ thuật mạng, phần cứng, phần mềm nội bộ cho nhân viên công ty.', 'Am hiểu hệ điều hành Windows/MacOS, mạng LAN cơ bản. Giao tiếp tốt, nhiệt tình.', '500 - 800 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-08-30 23:59:59');
 
 -- --------------------------------------------------------
 
@@ -564,7 +576,9 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `email`, `phone`, `password_hash`, `role`, `status`, `is_mfa_enabled`, `created_at`, `updated_at`) VALUES
 (1, 'user1@gmail.com', NULL, '$2a$10$ZI4mUSszCLaHMJJ3LF7Ke.RII1hLS.taSVWFZI4jFaVdxmlYkUCM.', 'CANDIDATE', 'ACTIVE', 0, '2026-07-13 02:45:44', '2026-07-13 02:45:44'),
 (2, 'admin@gmail.com', NULL, '$2a$10$siBh5GXNBBIlX/81fNtR2uba.hSywYGnIV/ZBqr3eDMpOu208ZtiO', 'ADMIN', 'ACTIVE', 0, '2026-07-15 06:46:12', '2026-07-15 06:58:04'),
-(3, 'employer@gmail.com', '0987654321', '$2a$10$dummyhashpassword123', 'EMPLOYER', 'ACTIVE', 0, '2026-07-24 06:39:32', '2026-07-24 06:39:32');
+(3, 'employer@gmail.com', '0987654321', '$2a$10$dummyhashpassword123', 'EMPLOYER', 'ACTIVE', 0, '2026-07-24 06:39:32', '2026-07-24 06:39:32'),
+(4, 'hr@technova.vn', '0912345678', '$2a$10$dummyhashpassword123', 'EMPLOYER', 'ACTIVE', 0, '2026-07-27 08:47:50', '2026-07-27 08:47:50'),
+(5, 'ctyA@gmail.com', NULL, '$2a$10$cc9kD4z4PHqKVFUS/WG5oOSuaEjdt2UGv9TIvYzQdcf9sOseWAM.u', 'EMPLOYER', 'ACTIVE', 0, '2026-08-04 06:45:36', '2026-08-04 06:45:36');
 
 --
 -- Indexes for dumped tables
@@ -740,7 +754,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `applications`
 --
 ALTER TABLE `applications`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `candidate_activities`
@@ -812,7 +826,7 @@ ALTER TABLE `company_likes`
 -- AUTO_INCREMENT for table `company_profiles`
 --
 ALTER TABLE `company_profiles`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `cv_documents`
@@ -830,7 +844,7 @@ ALTER TABLE `demo_products`
 -- AUTO_INCREMENT for table `job_postings`
 --
 ALTER TABLE `job_postings`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `reference_values`
@@ -860,7 +874,7 @@ ALTER TABLE `system_logs`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- Constraints for dumped tables

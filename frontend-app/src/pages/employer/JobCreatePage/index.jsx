@@ -5,6 +5,11 @@ import authService from '../../../features/auth/authService';
 import Input from '../../../components/common/Input';
 import Button from '../../../components/common/Button';
 import Toast from '../../../components/common/Toast';
+import RichTextEditor from '../../../components/common/RichTextEditor';
+
+// Loại bỏ thẻ HTML để kiểm tra rỗng — dùng cho validate vì
+// RichTextEditor lưu HTML nên input required native không còn tác dụng
+const stripHtml = (html) => html?.replace(/<[^>]*>/g, '').trim() || '';
 
 export default function JobCreatePage() {
   const navigate = useNavigate();
@@ -63,6 +68,14 @@ export default function JobCreatePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!companyId) return setStatusMsg({ type: 'error', message: 'Thông tin doanh nghiệp chưa hợp lệ.' });
+
+    // Validate thủ công cho 2 field rich text (không còn dựa vào <textarea required>)
+    if (!stripHtml(formData.description)) {
+      return setStatusMsg({ type: 'error', message: 'Mô tả công việc không được để trống.' });
+    }
+    if (!stripHtml(formData.requirements)) {
+      return setStatusMsg({ type: 'error', message: 'Yêu cầu công việc không được để trống.' });
+    }
 
     setIsLoading(true);
     setStatusMsg({ type: null, message: '' });
@@ -199,31 +212,23 @@ export default function JobCreatePage() {
             <div className="space-y-6 pt-4">
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider border-b pb-2">2. Chi tiết công việc</h3>
               
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700">Mô tả công việc (Job Description) <span className="text-red-500">*</span></label>
-                <textarea
-                  name="description" 
-                  value={formData.description} 
-                  onChange={handleChange} 
-                  required 
-                  rows="5"
-                  className={`${inputClassName} resize-y min-h-[120px]`}
-                  placeholder="Mô tả chi tiết các công việc, nhiệm vụ hàng ngày ứng viên cần thực hiện..."
-                ></textarea>
-              </div>
+              <RichTextEditor
+                label="Mô tả công việc (Job Description)"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                placeholder="Mô tả chi tiết các công việc, nhiệm vụ hàng ngày ứng viên cần thực hiện..."
+              />
 
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-semibold text-gray-700">Yêu cầu ứng viên (Requirements) <span className="text-red-500">*</span></label>
-                <textarea
-                  name="requirements" 
-                  value={formData.requirements} 
-                  onChange={handleChange} 
-                  required 
-                  rows="5"
-                  className={`${inputClassName} resize-y min-h-[120px]`}
-                  placeholder="- Tốt nghiệp chuyên ngành CNTT&#10;- Có kinh nghiệm 2 năm với ReactJS&#10;- Kỹ năng làm việc nhóm tốt..."
-                ></textarea>
-              </div>
+              <RichTextEditor
+                label="Yêu cầu ứng viên (Requirements)"
+                name="requirements"
+                value={formData.requirements}
+                onChange={handleChange}
+                required
+                placeholder="- Tốt nghiệp chuyên ngành CNTT&#10;- Có kinh nghiệm 2 năm với ReactJS&#10;- Kỹ năng làm việc nhóm tốt..."
+              />
             </div>
 
             {/* Actions */}

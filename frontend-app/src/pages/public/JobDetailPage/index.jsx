@@ -4,6 +4,7 @@ import {
   MapPin, DollarSign, Briefcase, Clock, Calendar, 
   Building2, Send, Heart, CheckCircle2, AlertCircle, Loader2
 } from 'lucide-react';
+import DOMPurify from 'dompurify';
 
 import jobService from '../../../features/job/jobService';
 import authService from '../../../features/auth/authService';
@@ -105,8 +106,13 @@ export default function JobDetailPage() {
 
   if (!job) return <div className="text-center py-20 text-xl font-bold text-gray-600">Không tìm thấy công việc này!</div>;
 
-  // Render format text có xuống dòng
-  const formatText = (text) => text?.split('\n').map((str, index) => <p key={index} className="mb-2">{str}</p>);
+  // Render nội dung HTML từ RichTextEditor một cách an toàn (loại bỏ script/thẻ nguy hiểm).
+  // Chỉ cho phép các thẻ cơ bản mà RichTextEditor (TipTap StarterKit) có thể sinh ra.
+  const renderHtml = (html) => ({
+    __html: DOMPurify.sanitize(html || '', {
+      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'ul', 'ol', 'li'],
+    }),
+  });
 
   // =================================================================
   // ĐÃ CẬP NHẬT: XỬ LÝ ĐỒNG BỘ JSON (HỖ TRỢ ĐA DẠNG CẤU TRÚC BACKEND)
@@ -213,18 +219,20 @@ export default function JobDetailPage() {
               {/* Mô tả */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800 mb-3">Mô tả công việc</h3>
-                <div className="text-gray-600 leading-relaxed">
-                  {formatText(job.description)}
-                </div>
+                <div
+                  className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={renderHtml(job.description)}
+                />
               </div>
 
               {/* Yêu cầu */}
               {job.requirements && (
                 <div>
                   <h3 className="text-lg font-bold text-gray-800 mb-3">Yêu cầu ứng viên</h3>
-                  <div className="text-gray-600 leading-relaxed">
-                    {formatText(job.requirements)}
-                  </div>
+                  <div
+                    className="text-gray-600 leading-relaxed prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={renderHtml(job.requirements)}
+                  />
                 </div>
               )}
             </div>
