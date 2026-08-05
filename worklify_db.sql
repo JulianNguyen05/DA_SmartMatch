@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql:3306
--- Generation Time: Aug 04, 2026 at 06:53 AM
+-- Generation Time: Aug 04, 2026 at 07:34 AM
 -- Server version: 8.4.8
 -- PHP Version: 8.3.30
 
@@ -462,7 +462,8 @@ INSERT INTO `job_postings` (`id`, `company_id`, `title`, `description`, `require
 (8, 2, 'QA/QC Tester (Manual & Automation)', 'Đảm bảo chất lượng sản phẩm phần mềm trước khi phát hành đến tay người dùng.', 'Kinh nghiệm 2 năm QA/QC. Biết sử dụng Selenium, Postman là một điểm cộng.', '700 - 1000 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-10-31 23:59:59'),
 (9, 2, 'Product Manager', 'Quản lý vòng đời phát triển sản phẩm, làm việc với các đội Dev, Design, Marketing.', 'Có kinh nghiệm quản lý sản phẩm phần mềm B2B/B2C, kỹ năng giao tiếp và phân tích số liệu tốt.', '2500 - 4000 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-12-31 23:59:59'),
 (10, 2, 'System Analyst (BA)', 'Phân tích yêu cầu khách hàng, viết tài liệu đặc tả hệ thống (SRS) cho team phát triển.', 'Kinh nghiệm làm BA từ 2 năm trở lên. Kỹ năng vẽ biểu đồ UML, BPMN tốt.', '1200 - 2000 USD', 'Quận 3, TP. Hồ Chí Minh', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-11-15 23:59:59'),
-(11, 2, 'IT Support Specialist', 'Hỗ trợ xử lý các vấn đề kỹ thuật mạng, phần cứng, phần mềm nội bộ cho nhân viên công ty.', 'Am hiểu hệ điều hành Windows/MacOS, mạng LAN cơ bản. Giao tiếp tốt, nhiệt tình.', '500 - 800 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-08-30 23:59:59');
+(11, 2, 'IT Support Specialist', 'Hỗ trợ xử lý các vấn đề kỹ thuật mạng, phần cứng, phần mềm nội bộ cho nhân viên công ty.', 'Am hiểu hệ điều hành Windows/MacOS, mạng LAN cơ bản. Giao tiếp tốt, nhiệt tình.', '500 - 800 USD', 'Quận Cầu Giấy, Hà Nội', 'FULL_TIME', 'ACTIVE', '2026-07-27 08:47:50', '2026-08-30 23:59:59'),
+(12, 3, 'aa', '<p>aaaa<strong>aaasss<em>ss</em></strong></p><p></p>', '<p>aw<em>w</em><strong>wws</strong></p>', 'aaa', 'aaa', 'PART_TIME', 'PENDING', '2026-08-04 07:31:10', '2026-08-21 07:30:00');
 
 -- --------------------------------------------------------
 
@@ -844,7 +845,7 @@ ALTER TABLE `demo_products`
 -- AUTO_INCREMENT for table `job_postings`
 --
 ALTER TABLE `job_postings`
-  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` bigint NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `reference_values`

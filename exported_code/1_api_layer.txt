@@ -1,8 +1,5 @@
-=== TẦNG API ===
-
-
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\WorklifyApplication.java
+FILE: backend-core/api/src/main/java/com/worklify/api/WorklifyApplication.java
 ================================================================================
 
 package com.worklify.api;
@@ -12,17 +9,18 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Lớp khởi động (Entry point) của toàn bộ hệ thống Backend Worklify.
  */
-@SpringBootApplication(scanBasePackages = {"com.worklify"}) // ĐÃ SỬA: Quét toàn bộ Bean ở các module của Worklify
-@EnableJpaRepositories(basePackages = {"com.worklify.infrastructure.persistence.repository"}) // ĐÃ SỬA: Đường dẫn Repo mới
-@EntityScan(basePackages = {"com.worklify.infrastructure.persistence.entity"}) // ĐÃ SỬA: Đường dẫn Entity mới
-@EnableTransactionManagement // Kích hoạt quản lý giao dịch (@Transactional)
-@EnableJpaAuditing // Kích hoạt tính năng tự động ghi nhận thời gian (JPA Auditing)
-// [ĐÃ XÓA] @EnableAsync vì hệ thống không còn dùng RabbitMQ và AI nữa
+@SpringBootApplication(scanBasePackages = {"com.worklify"})
+@EnableJpaRepositories(basePackages = {"com.worklify.infrastructure.persistence.repository"})
+@EntityScan(basePackages = {"com.worklify.infrastructure.persistence.entity"})
+@EnableTransactionManagement
+@EnableJpaAuditing
+@EnableAsync // Bật lại: cần cho @Async trong DomainEventRabbitMqDispatcher
 public class WorklifyApplication {
 
     public static void main(String[] args) {
@@ -30,8 +28,9 @@ public class WorklifyApplication {
     }
 }
 
+
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\ErrorCode.java
+FILE: backend-core/api/src/main/java/com/worklify/api/common/exception/ErrorCode.java
 ================================================================================
 
 package com.worklify.api.common.exception;
@@ -57,7 +56,7 @@ public enum ErrorCode {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\ErrorResponse.java
+FILE: backend-core/api/src/main/java/com/worklify/api/common/exception/ErrorResponse.java
 ================================================================================
 
 package com.worklify.api.common.exception;
@@ -83,7 +82,7 @@ public class ErrorResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\common\exception\GlobalExceptionHandler.java
+FILE: backend-core/api/src/main/java/com/worklify/api/common/exception/GlobalExceptionHandler.java
 ================================================================================
 
 package com.worklify.api.common.exception;
@@ -175,7 +174,7 @@ public class GlobalExceptionHandler {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\common\response\ApiResponse.java
+FILE: backend-core/api/src/main/java/com/worklify/api/common/response/ApiResponse.java
 ================================================================================
 
 package com.worklify.api.common.response;
@@ -243,7 +242,7 @@ public class ApiResponse<T> {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\common\response\PageResponseWrapper.java
+FILE: backend-core/api/src/main/java/com/worklify/api/common/response/PageResponseWrapper.java
 ================================================================================
 
 package com.worklify.api.common.response;
@@ -275,7 +274,7 @@ public class PageResponseWrapper<T> {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\config\OpenApiConfig.java
+FILE: backend-core/api/src/main/java/com/worklify/api/config/OpenApiConfig.java
 ================================================================================
 
 package com.worklify.api.config;
@@ -311,35 +310,7 @@ public class OpenApiConfig {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\config\WebMvcConfig.java
-================================================================================
-
-package com.worklify.api.config;
-
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-@Configuration
-public class WebMvcConfig implements WebMvcConfigurer {
-
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Lấy đường dẫn tuyệt đối của thư mục "uploads" ở root dự án
-        Path uploadDir = Paths.get("uploads");
-        String uploadPath = uploadDir.toFile().getAbsolutePath();
-
-        // Map đường dẫn URL "/uploads/**" tới thư mục vật lý trên server
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
-    }
-}
-
-================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\HomeController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/HomeController.java
 ================================================================================
 
 package com.worklify.api.controller;
@@ -360,7 +331,7 @@ public class HomeController {
 
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\admin\AdminController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/admin/AdminController.java
 ================================================================================
 
 package com.worklify.api.controller.admin;
@@ -493,7 +464,7 @@ public class AdminController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\auth\AuthController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/auth/AuthController.java
 ================================================================================
 
 package com.worklify.api.controller.auth;
@@ -570,7 +541,7 @@ public class AuthController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\candidate\CandidateController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/candidate/CandidateController.java
 ================================================================================
 
 package com.worklify.api.controller.candidate;
@@ -579,6 +550,9 @@ import com.worklify.api.common.response.ApiResponse;
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
+import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
+import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
 import com.worklify.domain.common.SearchPageable;
 import io.swagger.v3.oas.annotations.Operation;
@@ -787,6 +761,8 @@ public class CandidateController {
         candidateService.deleteEducation(userId, educationId);
         return ApiResponse.success(null, "Xóa học vấn thành công");
     }
+
+
 
     // ==========================================
     // 6. QUẢN LÝ KINH NGHIỆM LÀM VIỆC (EXPERIENCES)
@@ -1050,10 +1026,106 @@ public class CandidateController {
         candidateService.removeSkillFromCandidate(userId, skillId);
         return ApiResponse.success(null, "Đã gỡ kỹ năng khỏi hồ sơ");
     }
+
+    // ==========================================
+    // PROFILE LAYOUT (SANDBOX KÉO-THẢ) — [MỚI]
+    // ==========================================
+    @GetMapping("/{userId}/profile/layout")
+    @Operation(summary = "Lấy cấu hình layout ProfilePage (tự khởi tạo mặc định nếu chưa có)")
+    public ApiResponse<List<ProfileLayoutItemResponse>> getProfileLayout(
+            @PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getProfileLayout(userId));
+    }
+
+    @PutMapping("/{userId}/profile/layout/reorder")
+    @Operation(summary = "Kéo-thả đổi vị trí nhiều block cùng lúc")
+    public ApiResponse<List<ProfileLayoutItemResponse>> reorderProfileLayout(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody ProfileLayoutReorderRequest request) {
+        return ApiResponse.success(candidateService.reorderProfileLayout(userId, request), "Cập nhật bố cục thành công");
+    }
+
+    @PatchMapping("/{userId}/profile/layout/{blockType}/visibility")
+    @Operation(summary = "Ẩn/hiện 1 block trên ProfilePage")
+    public ApiResponse<ProfileLayoutItemResponse> toggleBlockVisibility(
+            @PathVariable("userId") Long userId,
+            @PathVariable("blockType") String blockType,
+            @RequestBody ToggleBlockVisibilityRequest request) {
+        return ApiResponse.success(
+                candidateService.toggleBlockVisibility(userId, blockType, request.isVisible()),
+                "Cập nhật hiển thị block thành công"
+        );
+    }
+
+    @GetMapping("/reference-values/search")
+    @Operation(summary = "Tìm kiếm giá trị danh mục dùng chung (SKILL/LANGUAGE/...) cho dropdown")
+    public ApiResponse<List<ReferenceValueResponse>> searchReferenceValues(
+            @RequestParam("type") String type,
+            @RequestParam(value = "keyword", required = false, defaultValue = "") String keyword) {
+        return ApiResponse.success(candidateService.searchReferenceValues(type, keyword));
+    }
+
+    @PostMapping("/{userId}/reference-values/suggestions")
+    @Operation(summary = "Gửi đề xuất thêm mới / sửa / xóa 1 giá trị danh mục cho admin duyệt")
+    public ApiResponse<SuggestionResponse> suggestReferenceValue(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody SuggestionRequest request) {
+        return ApiResponse.success(candidateService.suggestReferenceValue(userId, request), "Đã gửi đề xuất, chờ admin duyệt");
+    }
+
+    @PutMapping("/{userId}/skills/reorder")
+    @Operation(summary = "Kéo-thả sắp xếp lại thứ tự hiển thị các skill")
+    public ApiResponse<List<CandidateSkillResponse>> reorderSkills(
+            @PathVariable("userId") Long userId,
+            @Valid @RequestBody SkillReorderRequest request) {
+        return ApiResponse.success(candidateService.reorderSkills(userId, request), "Cập nhật thứ tự kỹ năng thành công");
+    }
+
+    @GetMapping("/{userId}/profile/full")
+    @Operation(summary = "Lấy toàn bộ dữ liệu ProfilePage (layout + 9 block danh sách) trong 1 lần gọi — phục vụ sandbox kéo-thả")
+    public ApiResponse<CandidateProfileFullResponse> getFullProfile(
+            @PathVariable("userId") Long userId) {
+        return ApiResponse.success(candidateService.getFullProfile(userId));
+    }
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\demo\DemoProductController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/demo/DemoActivityController.java
+================================================================================
+
+package com.worklify.api.controller.demo;
+
+import com.worklify.api.common.response.ApiResponse;
+import com.worklify.infrastructure.messaging.JobViewAnalyticsConsumer;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
+
+/**
+ * Endpoint demo trực quan cho Kafka Activity Tracking - không dùng cho production.
+ */
+@RestController
+@RequestMapping("/api/v1/demo")
+@RequiredArgsConstructor
+@Tag(name = "Demo - Kafka Activity Tracking", description = "Endpoint minh họa cho phần demo Kafka")
+public class DemoActivityController {
+
+    private final JobViewAnalyticsConsumer analyticsConsumer;
+
+    @GetMapping("/job-view-stats")
+    @Operation(summary = "Xem thống kê lượt xem job (đọc từ Kafka consumer group 'analytics')")
+    public ApiResponse<Map<Long, Integer>> getJobViewStats() {
+        return ApiResponse.success(analyticsConsumer.getViewCountSnapshot());
+    }
+}
+
+================================================================================
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/demo/DemoProductController.java
 ================================================================================
 
 package com.worklify.api.controller.demo;
@@ -1103,7 +1175,7 @@ public class DemoProductController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\employer\EmployerController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/employer/EmployerController.java
 ================================================================================
 
 package com.worklify.api.controller.employer;
@@ -1201,7 +1273,7 @@ public class EmployerController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\file\FileController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/file/FileController.java
 ================================================================================
 
 package com.worklify.api.controller.file;
@@ -1262,7 +1334,7 @@ public class FileController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\job\JobController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/job/JobController.java
 ================================================================================
 
 package com.worklify.api.controller.job;
@@ -1374,7 +1446,7 @@ public class JobController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\controller\jobapplication\JobApplicationController.java
+FILE: backend-core/api/src/main/java/com/worklify/api/controller/jobapplication/JobApplicationController.java
 ================================================================================
 
 package com.worklify.api.controller.jobapplication;
@@ -1455,7 +1527,7 @@ public class JobApplicationController {
 }
 
 ================================================================================
-FILE: ./backend-core\api\src\main\java\com\worklify\api\filter\RequestLoggingFilter.java
+FILE: backend-core/api/src/main/java/com/worklify/api/filter/RequestLoggingFilter.java
 ================================================================================
 
 package com.worklify.api.filter;
@@ -1504,3 +1576,4 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         }
     }
 }
+

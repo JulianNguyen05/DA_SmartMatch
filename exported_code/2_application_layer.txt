@@ -1,8 +1,5 @@
-=== TẦNG APPLICATION ===
-
-
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\AdminJobResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/AdminJobResponse.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -28,7 +25,7 @@ public class AdminJobResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\CompanyModerationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/CompanyModerationRequest.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -43,7 +40,7 @@ public class CompanyModerationRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\DashboardStatsResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/DashboardStatsResponse.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -74,7 +71,7 @@ public class DashboardStatsResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\JobModerationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/JobModerationRequest.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -88,7 +85,7 @@ public class JobModerationRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\MasterDataRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/MasterDataRequest.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -105,7 +102,7 @@ public class MasterDataRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\SuggestionModerationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/SuggestionModerationRequest.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -123,7 +120,7 @@ public class SuggestionModerationRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\dto\SystemLogResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/dto/SystemLogResponse.java
 ================================================================================
 
 package com.worklify.application.admin.dto;
@@ -144,7 +141,7 @@ public class SystemLogResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\service\AdminService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/service/AdminService.java
 ================================================================================
 
 package com.worklify.application.admin.service;
@@ -182,7 +179,7 @@ public interface AdminService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\admin\service\impl\AdminServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/admin/service/impl/AdminServiceImpl.java
 ================================================================================
 
 package com.worklify.application.admin.service.impl;
@@ -190,8 +187,11 @@ package com.worklify.application.admin.service.impl;
 import com.worklify.application.admin.dto.AdminJobResponse;
 import com.worklify.application.common.exception.ResourceNotFoundException;
 import com.worklify.application.employer.dto.CompanyProfileResponse;
+import com.worklify.application.referencedata.ReferenceValueType;
 import com.worklify.domain.auth.model.User;
 import com.worklify.domain.candidate.repository.CandidateProfileRepository;
+import com.worklify.domain.candidate.repository.CandidateSkillRepository;
+import com.worklify.domain.candidate.repository.LanguageRepository;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.employer.repository.CompanyLikeRepository;
 import com.worklify.domain.employer.repository.CompanyProfileRepository;
@@ -236,7 +236,8 @@ public class AdminServiceImpl implements AdminService {
     private final CompanyProfileRepository companyProfileRepository;
     private final CompanyLikeRepository companyLikeRepository;
     private final SystemLogRepository systemLogRepository;
-    // [ĐÃ SỬA] Thay SkillRepository bằng cặp ReferenceValue/ReferenceValueSuggestion
+    private final CandidateSkillRepository candidateSkillRepository;
+    private final LanguageRepository languageRepository;
     private final ReferenceValueRepository referenceValueRepository;
     private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
     private final CandidateProfileRepository candidateProfileRepository;
@@ -343,25 +344,58 @@ public class AdminServiceImpl implements AdminService {
         ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.findById(suggestionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đề xuất."));
 
-        // Phòng trường hợp giữa lúc đề xuất PENDING và lúc duyệt, đã có admin khác
-        // hoặc suggestion khác approve trùng type+name trước đó -> tránh vi phạm
-        // UNIQUE(type, name) ở bảng reference_values.
-        Optional<ReferenceValue> existing = referenceValueRepository
-                .findByTypeAndNameIgnoreCase(suggestion.getType(), suggestion.getName());
-
-        ReferenceValue approvedValue = suggestion.approve(SYSTEM_ADMIN_ID);
-        if (existing.isEmpty()) {
-            referenceValueRepository.save(approvedValue);
+        switch (suggestion.getRequestType()) {
+            case CREATE -> applyCreate(suggestion);
+            case EDIT -> applyEdit(suggestion);
+            case DELETE -> applyDelete(suggestion);
         }
 
+        // approve() chỉ chuyển trạng thái (xem ghi chú trong ReferenceValueSuggestion.java);
+        // hệ quả lên ReferenceValue đã được áp dụng ở các hàm applyXxx phía trên.
+        suggestion.approve(SYSTEM_ADMIN_ID);
         ReferenceValueSuggestion saved = referenceValueSuggestionRepository.save(suggestion);
 
         systemLogRepository.save(SystemLog.record(
-                SYSTEM_ADMIN_ID, "APPROVE_SUGGESTION",
+                SYSTEM_ADMIN_ID, "APPROVE_SUGGESTION_" + suggestion.getRequestType(),
                 "Suggestion ID: " + suggestionId + " (" + suggestion.getType() + ": " + suggestion.getName() + ")"
         ));
 
         return mapToSuggestionResponse(saved);
+    }
+
+    private void applyCreate(ReferenceValueSuggestion suggestion) {
+        Optional<ReferenceValue> existing = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(suggestion.getType(), suggestion.getName());
+        if (existing.isEmpty()) {
+            referenceValueRepository.save(ReferenceValue.create(suggestion.getType(), suggestion.getName()));
+        }
+    }
+
+    private void applyEdit(ReferenceValueSuggestion suggestion) {
+        ReferenceValue target = referenceValueRepository.findById(suggestion.getTargetReferenceValueId())
+                .orElseThrow(() -> new ResourceNotFoundException("Giá trị cần sửa không còn tồn tại."));
+        referenceValueRepository.save(
+                ReferenceValue.restore(target.getId(), target.getType(), suggestion.getName())
+        );
+    }
+
+    private void applyDelete(ReferenceValueSuggestion suggestion) {
+        Long targetId = suggestion.getTargetReferenceValueId();
+        ReferenceValue target = referenceValueRepository.findById(targetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Giá trị cần xóa không còn tồn tại."));
+
+        boolean inUse = switch (target.getType()) {
+            case ReferenceValueType.SKILL -> candidateSkillRepository.existsBySkillId(targetId);
+            case ReferenceValueType.LANGUAGE -> languageRepository.existsByLanguageId(targetId);
+            default -> false;
+        };
+        if (inUse) {
+            throw new IllegalStateException(
+                    "'" + target.getName() + "' đang được ứng viên khác sử dụng, không thể xóa. " +
+                            "Hãy từ chối đề xuất này và yêu cầu candidate chọn giá trị khác."
+            );
+        }
+        referenceValueRepository.deleteById(targetId);
     }
 
     @Override
@@ -386,6 +420,8 @@ public class AdminServiceImpl implements AdminService {
                 .type(s.getType())
                 .name(s.getName())
                 .requestedByUserId(s.getRequestedByUserId())
+                .requestType(s.getRequestType())
+                .targetReferenceValueId(s.getTargetReferenceValueId())
                 .status(s.getStatus())
                 .reviewedByAdminId(s.getReviewedByAdminId())
                 .reviewNote(s.getReviewNote())
@@ -515,7 +551,7 @@ public class AdminServiceImpl implements AdminService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\dto\AuthResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/dto/AuthResponse.java
 ================================================================================
 
 package com.worklify.application.auth.dto;
@@ -537,7 +573,7 @@ public class AuthResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\dto\ChangePasswordRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/dto/ChangePasswordRequest.java
 ================================================================================
 
 package com.worklify.application.auth.dto;
@@ -555,7 +591,7 @@ public class ChangePasswordRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\dto\LoginRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/dto/LoginRequest.java
 ================================================================================
 
 package com.worklify.application.auth.dto;
@@ -575,7 +611,7 @@ public class LoginRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\dto\RegisterRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/dto/RegisterRequest.java
 ================================================================================
 
 package com.worklify.application.auth.dto;
@@ -609,7 +645,7 @@ public class RegisterRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\dto\UserResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/dto/UserResponse.java
 ================================================================================
 
 package com.worklify.application.auth.dto;
@@ -635,7 +671,7 @@ public class UserResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\service\AuthService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/service/AuthService.java
 ================================================================================
 
 package com.worklify.application.auth.service;
@@ -650,7 +686,7 @@ public interface AuthService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\auth\service\impl\AuthServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/auth/service/impl/AuthServiceImpl.java
 ================================================================================
 
 package com.worklify.application.auth.service.impl;
@@ -823,7 +859,7 @@ public class AuthServiceImpl implements AuthService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ActivityRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ActivityRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -847,7 +883,7 @@ public class ActivityRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ActivityResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ActivityResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -872,7 +908,7 @@ public class ActivityResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\AwardRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/AwardRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -894,7 +930,7 @@ public class AwardRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\AwardResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/AwardResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -917,7 +953,43 @@ public class AwardResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CandidateProfileRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CandidateProfileFullResponse.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+import java.util.List;
+
+/**
+ * Response tổng hợp cho ProfilePage — gộp layout (vị trí/ẩn-hiện block) và
+ * toàn bộ dữ liệu nghiệp vụ của từng block, phục vụ FE render sandbox chỉ với
+ * 1 lần gọi API thay vì 12+ request riêng lẻ.
+ */
+@Data
+@Builder
+public class CandidateProfileFullResponse {
+    private List<ProfileLayoutItemResponse> layout;
+
+    // Block đơn (PERSONAL_INFO, AVATAR, SOCIAL_LINKS đều gộp chung trong CandidateProfileResponse)
+    private CandidateProfileResponse profile;
+
+    // Block danh sách — đã sort theo displayOrder từ service
+    private List<ActivityResponse> activities;
+    private List<AwardResponse> awards;
+    private List<CandidateSkillResponse> skills;
+    private List<CertificationResponse> certifications;
+    private List<EducationResponse> educations;
+    private List<ExperienceResponse> experiences;
+    private List<HobbyResponse> hobbies;
+    private List<LanguageResponse> languages;
+    private List<ProjectResponse> projects;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CandidateProfileRequest.java
 ================================================================================
 
 // CandidateProfileRequest.java
@@ -945,7 +1017,7 @@ public class CandidateProfileRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CandidateProfileResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CandidateProfileResponse.java
 ================================================================================
 
 // CandidateProfileResponse.java
@@ -978,7 +1050,7 @@ public class CandidateProfileResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CandidateSkillRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CandidateSkillRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -996,7 +1068,7 @@ public class CandidateSkillRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CandidateSkillResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CandidateSkillResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1007,15 +1079,16 @@ import lombok.Data;
 @Data
 @Builder
 public class CandidateSkillResponse {
-    private Long id;           // skillId trong bảng skills
+    private Long id;           // skillId trong bảng reference_values
     private String skillName;
     private String level;
     private Integer yearsOfEx;
     private String description; // Ánh xạ từ cột note
+    private int displayOrder;
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CertificationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CertificationRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1039,7 +1112,7 @@ public class CertificationRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CertificationResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CertificationResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1064,7 +1137,7 @@ public class CertificationResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\CvDocumentResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/CvDocumentResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1088,7 +1161,7 @@ public class CvDocumentResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\EducationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/EducationRequest.java
 ================================================================================
 
 // EducationRequest.java
@@ -1114,7 +1187,7 @@ public class EducationRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\EducationResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/EducationResponse.java
 ================================================================================
 
 // EducationResponse.java
@@ -1141,7 +1214,7 @@ public class EducationResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ExperienceRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ExperienceRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1167,7 +1240,7 @@ public class ExperienceRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ExperienceResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ExperienceResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1194,7 +1267,7 @@ public class ExperienceResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\GeneratedCvRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/GeneratedCvRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1209,7 +1282,7 @@ public class GeneratedCvRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\HobbyRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/HobbyRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1226,7 +1299,7 @@ public class HobbyRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\HobbyResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/HobbyResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1243,7 +1316,7 @@ public class HobbyResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\LanguageRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/LanguageRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1265,7 +1338,7 @@ public class LanguageRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\LanguageResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/LanguageResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1288,7 +1361,64 @@ public class LanguageResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ProjectRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/LayoutPositionItem.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Data;
+
+@Data
+public class LayoutPositionItem {
+    @NotBlank(message = "blockType không được để trống")
+    private String blockType;
+
+    @PositiveOrZero(message = "position không được âm")
+    private int position;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ProfileLayoutItemResponse.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import lombok.Builder;
+import lombok.Data;
+
+@Data
+@Builder
+public class ProfileLayoutItemResponse {
+    private String blockType;
+    private int position;
+    private boolean visible;
+    /** true nếu block chứa danh sách nhiều item (FE dùng để biết block nào có sắp xếp item con). */
+    private boolean repeatable;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ProfileLayoutReorderRequest.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class ProfileLayoutReorderRequest {
+    @NotEmpty(message = "Danh sách block không được để trống")
+    @Valid
+    private List<LayoutPositionItem> items;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ProjectRequest.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1314,7 +1444,7 @@ public class ProjectRequest {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\ProjectResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ProjectResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1341,7 +1471,45 @@ public class ProjectResponse {
 
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\dto\SkillResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/SkillReorderItem.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import lombok.Data;
+
+@Data
+public class SkillReorderItem {
+    @NotNull(message = "skillId không được để trống")
+    private Long skillId;
+
+    @PositiveOrZero(message = "displayOrder không được âm")
+    private int displayOrder;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/SkillReorderRequest.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class SkillReorderRequest {
+    @NotEmpty(message = "Danh sách skill không được để trống")
+    @Valid
+    private List<SkillReorderItem> items;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/SkillResponse.java
 ================================================================================
 
 package com.worklify.application.candidate.dto;
@@ -1357,7 +1525,20 @@ public class SkillResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\service\CandidateService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/dto/ToggleBlockVisibilityRequest.java
+================================================================================
+
+package com.worklify.application.candidate.dto;
+
+import lombok.Data;
+
+@Data
+public class ToggleBlockVisibilityRequest {
+    private boolean visible;
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/service/CandidateService.java
 ================================================================================
 
 package com.worklify.application.candidate.service;
@@ -1365,6 +1546,7 @@ package com.worklify.application.candidate.service;
 import com.worklify.application.candidate.dto.*;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
 import com.worklify.application.referencedata.dto.SuggestionResponse;
 import com.worklify.domain.common.DomainPageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -1393,7 +1575,7 @@ public interface CandidateService {
 
     // [MỚI] Dropdown search + đề xuất bổ sung, dùng chung cho SKILL/LANGUAGE/...
     List<ReferenceValueResponse> searchReferenceValues(String type, String keyword);
-    SuggestionResponse suggestReferenceValue(Long userId, String type, String name);
+    SuggestionResponse suggestReferenceValue(Long userId, SuggestionRequest request);
 
     CvDocumentResponse renameCv(Long userId, Long cvId, String newName);
     PageResponse<CandidateProfileResponse> searchCandidates(String keyword, DomainPageable pageable);
@@ -1448,10 +1630,23 @@ public interface CandidateService {
     LanguageResponse createLanguage(Long userId, LanguageRequest request);
     LanguageResponse updateLanguage(Long userId, Long languageId, LanguageRequest request);
     void deleteLanguage(Long userId, Long languageId);
+
+    // Lấy layout hiện tại; tự khởi tạo mặc định nếu candidate mở ProfilePage lần đầu
+    List<ProfileLayoutItemResponse> getProfileLayout(Long userId);
+
+    // Kéo-thả đổi vị trí nhiều block cùng lúc
+    List<ProfileLayoutItemResponse> reorderProfileLayout(Long userId, ProfileLayoutReorderRequest request);
+
+    // Ẩn/hiện 1 block
+    ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible);
+
+    List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request);
+
+    CandidateProfileFullResponse getFullProfile(Long userId);
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\candidate\service\impl\CandidateServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/candidate/service/impl/CandidateServiceImpl.java
 ================================================================================
 
 package com.worklify.application.candidate.service.impl;
@@ -1465,12 +1660,14 @@ import com.worklify.application.common.exception.ReferenceValueSuggestionPending
 import com.worklify.application.common.port.FileStoragePort;
 import com.worklify.application.referencedata.ReferenceValueType;
 import com.worklify.application.referencedata.dto.ReferenceValueResponse;
+import com.worklify.application.referencedata.dto.SuggestionRequest;
 import com.worklify.domain.candidate.model.*;
 import com.worklify.domain.candidate.repository.*;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.common.DomainPageable;
 import com.worklify.domain.referencedata.model.ReferenceValue;
 import com.worklify.domain.referencedata.model.ReferenceValueSuggestion;
+import com.worklify.domain.referencedata.model.SuggestionType;
 import com.worklify.domain.referencedata.repository.ReferenceValueRepository;
 import com.worklify.domain.referencedata.repository.ReferenceValueSuggestionRepository;
 import com.worklify.application.referencedata.dto.SuggestionResponse;
@@ -1480,10 +1677,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -1497,6 +1691,7 @@ public class CandidateServiceImpl implements CandidateService {
     private final CandidateSkillRepository candidateSkillRepository;
     private final ReferenceValueRepository referenceValueRepository;
     private final ReferenceValueSuggestionRepository referenceValueSuggestionRepository;
+    private final CandidateProfileLayoutRepository candidateProfileLayoutRepository;
     private final FileStoragePort fileStoragePort;
     private final ObjectMapper objectMapper;
     private final EducationRepository educationRepository;
@@ -1660,16 +1855,11 @@ public class CandidateServiceImpl implements CandidateService {
                 .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên với User ID: " + userId));
 
         return candidateSkillRepository.findByCandidateId(profile.getId()).stream()
+                .sorted(Comparator.comparingInt(CandidateSkill::getDisplayOrder))
                 .map(cs -> {
                     ReferenceValue skill = referenceValueRepository.findById(cs.getSkillId())
                             .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
-                    return CandidateSkillResponse.builder()
-                            .id(skill.getId())
-                            .skillName(skill.getName())
-                            .level(cs.getLevel())
-                            .yearsOfEx(cs.getYearsOfEx())
-                            .description(cs.getNote())
-                            .build();
+                    return mapToCandidateSkillResponse(cs, skill);
                 })
                 .collect(Collectors.toList());
     }
@@ -1683,7 +1873,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
                 .orElseGet(() -> {
                     referenceValueSuggestionRepository.save(
-                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                            ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, request.getSkillName(), userId)
                     );
                     return null;
                 });
@@ -1701,17 +1891,12 @@ public class CandidateServiceImpl implements CandidateService {
                 .level(request.getLevel())
                 .note(request.getDescription())
                 .yearsOfEx(0)
+                .displayOrder(nextSkillDisplayOrder(profile.getId()))
                 .build();
 
         candidateSkillRepository.save(cs);
 
-        return CandidateSkillResponse.builder()
-                .id(skill.getId())
-                .skillName(skill.getName())
-                .level(cs.getLevel())
-                .yearsOfEx(cs.getYearsOfEx())
-                .description(cs.getNote())
-                .build();
+        return mapToCandidateSkillResponse(cs, skill);
     }
 
     @Override
@@ -1723,7 +1908,7 @@ public class CandidateServiceImpl implements CandidateService {
                 .findByTypeAndNameIgnoreCase(ReferenceValueType.SKILL, request.getSkillName())
                 .orElseGet(() -> {
                     referenceValueSuggestionRepository.save(
-                            ReferenceValueSuggestion.create(ReferenceValueType.SKILL, request.getSkillName(), userId)
+                            ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, request.getSkillName(), userId)
                     );
                     return null;
                 });
@@ -1748,17 +1933,12 @@ public class CandidateServiceImpl implements CandidateService {
                 .level(request.getLevel())
                 .note(request.getDescription())
                 .yearsOfEx(oldCs.getYearsOfEx())
+                .displayOrder(oldCs.getDisplayOrder()) // giữ nguyên vị trí cũ khi chỉ đổi tên/level
                 .build();
 
         candidateSkillRepository.save(newCs);
 
-        return CandidateSkillResponse.builder()
-                .id(targetSkill.getId())
-                .skillName(targetSkill.getName())
-                .level(newCs.getLevel())
-                .yearsOfEx(newCs.getYearsOfEx())
-                .description(newCs.getNote())
-                .build();
+        return mapToCandidateSkillResponse(newCs, targetSkill);
     }
 
     @Override
@@ -1768,7 +1948,54 @@ public class CandidateServiceImpl implements CandidateService {
         referenceValueRepository.findById(skillId)
                 .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
         CandidateSkill cs = new CandidateSkill(profile.getId(), skillId);
+        cs.reorder(nextSkillDisplayOrder(profile.getId()));
         candidateSkillRepository.save(cs);
+    }
+
+    @Override
+    public List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        List<CandidateSkill> current = candidateSkillRepository.findByCandidateId(profile.getId());
+        Map<Long, CandidateSkill> bySkillId = current.stream()
+                .collect(Collectors.toMap(CandidateSkill::getSkillId, cs -> cs));
+
+        for (SkillReorderItem item : request.getItems()) {
+            CandidateSkill cs = bySkillId.get(item.getSkillId());
+            if (cs == null) {
+                throw new IllegalArgumentException("Skill không thuộc hồ sơ này: " + item.getSkillId());
+            }
+            cs.reorder(item.getDisplayOrder());
+        }
+
+        List<CandidateSkill> saved = candidateSkillRepository.saveAll(current);
+        return saved.stream()
+                .sorted(Comparator.comparingInt(CandidateSkill::getDisplayOrder))
+                .map(cs -> {
+                    ReferenceValue skill = referenceValueRepository.findById(cs.getSkillId())
+                            .orElseThrow(() -> new IllegalArgumentException("Kỹ năng không tồn tại."));
+                    return mapToCandidateSkillResponse(cs, skill);
+                })
+                .collect(Collectors.toList());
+    }
+
+    private int nextSkillDisplayOrder(Long candidateId) {
+        return candidateSkillRepository.findByCandidateId(candidateId).stream()
+                .mapToInt(CandidateSkill::getDisplayOrder)
+                .max()
+                .orElse(-1) + 1;
+    }
+
+    private CandidateSkillResponse mapToCandidateSkillResponse(CandidateSkill cs, ReferenceValue skill) {
+        return CandidateSkillResponse.builder()
+                .id(skill.getId())
+                .skillName(skill.getName())
+                .level(cs.getLevel())
+                .yearsOfEx(cs.getYearsOfEx())
+                .description(cs.getNote())
+                .displayOrder(cs.getDisplayOrder())
+                .build();
     }
 
     @Override
@@ -1815,7 +2042,7 @@ public class CandidateServiceImpl implements CandidateService {
             if (skill.isEmpty()) {
                 // Không tự tạo — chỉ đề xuất, admin duyệt sau. Không gán vào candidate_skills.
                 referenceValueSuggestionRepository.save(
-                        ReferenceValueSuggestion.create(ReferenceValueType.SKILL, trimmed, candidateId)
+                        ReferenceValueSuggestion.createNew(ReferenceValueType.SKILL, trimmed, candidateId)
                 );
                 log.info("Skill '{}' chưa tồn tại, đã tạo suggestion PENDING, bỏ qua gán cho candidateId={}",
                         trimmed, candidateId);
@@ -2482,29 +2709,182 @@ public class CandidateServiceImpl implements CandidateService {
     }
 
     @Override
-    public SuggestionResponse suggestReferenceValue(Long userId, String type, String name) {
-        Optional<ReferenceValue> existing = referenceValueRepository.findByTypeAndNameIgnoreCase(type, name);
+    public SuggestionResponse suggestReferenceValue(Long userId, SuggestionRequest request) {
+        SuggestionType requestType = parseRequestType(request.getRequestType());
+
+        return switch (requestType) {
+            case CREATE -> handleCreateSuggestion(userId, request);
+            case EDIT -> handleEditSuggestion(userId, request);
+            case DELETE -> handleDeleteSuggestion(userId, request);
+        };
+    }
+
+    private SuggestionResponse handleCreateSuggestion(Long userId, SuggestionRequest request) {
+        Optional<ReferenceValue> existing = referenceValueRepository
+                .findByTypeAndNameIgnoreCase(request.getType(), request.getName());
         if (existing.isPresent()) {
-            throw new IllegalArgumentException("'" + name + "' đã tồn tại trong hệ thống, không cần đề xuất.");
+            throw new IllegalArgumentException("'" + request.getName() + "' đã tồn tại trong hệ thống, không cần đề xuất.");
         }
-
         ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
-                ReferenceValueSuggestion.create(type, name, userId)
+                ReferenceValueSuggestion.createNew(request.getType(), request.getName(), userId)
         );
+        return mapToSuggestionResponse(suggestion);
+    }
 
+    private SuggestionResponse handleEditSuggestion(Long userId, SuggestionRequest request) {
+        requireTargetId(request);
+        ReferenceValue target = referenceValueRepository.findById(request.getTargetReferenceValueId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giá trị cần sửa."));
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
+                ReferenceValueSuggestion.createEdit(target.getType(), request.getName(), userId, target.getId())
+        );
+        return mapToSuggestionResponse(suggestion);
+    }
+
+    private SuggestionResponse handleDeleteSuggestion(Long userId, SuggestionRequest request) {
+        requireTargetId(request);
+        ReferenceValue target = referenceValueRepository.findById(request.getTargetReferenceValueId())
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy giá trị cần xóa."));
+        ReferenceValueSuggestion suggestion = referenceValueSuggestionRepository.save(
+                ReferenceValueSuggestion.createDelete(target.getType(), target.getName(), userId, target.getId())
+        );
+        return mapToSuggestionResponse(suggestion);
+    }
+
+    private void requireTargetId(SuggestionRequest request) {
+        if (request.getTargetReferenceValueId() == null) {
+            throw new IllegalArgumentException("targetReferenceValueId không được để trống với yêu cầu EDIT/DELETE.");
+        }
+    }
+
+    private SuggestionType parseRequestType(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return SuggestionType.CREATE; // tương thích ngược request cũ chưa gửi field này
+        }
+        try {
+            return SuggestionType.valueOf(raw.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("requestType không hợp lệ: " + raw);
+        }
+    }
+
+    private SuggestionResponse mapToSuggestionResponse(ReferenceValueSuggestion s) {
         return SuggestionResponse.builder()
-                .id(suggestion.getId())
-                .type(suggestion.getType())
-                .name(suggestion.getName())
-                .requestedByUserId(suggestion.getRequestedByUserId())
-                .status(suggestion.getStatus())
-                .createdAt(suggestion.getCreatedAt())
+                .id(s.getId())
+                .type(s.getType())
+                .name(s.getName())
+                .requestedByUserId(s.getRequestedByUserId())
+                .requestType(s.getRequestType())
+                .targetReferenceValueId(s.getTargetReferenceValueId())
+                .status(s.getStatus())
+                .reviewedByAdminId(s.getReviewedByAdminId())
+                .reviewNote(s.getReviewNote())
+                .createdAt(s.getCreatedAt())
+                .reviewedAt(s.getReviewedAt())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public List<ProfileLayoutItemResponse> getProfileLayout(Long userId) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        return getOrInitLayout(profile.getId()).stream()
+                .sorted(Comparator.comparingInt(CandidateProfileLayout::getPosition))
+                .map(this::mapToLayoutResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProfileLayoutItemResponse> reorderProfileLayout(Long userId, ProfileLayoutReorderRequest request) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        List<CandidateProfileLayout> layouts = getOrInitLayout(profile.getId());
+        Map<BlockType, CandidateProfileLayout> byType = layouts.stream()
+                .collect(Collectors.toMap(CandidateProfileLayout::getBlockType, l -> l));
+
+        for (LayoutPositionItem item : request.getItems()) {
+            BlockType type = parseBlockType(item.getBlockType());
+            CandidateProfileLayout layout = byType.get(type);
+            if (layout == null) {
+                throw new IllegalArgumentException("Block không hợp lệ: " + item.getBlockType());
+            }
+            layout.reorder(item.getPosition());
+        }
+
+        List<CandidateProfileLayout> saved = candidateProfileLayoutRepository.saveAll(layouts);
+        return saved.stream()
+                .sorted(Comparator.comparingInt(CandidateProfileLayout::getPosition))
+                .map(this::mapToLayoutResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ProfileLayoutItemResponse toggleBlockVisibility(Long userId, String blockType, boolean visible) {
+        CandidateProfile profile = candidateProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy hồ sơ ứng viên."));
+
+        BlockType type = parseBlockType(blockType);
+        List<CandidateProfileLayout> layouts = getOrInitLayout(profile.getId());
+        CandidateProfileLayout target = layouts.stream()
+                .filter(l -> l.getBlockType() == type)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Block không hợp lệ: " + blockType));
+
+        target.toggleVisibility(visible);
+        candidateProfileLayoutRepository.saveAll(List.of(target));
+        return mapToLayoutResponse(target);
+    }
+
+    // Lấy layout hiện có; nếu candidate chưa từng có layout (mở ProfilePage lần đầu) thì khởi tạo mặc định
+    private List<CandidateProfileLayout> getOrInitLayout(Long candidateId) {
+        if (!candidateProfileLayoutRepository.existsByCandidateId(candidateId)) {
+            return candidateProfileLayoutRepository.saveAll(CandidateProfileLayout.defaultFor(candidateId));
+        }
+        return candidateProfileLayoutRepository.findByCandidateId(candidateId);
+    }
+
+    private BlockType parseBlockType(String raw) {
+        try {
+            return BlockType.valueOf(raw.trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("blockType không hợp lệ: " + raw);
+        }
+    }
+
+    private ProfileLayoutItemResponse mapToLayoutResponse(CandidateProfileLayout layout) {
+        return ProfileLayoutItemResponse.builder()
+                .blockType(layout.getBlockType().name())
+                .position(layout.getPosition())
+                .visible(layout.isVisible())
+                .repeatable(layout.getBlockType().isRepeatable())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public CandidateProfileFullResponse getFullProfile(Long userId) {
+        return CandidateProfileFullResponse.builder()
+                .layout(getProfileLayout(userId))
+                .profile(getProfileByUserId(userId))
+                .activities(getActivitiesByUserId(userId))
+                .awards(getAwardsByUserId(userId))
+                .skills(getSkillsByUserId(userId))
+                .certifications(getCertificationsByUserId(userId))
+                .educations(getEducationsByUserId(userId))
+                .experiences(getExperiencesByUserId(userId))
+                .hobbies(getHobbiesByUserId(userId))
+                .languages(getLanguagesByUserId(userId))
+                .projects(getProjectsByUserId(userId))
+                .build();
+    }
+
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\dto\FileData.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/dto/FileData.java
 ================================================================================
 
 // File: application/src/main/java/com/smartmatch/application/common/dto/FileData.java
@@ -2514,7 +2894,7 @@ import java.io.InputStream;
 public record FileData(String fileName, InputStream content, long size, String contentType) {}
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\dto\PageResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/dto/PageResponse.java
 ================================================================================
 
 package com.worklify.application.common.dto;
@@ -2538,7 +2918,7 @@ public class PageResponse<T> {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\exception\ReferenceValueSuggestionPendingException.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/exception/ReferenceValueSuggestionPendingException.java
 ================================================================================
 
 package com.worklify.application.common.exception;
@@ -2558,7 +2938,7 @@ public class ReferenceValueSuggestionPendingException extends RuntimeException {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\exception\ResourceNotFoundException.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/exception/ResourceNotFoundException.java
 ================================================================================
 
 package com.worklify.application.common.exception;
@@ -2575,7 +2955,7 @@ public class ResourceNotFoundException extends RuntimeException {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\port\FileStoragePort.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/port/FileStoragePort.java
 ================================================================================
 
 package com.worklify.application.common.port;
@@ -2612,7 +2992,7 @@ public interface FileStoragePort {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\common\port\TokenProviderPort.java
+FILE: backend-core/application/src/main/java/com/worklify/application/common/port/TokenProviderPort.java
 ================================================================================
 
 package com.worklify.application.common.port;
@@ -2623,7 +3003,7 @@ public interface TokenProviderPort {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\demo\dto\DemoProductDto.java
+FILE: backend-core/application/src/main/java/com/worklify/application/demo/dto/DemoProductDto.java
 ================================================================================
 
 package com.worklify.application.demo.dto;
@@ -2638,7 +3018,7 @@ public class DemoProductDto {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\demo\service\DemoProductService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/demo/service/DemoProductService.java
 ================================================================================
 
 package com.worklify.application.demo.service;
@@ -2704,7 +3084,7 @@ public class DemoProductService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\employer\dto\CompanyProfileRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/employer/dto/CompanyProfileRequest.java
 ================================================================================
 
 package com.worklify.application.employer.dto;
@@ -2721,7 +3101,7 @@ public class CompanyProfileRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\employer\dto\CompanyProfileResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/employer/dto/CompanyProfileResponse.java
 ================================================================================
 
 package com.worklify.application.employer.dto;
@@ -2746,7 +3126,7 @@ public class CompanyProfileResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\employer\service\EmployerService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/employer/service/EmployerService.java
 ================================================================================
 
 package com.worklify.application.employer.service;
@@ -2766,7 +3146,7 @@ public interface EmployerService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\employer\service\impl\EmployerServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/employer/service/impl/EmployerServiceImpl.java
 ================================================================================
 
 // ============================================================
@@ -2904,7 +3284,7 @@ public class EmployerServiceImpl implements EmployerService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\job\dto\JobPostingRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/job/dto/JobPostingRequest.java
 ================================================================================
 
 // File: \backend-core\application\src\main\java\com\smartmatch\application\job\dto\JobPostingRequest.java
@@ -2940,7 +3320,7 @@ public class JobPostingRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\job\dto\JobPostingResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/job/dto/JobPostingResponse.java
 ================================================================================
 
 // File: \backend-core\application\src\main\java\com\smartmatch\application\job\dto\JobPostingResponse.java
@@ -2970,7 +3350,7 @@ public class JobPostingResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\job\dto\SavedJobResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/job/dto/SavedJobResponse.java
 ================================================================================
 
 // File: \backend-core\application\src\main\java\com\smartmatch\application\job\dto\SavedJobResponse.java
@@ -2990,7 +3370,21 @@ public class SavedJobResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\job\service\JobService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/job/port/JobViewEventPublisherPort.java
+================================================================================
+
+package com.worklify.application.job.port;
+
+/**
+ * Port để publish sự kiện "xem chi tiết job" ra hệ thống event streaming (Kafka).
+ * Tách biệt hoàn toàn khỏi luồng RabbitMQ (AI matching) - đây là port riêng cho activity tracking.
+ */
+public interface JobViewEventPublisherPort {
+    void publishJobViewed(Long jobId, Long viewerUserId);
+}
+
+================================================================================
+FILE: backend-core/application/src/main/java/com/worklify/application/job/service/JobService.java
 ================================================================================
 
 // File: \backend-core\application\src\main\java\com\smartmatch\application\job\service\JobService.java
@@ -3015,7 +3409,7 @@ public interface JobService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\job\service\impl\JobServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/job/service/impl/JobServiceImpl.java
 ================================================================================
 
 package com.worklify.application.job.service.impl;
@@ -3024,6 +3418,7 @@ import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.job.dto.JobPostingRequest;
 import com.worklify.application.job.dto.JobPostingResponse;
 import com.worklify.application.job.dto.SavedJobResponse;
+import com.worklify.application.job.port.JobViewEventPublisherPort;
 import com.worklify.application.job.service.JobService;
 import com.worklify.domain.common.DomainPage;
 import com.worklify.domain.common.DomainPageable;
@@ -3050,9 +3445,8 @@ public class JobServiceImpl implements JobService {
 
     private final JobPostingRepository jobPostingRepository;
     private final SavedJobRepository savedJobRepository;
-
-    // 1. INJECT THÊM REPOSITORY LẤY THÔNG TIN CÔNG TY
     private final CompanyProfileRepository companyProfileRepository;
+    private final JobViewEventPublisherPort jobViewEventPublisherPort;
 
     @Override
     public JobPostingResponse createJobPosting(Long companyId, JobPostingRequest request) {
@@ -3093,10 +3487,13 @@ public class JobServiceImpl implements JobService {
     @Override
     @Transactional(readOnly = true)
     public JobPostingResponse getJobById(Long jobId) {
-        return mapToResponse(
-                jobPostingRepository.findById(jobId)
-                        .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tin tuyển dụng"))
-        );
+        JobPosting job = jobPostingRepository.findById(jobId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy tin tuyển dụng"));
+
+        // [MỚI] Publish event xem job ra Kafka - demo Activity Tracking
+        jobViewEventPublisherPort.publishJobViewed(jobId, null); // null = chưa gắn user thật, demo ở mức ẩn danh
+
+        return mapToResponse(job);
     }
 
     @Override
@@ -3214,7 +3611,7 @@ public class JobServiceImpl implements JobService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\jobapplication\dto\ApplicationRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/jobapplication/dto/ApplicationRequest.java
 ================================================================================
 
 package com.worklify.application.jobapplication.dto;
@@ -3232,7 +3629,7 @@ public class ApplicationRequest {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\jobapplication\dto\ApplicationResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/jobapplication/dto/ApplicationResponse.java
 ================================================================================
 
 package com.worklify.application.jobapplication.dto;
@@ -3264,7 +3661,7 @@ public class ApplicationResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\jobapplication\service\JobApplicationService.java
+FILE: backend-core/application/src/main/java/com/worklify/application/jobapplication/service/JobApplicationService.java
 ================================================================================
 
 package com.worklify.application.jobapplication.service;
@@ -3289,7 +3686,7 @@ public interface JobApplicationService {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\jobapplication\service\impl\JobApplicationServiceImpl.java
+FILE: backend-core/application/src/main/java/com/worklify/application/jobapplication/service/impl/JobApplicationServiceImpl.java
 ================================================================================
 
 package com.worklify.application.jobapplication.service.impl;
@@ -3298,6 +3695,7 @@ import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.jobapplication.dto.ApplicationRequest;
 import com.worklify.application.jobapplication.dto.ApplicationResponse;
 import com.worklify.application.jobapplication.service.JobApplicationService;
+import com.worklify.domain.application.event.ApplicationSubmittedEvent;
 import com.worklify.domain.application.model.Application;
 import com.worklify.domain.application.model.ApplicationStatus;
 import com.worklify.domain.application.repository.ApplicationRepository;
@@ -3315,6 +3713,7 @@ import com.worklify.domain.job.model.JobPosting;
 import com.worklify.domain.job.model.JobStatus;
 import com.worklify.domain.job.repository.JobPostingRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -3331,6 +3730,7 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     private final CvDocumentRepository cvDocumentRepository;
     private final UserRepository userRepository;
     private final CandidateProfileRepository candidateProfileRepository;
+    private final ApplicationEventPublisher eventPublisher; // [MỚI] để bắn ApplicationSubmittedEvent qua RabbitMQ
 
     @Override
     public ApplicationResponse applyJob(Long candidateId, ApplicationRequest request) {
@@ -3349,6 +3749,15 @@ public class JobApplicationServiceImpl implements JobApplicationService {
         );
 
         Application savedApplication = applicationRepository.save(application);
+
+        // [MỚI] Bắn domain event -> DomainEventRabbitMqDispatcher sẽ bắt event này
+        // và gửi sang queue "worklify.ai.submit.queue" cho backend-ml xử lý matching.
+        eventPublisher.publishEvent(new ApplicationSubmittedEvent(
+                savedApplication.getId(),
+                candidateId,
+                request.getJobId(),
+                savedApplication.getAppliedAt()
+        ));
 
         return mapToResponse(savedApplication);
     }
@@ -3455,8 +3864,9 @@ public class JobApplicationServiceImpl implements JobApplicationService {
     }
 }
 
+
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\referencedata\ReferenceValueType.java
+FILE: backend-core/application/src/main/java/com/worklify/application/referencedata/ReferenceValueType.java
 ================================================================================
 
 package com.worklify.application.referencedata;
@@ -3475,7 +3885,7 @@ public final class ReferenceValueType {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\referencedata\dto\ReferenceValueResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/referencedata/dto/ReferenceValueResponse.java
 ================================================================================
 
 package com.worklify.application.referencedata.dto;
@@ -3496,7 +3906,7 @@ public class ReferenceValueResponse {
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\referencedata\dto\SuggestionRequest.java
+FILE: backend-core/application/src/main/java/com/worklify/application/referencedata/dto/SuggestionRequest.java
 ================================================================================
 
 package com.worklify.application.referencedata.dto;
@@ -3511,15 +3921,25 @@ public class SuggestionRequest {
 
     @NotBlank(message = "Tên đề xuất không được để trống")
     private String name;
+
+    /**
+     * CREATE / EDIT / DELETE. Để trống mặc định hiểu là CREATE (giữ tương thích
+     * ngược với các request cũ chưa gửi field này).
+     */
+    private String requestType;
+
+    /** Bắt buộc khi requestType = EDIT hoặc DELETE; bỏ trống khi CREATE. */
+    private Long targetReferenceValueId;
 }
 
 ================================================================================
-FILE: ./backend-core\application\src\main\java\com\worklify\application\referencedata\dto\SuggestionResponse.java
+FILE: backend-core/application/src/main/java/com/worklify/application/referencedata/dto/SuggestionResponse.java
 ================================================================================
 
 package com.worklify.application.referencedata.dto;
 
 import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.domain.referencedata.model.SuggestionType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -3532,9 +3952,12 @@ public class SuggestionResponse {
     private String type;
     private String name;
     private Long requestedByUserId;
+    private SuggestionType requestType;
+    private Long targetReferenceValueId;
     private SuggestionStatus status;
     private Long reviewedByAdminId;
     private String reviewNote;
     private LocalDateTime createdAt;
     private LocalDateTime reviewedAt;
 }
+

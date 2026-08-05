@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import uvicorn
 from fastapi import FastAPI
 
+from app.api.endpoints import parser
 from app.messaging.rabbitmq_consumer import start_consumer_in_background
 
 # Cấu hình logging ở mức root để log INFO của "worklify.rabbitmq" (và các logger khác)
@@ -29,6 +30,8 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+app.include_router(parser.router)
 
 
 @app.get("/health")

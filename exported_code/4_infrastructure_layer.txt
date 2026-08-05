@@ -1,8 +1,5 @@
-=== TẦNG INFRASTRUCTURE ===
-
-
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\AuthConfig.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/config/AuthConfig.java
 ================================================================================
 
 // File: \backend-core\infrastructure\src\main\java\com\smartmatch\infrastructure\config\AuthConfig.java
@@ -45,7 +42,76 @@ public class AuthConfig {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\RabbitMqConfig.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/config/KafkaConfig.java
+================================================================================
+
+package com.worklify.infrastructure.config;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.*;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
+import org.springframework.kafka.support.serializer.JsonSerializer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Cấu hình Kafka cho luồng Activity Tracking (job view events).
+ * Chạy độc lập, song song với RabbitMqConfig — không thay thế luồng AI matching.
+ */
+@Configuration
+public class KafkaConfig {
+
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
+    // Tên Topic
+    public static final String TOPIC_JOB_VIEW = "worklify.job.view.events";
+
+    @Bean
+    public ProducerFactory<String, Object> producerFactory() {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(config);
+    }
+
+    @Bean
+    public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
+        return new KafkaTemplate<>(producerFactory);
+    }
+
+    @Bean
+    public ConsumerFactory<String, Object> consumerFactory(
+            @Value("${spring.kafka.consumer.group-id:worklify-default}") String groupId) {
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.worklify.infrastructure.messaging.dto");
+        return new DefaultKafkaConsumerFactory<>(config);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
+            ConsumerFactory<String, Object> consumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(consumerFactory);
+        return factory;
+    }
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/config/RabbitMqConfig.java
 ================================================================================
 
 package com.worklify.infrastructure.config;
@@ -116,7 +182,7 @@ public class RabbitMqConfig {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\SecurityConfig.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/config/SecurityConfig.java
 ================================================================================
 
 package com.worklify.infrastructure.config;
@@ -184,7 +250,7 @@ public class SecurityConfig {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\config\WebConfig.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/config/WebConfig.java
 ================================================================================
 
 package com.worklify.infrastructure.config;
@@ -203,6 +269,8 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Value("${application.frontend.url:http://localhost:3000}")
     private String frontendUrl;
+    @Value("${application.storage.local.upload-dir:./uploads}")
+    private String uploadDir;
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
@@ -216,16 +284,56 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadDir = Paths.get("./uploads");
-        String uploadPath = uploadDir.toFile().getAbsolutePath();
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        String uploadLocation = uploadPath.toUri().toString();
 
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:" + uploadPath + "/");
+                .addResourceLocations(uploadLocation);
     }
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\messaging\DomainEventRabbitMqDispatcher.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/AiMatchResultConsumer.java
+================================================================================
+
+package com.worklify.infrastructure.messaging;
+
+import com.worklify.infrastructure.config.RabbitMqConfig;
+import com.worklify.infrastructure.messaging.dto.AiMatchResultEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * Lắng nghe kết quả matching trả về từ backend-ml qua queue "worklify.ai.result.queue".
+ *
+ * TRẠNG THÁI HIỆN TẠI: tính năng scoring nghiệp vụ (lưu matchScore vào Application,
+ * hiển thị lên UI cho employer...) CHƯA được xây dựng. Consumer này hiện chỉ log lại
+ * để xác nhận luồng RabbitMQ (submit -> backend-ml -> result) chạy đúng end-to-end.
+ *
+ * KHI SCORING FEATURE SẴN SÀNG: bổ sung logic lưu event.matchScore() vào entity
+ * tương ứng ngay trong method handleAiMatchResult() bên dưới — không cần đổi gì
+ * ở RabbitMqConfig hay DomainEventRabbitMqDispatcher.
+ */
+@Slf4j
+@Component
+public class AiMatchResultConsumer {
+
+    @RabbitListener(queues = RabbitMqConfig.QUEUE_AI_RESULT)
+    public void handleAiMatchResult(AiMatchResultEvent event) {
+        log.info(
+                "[RabbitMQ -> Domain] Nhận kết quả matching (STUB) cho applicationId={}, jobId={}, candidateId={}: score={}",
+                event.applicationId(), event.jobId(), event.candidateId(), event.matchScore()
+        );
+
+        // TODO: khi matcher_service.py hoàn thiện, thêm bước lưu matchScore
+        // vào Application (hoặc bảng match_result riêng nếu domain model cần tách ra).
+    }
+}
+
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/DomainEventRabbitMqDispatcher.java
 ================================================================================
 
 package com.worklify.infrastructure.messaging;
@@ -264,7 +372,173 @@ public class DomainEventRabbitMqDispatcher {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ActivityRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/JobViewAnalyticsConsumer.java
+================================================================================
+
+package com.worklify.infrastructure.messaging;
+
+import com.worklify.infrastructure.config.KafkaConfig;
+import com.worklify.infrastructure.messaging.dto.JobViewEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Consumer group "analytics" - đếm số lượt xem theo từng jobId.
+ * Đọc độc lập với JobViewAuditLogConsumer - minh chứng khả năng
+ * "nhiều consumer group cùng đọc 1 topic độc lập" của Kafka.
+ */
+@Slf4j
+@Component
+public class JobViewAnalyticsConsumer {
+
+    // Demo mock - lưu counter trong memory, không cần bảng DB thật
+    private final Map<Long, Integer> viewCountByJobId = new ConcurrentHashMap<>();
+
+    @KafkaListener(
+            topics = KafkaConfig.TOPIC_JOB_VIEW,
+            groupId = "worklify-analytics-group"
+    )
+    public void onJobViewed(JobViewEvent event) {
+        viewCountByJobId.merge(event.getJobId(), 1, Integer::sum);
+        log.info("[analytics] jobId={} -> tổng lượt xem={}", event.getJobId(), viewCountByJobId.get(event.getJobId()));
+    }
+
+    public Map<Long, Integer> getViewCountSnapshot() {
+        return Map.copyOf(viewCountByJobId);
+    }
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/JobViewAuditLogConsumer.java
+================================================================================
+
+package com.worklify.infrastructure.messaging;
+
+import com.worklify.infrastructure.config.KafkaConfig;
+import com.worklify.infrastructure.messaging.dto.JobViewEvent;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
+/**
+ * Consumer group "audit-log" - ghi log riêng cho mục đích audit/kiểm tra.
+ * Mock: chỉ log ra console thay vì ghi file/DB thật.
+ */
+@Slf4j
+@Component
+public class JobViewAuditLogConsumer {
+
+    @KafkaListener(
+            topics = KafkaConfig.TOPIC_JOB_VIEW,
+            groupId = "worklify-audit-log-group"
+    )
+    public void onJobViewed(JobViewEvent event) {
+        log.info("[audit-log] Ghi nhận: jobId={}, viewerUserId={}, time={}",
+                event.getJobId(), event.getViewerUserId(), event.getTimestamp());
+    }
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/JobViewEventKafkaProducer.java
+================================================================================
+
+package com.worklify.infrastructure.messaging;
+
+import com.worklify.application.job.port.JobViewEventPublisherPort;
+import com.worklify.infrastructure.config.KafkaConfig;
+import com.worklify.infrastructure.messaging.dto.JobViewEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+import java.time.Instant;
+
+/**
+ * Adapter implement JobViewEventPublisherPort bằng Kafka.
+ * Dùng jobId làm partition key để đảm bảo thứ tự event trong cùng 1 job (đúng lý thuyết ordering-per-partition).
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class JobViewEventKafkaProducer implements JobViewEventPublisherPort {
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+
+    @Override
+    public void publishJobViewed(Long jobId, Long viewerUserId) {
+        JobViewEvent event = JobViewEvent.builder()
+                .jobId(jobId)
+                .viewerUserId(viewerUserId)
+                .timestamp(Instant.now())
+                .build();
+
+        // fire-and-forget: không để lỗi Kafka làm ảnh hưởng luồng xem job chính
+        kafkaTemplate.send(KafkaConfig.TOPIC_JOB_VIEW, String.valueOf(jobId), event)
+                .exceptionally(ex -> {
+                    log.warn("Không publish được JobViewEvent cho jobId={}: {}", jobId, ex.getMessage());
+                    return null;
+                });
+    }
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/dto/AiMatchResultEvent.java
+================================================================================
+
+package com.worklify.infrastructure.messaging.dto;
+
+import java.time.LocalDateTime;
+
+/**
+ * Payload nhận được từ backend-ml (Python) qua queue "worklify.ai.result.queue".
+ * Cấu trúc field phải khớp với JSON mà consumer bên Python gửi lên (camelCase).
+ *
+ * LƯU Ý: hiện tại matchScore là giá trị STUB (sinh ngẫu nhiên bên backend-ml)
+ * vì tính năng matching thật (matcher_service.py) chưa hoàn thiện.
+ */
+public record AiMatchResultEvent(
+        Long applicationId,
+        Long jobId,
+        Long candidateId,
+        Double matchScore,
+        LocalDateTime processedAt
+) {}
+
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/messaging/dto/JobViewEvent.java
+================================================================================
+
+package com.worklify.infrastructure.messaging.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
+/**
+ * Sự kiện "xem chi tiết job" - dùng cho demo Activity Tracking qua Kafka.
+ * viewerUserId có thể null (khách xem chưa đăng nhập).
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class JobViewEvent {
+    private Long jobId;
+    private Long viewerUserId;
+    private Instant timestamp;
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ActivityRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -315,7 +589,7 @@ public class ActivityRepositoryAdapter implements ActivityRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ApplicationRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ApplicationRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -382,7 +656,7 @@ public class ApplicationRepositoryAdapter implements ApplicationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\AwardRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/AwardRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -433,7 +707,51 @@ public class AwardRepositoryAdapter implements AwardRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CandidateProfileRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CandidateProfileLayoutRepositoryAdapter.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.adapter;
+
+import com.worklify.domain.candidate.model.CandidateProfileLayout;
+import com.worklify.domain.candidate.repository.CandidateProfileLayoutRepository;
+import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
+import com.worklify.infrastructure.persistence.repository.CandidateProfileLayoutJpaRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class CandidateProfileLayoutRepositoryAdapter implements CandidateProfileLayoutRepository {
+
+    private final CandidateProfileLayoutJpaRepository jpaRepository;
+    private final CandidateEntityMapper mapper;
+
+    @Override
+    public List<CandidateProfileLayout> findByCandidateId(Long candidateId) {
+        return jpaRepository.findByCandidateId(candidateId).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByCandidateId(Long candidateId) {
+        return jpaRepository.existsByCandidateId(candidateId);
+    }
+
+    @Override
+    public List<CandidateProfileLayout> saveAll(List<CandidateProfileLayout> layouts) {
+        List<CandidateProfileLayout> saved = jpaRepository.saveAll(
+                layouts.stream().map(mapper::toEntity).collect(Collectors.toList())
+        ).stream().map(mapper::toDomain).collect(Collectors.toList());
+        return saved;
+    }
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CandidateProfileRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -488,13 +806,14 @@ public class CandidateProfileRepositoryAdapter implements CandidateProfileReposi
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CandidateSkillRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CandidateSkillRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
 
 import com.worklify.domain.candidate.model.CandidateSkill;
 import com.worklify.domain.candidate.repository.CandidateSkillRepository;
+import com.worklify.infrastructure.persistence.entity.CandidateSkillJpaEntity;
 import com.worklify.infrastructure.persistence.mapper.CandidateEntityMapper;
 import com.worklify.infrastructure.persistence.repository.CandidateSkillJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -537,10 +856,25 @@ public class CandidateSkillRepositoryAdapter implements CandidateSkillRepository
     public void deleteByCandidateId(Long candidateId) {
         jpaRepository.deleteByCandidateId(candidateId);
     }
+
+    @Override
+    public boolean existsBySkillId(Long skillId) {
+        return jpaRepository.existsBySkillId(skillId);
+    }
+
+    @Override
+    public List<CandidateSkill> saveAll(List<CandidateSkill> candidateSkills) {
+        List<CandidateSkillJpaEntity> entities = candidateSkills.stream()
+                .map(mapper::toEntity)
+                .collect(Collectors.toList());
+        return jpaRepository.saveAll(entities).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CertificationRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CertificationRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -591,7 +925,7 @@ public class CertificationRepositoryAdapter implements CertificationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CompanyLikeRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CompanyLikeRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -639,7 +973,7 @@ public class CompanyLikeRepositoryAdapter implements CompanyLikeRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CompanyProfileRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CompanyProfileRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -713,7 +1047,7 @@ public class CompanyProfileRepositoryAdapter implements CompanyProfileRepository
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\CvDocumentRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/CvDocumentRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -759,7 +1093,7 @@ public class CvDocumentRepositoryAdapter implements CvDocumentRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\DemoProductAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/DemoProductAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -820,7 +1154,7 @@ public class DemoProductAdapter implements DemoProductRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\EducationRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/EducationRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -871,7 +1205,7 @@ public class EducationRepositoryAdapter implements EducationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ExperienceRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ExperienceRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -922,7 +1256,7 @@ public class ExperienceRepositoryAdapter implements ExperienceRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\HobbyRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/HobbyRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -973,7 +1307,7 @@ public class HobbyRepositoryAdapter implements HobbyRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\JobPostingRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/JobPostingRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1047,7 +1381,7 @@ public class JobPostingRepositoryAdapter implements JobPostingRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\LanguageRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/LanguageRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1095,10 +1429,15 @@ public class LanguageRepositoryAdapter implements LanguageRepository {
     public void deleteByCandidateId(Long candidateId) {
         jpaRepository.deleteByCandidateId(candidateId);
     }
+
+    @Override
+    public boolean existsByLanguageId(Long languageId) {
+        return jpaRepository.existsByLanguageId(languageId);
+    }
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ProjectRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ProjectRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1149,7 +1488,7 @@ public class ProjectRepositoryAdapter implements ProjectRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ReferenceValueRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ReferenceValueRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1201,7 +1540,7 @@ public class ReferenceValueRepositoryAdapter implements ReferenceValueRepository
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\ReferenceValueSuggestionRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/ReferenceValueSuggestionRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1251,7 +1590,7 @@ public class ReferenceValueSuggestionRepositoryAdapter implements ReferenceValue
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SavedJobRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/SavedJobRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1299,7 +1638,7 @@ public class SavedJobRepositoryAdapter implements SavedJobRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\SystemLogRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/SystemLogRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1335,7 +1674,7 @@ public class SystemLogRepositoryAdapter implements SystemLogRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\UserRepositoryAdapter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/UserRepositoryAdapter.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter;
@@ -1394,7 +1733,7 @@ public class UserRepositoryAdapter implements UserRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\adapter\util\PaginationMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/adapter/util/PaginationMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.adapter.util;
@@ -1434,7 +1773,7 @@ public class PaginationMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ActivityJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ActivityJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1482,7 +1821,7 @@ public class ActivityJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ApplicationJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ApplicationJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1532,7 +1871,7 @@ public class ApplicationJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\AwardJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/AwardJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1574,7 +1913,7 @@ public class AwardJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateProfileJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CandidateProfileJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1636,7 +1975,57 @@ public class CandidateProfileJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateSkillId.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CandidateProfileLayoutJpaEntity.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.entity;
+
+import com.worklify.domain.candidate.model.BlockType;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "candidate_profile_layouts",
+        uniqueConstraints = @UniqueConstraint(name = "uq_candidate_block", columnNames = {"candidate_id", "block_type"}))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class CandidateProfileLayoutJpaEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "candidate_id", nullable = false)
+    private Long candidateId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "block_type", nullable = false, length = 50)
+    private BlockType blockType;
+
+    @Column(name = "position", nullable = false)
+    private int position;
+
+    @Column(name = "visible", nullable = false)
+    private boolean visible;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CandidateSkillId.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1653,7 +2042,7 @@ public class CandidateSkillId implements Serializable {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CandidateSkillJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CandidateSkillJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1687,10 +2076,13 @@ public class CandidateSkillJpaEntity {
 
     @Column(name = "note", length = 255)
     private String note;
+
+    @Column(name = "display_order")
+    private int displayOrder;
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CertificationJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CertificationJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1738,7 +2130,7 @@ public class CertificationJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CompanyLikeJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CompanyLikeJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1777,7 +2169,7 @@ public class CompanyLikeJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CompanyProfileJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CompanyProfileJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1820,7 +2212,7 @@ public class CompanyProfileJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\CvDocumentJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/CvDocumentJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1873,7 +2265,7 @@ public class CvDocumentJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\DemoProductEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/DemoProductEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1897,7 +2289,7 @@ public class DemoProductEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\EducationJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/EducationJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -1963,7 +2355,7 @@ public class EducationJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ExperienceJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ExperienceJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2028,7 +2420,7 @@ public class ExperienceJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\HobbyJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/HobbyJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2059,7 +2451,7 @@ public class HobbyJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\JobPostingJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/JobPostingJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2119,7 +2511,7 @@ public class JobPostingJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\LanguageJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/LanguageJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2153,7 +2545,7 @@ public class LanguageJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ProjectJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ProjectJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2218,7 +2610,7 @@ public class ProjectJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ReferenceValueJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ReferenceValueJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2255,12 +2647,13 @@ public class ReferenceValueJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\ReferenceValueSuggestionJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/ReferenceValueSuggestionJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
 
 import com.worklify.domain.referencedata.model.SuggestionStatus;
+import com.worklify.domain.referencedata.model.SuggestionType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -2268,8 +2661,7 @@ import java.time.LocalDateTime;
 
 /**
  * Map bảng reference_value_suggestions. Tái sử dụng trực tiếp domain enum
- * SuggestionStatus (giống cách UserJpaEntity dùng domain.auth.model.Role),
- * lưu dạng STRING (PENDING/APPROVED/REJECTED) khớp init.sql.
+ * SuggestionStatus và SuggestionType (giống cách UserJpaEntity dùng domain.auth.model.Role).
  */
 @Entity
 @Table(name = "reference_value_suggestions")
@@ -2294,6 +2686,13 @@ public class ReferenceValueSuggestionJpaEntity {
     private Long requestedByUserId;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false, length = 20)
+    private SuggestionType requestType;
+
+    @Column(name = "target_reference_value_id")
+    private Long targetReferenceValueId;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SuggestionStatus status;
 
@@ -2311,7 +2710,7 @@ public class ReferenceValueSuggestionJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SavedJobJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/SavedJobJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2345,7 +2744,7 @@ public class SavedJobJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\SystemLogJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/SystemLogJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2384,7 +2783,7 @@ public class SystemLogJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\entity\UserJpaEntity.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/entity/UserJpaEntity.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.entity;
@@ -2441,7 +2840,7 @@ public class UserJpaEntity {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\ApplicationEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/ApplicationEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2462,7 +2861,7 @@ public interface ApplicationEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\CandidateEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/CandidateEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2507,10 +2906,13 @@ public interface CandidateEntityMapper {
 
     LanguageJpaEntity toEntity(Language language);
     Language toDomain(LanguageJpaEntity entity);
+
+    CandidateProfileLayoutJpaEntity toEntity(CandidateProfileLayout layout);
+    CandidateProfileLayout toDomain(CandidateProfileLayoutJpaEntity entity);
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\CompanyProfileEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/CompanyProfileEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2527,7 +2929,7 @@ public interface CompanyProfileEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\JobPostingEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/JobPostingEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2544,7 +2946,7 @@ public interface JobPostingEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\ReferenceDataEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/ReferenceDataEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2567,7 +2969,7 @@ public interface ReferenceDataEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\SavedJobEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/SavedJobEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2584,7 +2986,7 @@ public interface SavedJobEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\SystemLogEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/SystemLogEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2601,7 +3003,7 @@ public interface SystemLogEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\mapper\UserEntityMapper.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/mapper/UserEntityMapper.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.mapper;
@@ -2645,7 +3047,7 @@ public interface UserEntityMapper {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ActivityJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ActivityJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2663,7 +3065,7 @@ public interface ActivityJpaRepository extends JpaRepository<ActivityJpaEntity, 
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ApplicationJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ApplicationJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2684,7 +3086,7 @@ public interface ApplicationJpaRepository extends JpaRepository<ApplicationJpaEn
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\AwardJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/AwardJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2702,7 +3104,7 @@ public interface AwardJpaRepository extends JpaRepository<AwardJpaEntity, Long> 
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CandidateProfileJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CandidateProfileJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2737,7 +3139,25 @@ public interface CandidateProfileJpaRepository extends JpaRepository<CandidatePr
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CandidateSkillJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CandidateProfileLayoutJpaRepository.java
+================================================================================
+
+package com.worklify.infrastructure.persistence.repository;
+
+import com.worklify.infrastructure.persistence.entity.CandidateProfileLayoutJpaEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface CandidateProfileLayoutJpaRepository extends JpaRepository<CandidateProfileLayoutJpaEntity, Long> {
+    List<CandidateProfileLayoutJpaEntity> findByCandidateId(Long candidateId);
+    boolean existsByCandidateId(Long candidateId);
+}
+
+================================================================================
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CandidateSkillJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2756,10 +3176,11 @@ public interface CandidateSkillJpaRepository extends JpaRepository<CandidateSkil
     Optional<CandidateSkillJpaEntity> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsBySkillId(Long skillId);
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CertificationJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CertificationJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2777,7 +3198,7 @@ public interface CertificationJpaRepository extends JpaRepository<CertificationJ
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CompanyLikeJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CompanyLikeJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2794,7 +3215,7 @@ public interface CompanyLikeJpaRepository extends JpaRepository<CompanyLikeJpaEn
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CompanyProfileJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CompanyProfileJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2815,7 +3236,7 @@ public interface CompanyProfileJpaRepository extends JpaRepository<CompanyProfil
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\CvDocumentJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/CvDocumentJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2832,7 +3253,7 @@ public interface CvDocumentJpaRepository extends JpaRepository<CvDocumentJpaEnti
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\DemoProductJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/DemoProductJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2846,7 +3267,7 @@ public interface DemoProductJpaRepository extends JpaRepository<DemoProductEntit
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\EducationJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/EducationJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2863,7 +3284,7 @@ public interface EducationJpaRepository extends JpaRepository<EducationJpaEntity
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ExperienceJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ExperienceJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2881,7 +3302,7 @@ public interface ExperienceJpaRepository extends JpaRepository<ExperienceJpaEnti
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\HobbyJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/HobbyJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2899,7 +3320,7 @@ public interface HobbyJpaRepository extends JpaRepository<HobbyJpaEntity, Long> 
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\JobPostingJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/JobPostingJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2937,7 +3358,7 @@ public interface JobPostingJpaRepository extends JpaRepository<JobPostingJpaEnti
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\LanguageJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/LanguageJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2952,10 +3373,11 @@ import java.util.List;
 public interface LanguageJpaRepository extends JpaRepository<LanguageJpaEntity, Long> {
     List<LanguageJpaEntity> findByCandidateId(Long candidateId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsByLanguageId(Long languageId);
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ProjectJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ProjectJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2973,7 +3395,7 @@ public interface ProjectJpaRepository extends JpaRepository<ProjectJpaEntity, Lo
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ReferenceValueJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ReferenceValueJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -2995,7 +3417,7 @@ public interface ReferenceValueJpaRepository extends JpaRepository<ReferenceValu
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\ReferenceValueSuggestionJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/ReferenceValueSuggestionJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -3016,7 +3438,7 @@ public interface ReferenceValueSuggestionJpaRepository extends JpaRepository<Ref
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SavedJobJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/SavedJobJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -3036,7 +3458,7 @@ public interface SavedJobJpaRepository extends JpaRepository<SavedJobJpaEntity, 
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\SystemLogJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/SystemLogJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -3052,7 +3474,7 @@ public interface SystemLogJpaRepository extends JpaRepository<SystemLogJpaEntity
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\persistence\repository\UserJpaRepository.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/persistence/repository/UserJpaRepository.java
 ================================================================================
 
 package com.worklify.infrastructure.persistence.repository;
@@ -3070,7 +3492,7 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Long> {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\CustomUserDetailsService.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/security/CustomUserDetailsService.java
 ================================================================================
 
 package com.worklify.infrastructure.security;
@@ -3106,7 +3528,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\JwtAuthenticationFilter.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/security/JwtAuthenticationFilter.java
 ================================================================================
 
 package com.worklify.infrastructure.security;
@@ -3178,7 +3600,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\security\JwtService.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/security/JwtService.java
 ================================================================================
 
 package com.worklify.infrastructure.security;
@@ -3265,7 +3687,7 @@ public class JwtService implements TokenProviderPort {
 }
 
 ================================================================================
-FILE: ./backend-core\infrastructure\src\main\java\com\worklify\infrastructure\storage\LocalFileStorageService.java
+FILE: backend-core/infrastructure/src/main/java/com/worklify/infrastructure/storage/LocalFileStorageService.java
 ================================================================================
 
 package com.worklify.infrastructure.storage;
@@ -3412,3 +3834,4 @@ public class LocalFileStorageService implements FileStoragePort {
         return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
 }
+

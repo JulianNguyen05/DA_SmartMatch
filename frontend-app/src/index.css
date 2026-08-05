@@ -3,7 +3,7 @@
 
 /* 2. Import Tailwind CSS v4 SAU */
 @import "tailwindcss";
-
+@plugin "@tailwindcss/typography";
 /* 3. Cấu hình cơ bản (Tùy chọn) */
 html,
 body {

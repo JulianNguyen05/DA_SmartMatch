@@ -1,8 +1,5 @@
-=== TẦNG DOMAIN ===
-
-
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\admin\model\SystemLog.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/admin/model/SystemLog.java
 ================================================================================
 
 package com.worklify.domain.admin.model;
@@ -34,7 +31,7 @@ public class SystemLog {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\admin\repository\SystemLogRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/admin/repository/SystemLogRepository.java
 ================================================================================
 
 package com.worklify.domain.admin.repository;
@@ -47,7 +44,7 @@ public interface SystemLogRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\application\event\ApplicationSubmittedEvent.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/application/event/ApplicationSubmittedEvent.java
 ================================================================================
 
 package com.worklify.domain.application.event;
@@ -57,7 +54,7 @@ import java.time.LocalDateTime;
 public record ApplicationSubmittedEvent(Long applicationId, Long candidateId, Long jobId, LocalDateTime timestamp) {}
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\application\model\Application.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/application/model/Application.java
 ================================================================================
 
 package com.worklify.domain.application.model;
@@ -150,7 +147,7 @@ public class Application {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\application\model\ApplicationStatus.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/application/model/ApplicationStatus.java
 ================================================================================
 
 package com.worklify.domain.application.model;
@@ -164,7 +161,7 @@ public enum ApplicationStatus {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\application\repository\ApplicationRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/application/repository/ApplicationRepository.java
 ================================================================================
 
 package com.worklify.domain.application.repository;
@@ -184,7 +181,7 @@ public interface ApplicationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\auth\model\Role.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/auth/model/Role.java
 ================================================================================
 
 package com.worklify.domain.auth.model;
@@ -197,7 +194,7 @@ public enum Role {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\auth\model\User.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/auth/model/User.java
 ================================================================================
 
 package com.worklify.domain.auth.model;
@@ -253,7 +250,7 @@ public class User {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\auth\model\UserStatus.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/auth/model/UserStatus.java
 ================================================================================
 
 package com.worklify.domain.auth.model;
@@ -266,7 +263,7 @@ public enum UserStatus {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\auth\repository\UserRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/auth/repository/UserRepository.java
 ================================================================================
 
 package com.worklify.domain.auth.repository;
@@ -285,7 +282,7 @@ public interface UserRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Activity.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Activity.java
 ================================================================================
 
 // Activity.java
@@ -335,7 +332,7 @@ public class Activity {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Award.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Award.java
 ================================================================================
 
 // Award.java
@@ -380,7 +377,7 @@ public class Award {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\BlockType.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/BlockType.java
 ================================================================================
 
 // BlockType.java
@@ -422,7 +419,7 @@ public enum BlockType {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateProfile.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/CandidateProfile.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -493,23 +490,30 @@ public class CandidateProfile {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateProfileLayout.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/CandidateProfileLayout.java
 ================================================================================
 
 // CandidateProfileLayout.java
 package com.worklify.domain.candidate.model;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Cấu hình vị trí + trạng thái hiển thị của MỘT block trên trang ProfilePage.
  *
- * Đây là entity thuộc về "trình bày" (layout), hoàn toàn tách biệt với dữ liệu
- * nghiệp vụ trong Activity/Award/Education/... — CV Builder sau này sẽ đọc thẳng
- * dữ liệu nghiệp vụ qua các Repository tương ứng, KHÔNG phụ thuộc vào layout này.
+ * Đây là entity thuộc về "trình bày" (layout), tách biệt với dữ liệu nghiệp vụ
+ * trong Activity/Award/Education/... — CV Builder đọc thẳng dữ liệu nghiệp vụ
+ * qua các Repository tương ứng, KHÔNG phụ thuộc vào layout này.
  */
+@Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CandidateProfileLayout {
 
     /** Thứ tự mặc định khi khởi tạo layout lần đầu cho 1 candidate. */
@@ -528,22 +532,12 @@ public class CandidateProfileLayout {
             BlockType.HOBBY
     );
 
-    private final Long id;
-    private final Long candidateId;
-    private final BlockType blockType;
+    private Long id;
+    private Long candidateId;
+    private BlockType blockType;
     private int position;
     private boolean visible;
 
-    private CandidateProfileLayout(Long id, Long candidateId, BlockType blockType,
-                                   int position, boolean visible) {
-        this.id = id;
-        this.candidateId = candidateId;
-        this.blockType = blockType;
-        this.position = position;
-        this.visible = visible;
-    }
-
-    /** Tạo 1 layout item mới (chưa có id). */
     public static CandidateProfileLayout create(Long candidateId, BlockType blockType,
                                                 int position, boolean visible) {
         if (candidateId == null) {
@@ -552,16 +546,12 @@ public class CandidateProfileLayout {
         if (blockType == null) {
             throw new IllegalArgumentException("blockType không được null");
         }
-        return new CandidateProfileLayout(null, candidateId, blockType, position, visible);
-    }
-
-    /** Dựng lại từ persistence (đã có id). */
-    public static CandidateProfileLayout restore(Long id, Long candidateId, BlockType blockType,
-                                                 int position, boolean visible) {
-        if (id == null) {
-            throw new IllegalArgumentException("id không được null khi restore");
-        }
-        return new CandidateProfileLayout(id, candidateId, blockType, position, visible);
+        return CandidateProfileLayout.builder()
+                .candidateId(candidateId)
+                .blockType(blockType)
+                .position(position)
+                .visible(visible)
+                .build();
     }
 
     /**
@@ -592,42 +582,10 @@ public class CandidateProfileLayout {
     public void toggleVisibility(boolean visible) {
         this.visible = visible;
     }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getCandidateId() {
-        return candidateId;
-    }
-
-    public BlockType getBlockType() {
-        return blockType;
-    }
-
-    public int getPosition() {
-        return position;
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof CandidateProfileLayout that)) return false;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CandidateSkill.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/CandidateSkill.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -640,13 +598,15 @@ import lombok.Getter;
 @Getter
 @Builder
 @AllArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(of = {"candidateId", "skillId"}) // định danh theo khóa hỗn hợp, không phụ thuộc field mutable
 public class CandidateSkill {
     private final Long candidateId;
     private final Long skillId;
     private String level;
     private Integer yearsOfEx;
     private String note;
+    // [MỚI - Tiến độ 6] Vị trí hiển thị, phục vụ kéo-thả sắp xếp skill trên ProfilePage
+    private int displayOrder;
 
     public CandidateSkill(Long candidateId, Long skillId) {
         this.candidateId = candidateId;
@@ -654,11 +614,20 @@ public class CandidateSkill {
         this.level = "";
         this.yearsOfEx = 0;
         this.note = "";
+        this.displayOrder = 0;
+    }
+
+    // Business Behavior: kéo-thả đổi vị trí skill trong danh sách
+    public void reorder(int newPosition) {
+        if (newPosition < 0) {
+            throw new IllegalArgumentException("displayOrder không được âm");
+        }
+        this.displayOrder = newPosition;
     }
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Certification.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Certification.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -710,7 +679,7 @@ public class Certification {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\CvDocument.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/CvDocument.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -789,7 +758,7 @@ public class CvDocument {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Education.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Education.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -848,7 +817,7 @@ public class Education {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Experience.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Experience.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -906,7 +875,7 @@ public class Experience {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Hobby.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Hobby.java
 ================================================================================
 
 // Hobby.java
@@ -944,7 +913,7 @@ public class Hobby {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Language.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Language.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -1021,7 +990,7 @@ public class Language {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\model\Project.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/model/Project.java
 ================================================================================
 
 package com.worklify.domain.candidate.model;
@@ -1079,7 +1048,7 @@ public class Project {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ActivityRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/ActivityRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1099,7 +1068,7 @@ public interface ActivityRepository {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\AwardRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/AwardRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1119,7 +1088,7 @@ public interface AwardRepository {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateProfileLayoutRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/CandidateProfileLayoutRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1141,7 +1110,7 @@ public interface CandidateProfileLayoutRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateProfileRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/CandidateProfileRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1158,7 +1127,7 @@ public interface CandidateProfileRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CandidateSkillRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/CandidateSkillRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1173,10 +1142,12 @@ public interface CandidateSkillRepository {
     Optional<CandidateSkill> findByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateIdAndSkillId(Long candidateId, Long skillId);
     void deleteByCandidateId(Long candidateId);
+    boolean existsBySkillId(Long skillId);
+    List<CandidateSkill> saveAll(List<CandidateSkill> candidateSkills);
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CertificationRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/CertificationRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1196,7 +1167,7 @@ public interface CertificationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\CvDocumentRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/CvDocumentRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1213,7 +1184,7 @@ public interface CvDocumentRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\EducationRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/EducationRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1231,7 +1202,7 @@ public interface EducationRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ExperienceRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/ExperienceRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1250,7 +1221,7 @@ public interface ExperienceRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\HobbyRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/HobbyRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1270,7 +1241,7 @@ public interface HobbyRepository {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\LanguageRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/LanguageRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1286,11 +1257,12 @@ public interface LanguageRepository {
     List<Language> findByCandidateId(Long candidateId);
     void deleteById(Long id);
     void deleteByCandidateId(Long candidateId);
+    boolean existsByLanguageId(Long languageId);
 }
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\candidate\repository\ProjectRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/candidate/repository/ProjectRepository.java
 ================================================================================
 
 package com.worklify.domain.candidate.repository;
@@ -1310,7 +1282,7 @@ public interface ProjectRepository {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\DomainPage.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/common/DomainPage.java
 ================================================================================
 
 // File: \backend-core\domain\src\main\java\com\smartmatch\domain\common\DomainPage.java
@@ -1339,7 +1311,7 @@ public class DomainPage<T> {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\DomainPageable.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/common/DomainPageable.java
 ================================================================================
 
 package com.worklify.domain.common;
@@ -1354,7 +1326,7 @@ public interface DomainPageable {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\SearchPageable.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/common/SearchPageable.java
 ================================================================================
 
 package com.worklify.domain.common;
@@ -1388,7 +1360,7 @@ public class SearchPageable implements DomainPageable {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\valueobject\EmailAddress.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/common/valueobject/EmailAddress.java
 ================================================================================
 
 package com.worklify.domain.common.valueobject;
@@ -1406,7 +1378,7 @@ public record EmailAddress(String value) {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\common\valueobject\PhoneNumber.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/common/valueobject/PhoneNumber.java
 ================================================================================
 
 package com.worklify.domain.common.valueobject;
@@ -1420,7 +1392,7 @@ public record PhoneNumber(String value) {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\demo\model\DemoProduct.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/demo/model/DemoProduct.java
 ================================================================================
 
 package com.worklify.domain.demo.model;
@@ -1435,7 +1407,7 @@ public class DemoProduct {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\demo\repository\DemoProductRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/demo/repository/DemoProductRepository.java
 ================================================================================
 
 package com.worklify.domain.demo.repository;
@@ -1452,7 +1424,7 @@ public interface DemoProductRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\employer\model\CompanyProfile.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/employer/model/CompanyProfile.java
 ================================================================================
 
 package com.worklify.domain.employer.model;
@@ -1529,7 +1501,7 @@ public class CompanyProfile {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\employer\model\VerificationStatus.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/employer/model/VerificationStatus.java
 ================================================================================
 
 package com.worklify.domain.employer.model;
@@ -1541,7 +1513,7 @@ public enum VerificationStatus {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\employer\repository\CompanyLikeRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/employer/repository/CompanyLikeRepository.java
 ================================================================================
 
 package com.worklify.domain.employer.repository;
@@ -1555,7 +1527,7 @@ public interface CompanyLikeRepository {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\employer\repository\CompanyProfileRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/employer/repository/CompanyProfileRepository.java
 ================================================================================
 
 package com.worklify.domain.employer.repository;
@@ -1584,7 +1556,7 @@ public interface CompanyProfileRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\job\model\JobPosting.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/job/model/JobPosting.java
 ================================================================================
 
 package com.worklify.domain.job.model;
@@ -1685,7 +1657,7 @@ public class JobPosting {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\job\model\JobStatus.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/job/model/JobStatus.java
 ================================================================================
 
 package com.worklify.domain.job.model;
@@ -1698,7 +1670,7 @@ public enum JobStatus {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\job\model\SavedJob.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/job/model/SavedJob.java
 ================================================================================
 
 // File: \backend-core\domain\src\main\java\com\smartmatch\domain\job\model\SavedJob.java
@@ -1733,7 +1705,7 @@ public class SavedJob {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\job\repository\JobPostingRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/job/repository/JobPostingRepository.java
 ================================================================================
 
 package com.worklify.domain.job.repository;
@@ -1755,7 +1727,7 @@ public interface JobPostingRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\job\repository\SavedJobRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/job/repository/SavedJobRepository.java
 ================================================================================
 
 // File: \backend-core\domain\src\main\java\com\smartmatch\domain\job\repository\SavedJobRepository.java
@@ -1774,7 +1746,7 @@ public interface SavedJobRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\ReferenceValue.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/model/ReferenceValue.java
 ================================================================================
 
 package com.worklify.domain.referencedata.model;
@@ -1839,7 +1811,7 @@ public class ReferenceValue {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\ReferenceValueSuggestion.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/model/ReferenceValueSuggestion.java
 ================================================================================
 
 package com.worklify.domain.referencedata.model;
@@ -1857,6 +1829,8 @@ public class ReferenceValueSuggestion {
     private final String type;
     private final String name;
     private final Long requestedByUserId;
+    private final SuggestionType requestType;
+    private final Long targetReferenceValueId;
     private SuggestionStatus status;
     private Long reviewedByAdminId;
     private String reviewNote;
@@ -1865,12 +1839,15 @@ public class ReferenceValueSuggestion {
 
     @Builder
     private ReferenceValueSuggestion(Long id, String type, String name, Long requestedByUserId,
+                                     SuggestionType requestType, Long targetReferenceValueId,
                                      SuggestionStatus status, Long reviewedByAdminId, String reviewNote,
                                      LocalDateTime createdAt, LocalDateTime reviewedAt) {
         this.id = id;
         this.type = type;
         this.name = name;
         this.requestedByUserId = requestedByUserId;
+        this.requestType = requestType;
+        this.targetReferenceValueId = targetReferenceValueId;
         this.status = status;
         this.reviewedByAdminId = reviewedByAdminId;
         this.reviewNote = reviewNote;
@@ -1878,19 +1855,45 @@ public class ReferenceValueSuggestion {
         this.reviewedAt = reviewedAt;
     }
 
-    /** Tạo mới một đề xuất, mặc định status = PENDING. */
-    public static ReferenceValueSuggestion create(String type, String name, Long requestedByUserId) {
-        if (type == null || type.isBlank()) {
-            throw new IllegalArgumentException("type không được để trống");
-        }
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("name không được để trống");
-        }
-        if (requestedByUserId == null) {
-            throw new IllegalArgumentException("requestedByUserId không được null");
+    /** Đề xuất TẠO MỚI 1 giá trị chưa tồn tại. */
+    public static ReferenceValueSuggestion createNew(String type, String name, Long requestedByUserId) {
+        validateTypeAndName(type, name);
+        requireUserId(requestedByUserId);
+        return new ReferenceValueSuggestion(
+                null, normalizeType(type), name.trim(), requestedByUserId,
+                SuggestionType.CREATE, null,
+                SuggestionStatus.PENDING, null, null,
+                LocalDateTime.now(), null
+        );
+    }
+
+    /** Đề xuất SỬA TÊN 1 giá trị đã tồn tại. "name" là tên mới mong muốn. */
+    public static ReferenceValueSuggestion createEdit(String type, String name, Long requestedByUserId,
+                                                      Long targetReferenceValueId) {
+        validateTypeAndName(type, name);
+        requireUserId(requestedByUserId);
+        if (targetReferenceValueId == null) {
+            throw new IllegalArgumentException("targetReferenceValueId không được null khi đề xuất EDIT");
         }
         return new ReferenceValueSuggestion(
-                null, type.trim().toUpperCase(), name.trim(), requestedByUserId,
+                null, normalizeType(type), name.trim(), requestedByUserId,
+                SuggestionType.EDIT, targetReferenceValueId,
+                SuggestionStatus.PENDING, null, null,
+                LocalDateTime.now(), null
+        );
+    }
+
+    /** Đề xuất XÓA 1 giá trị đã tồn tại. "name" lưu lại tên hiện tại để admin đối chiếu khi duyệt. */
+    public static ReferenceValueSuggestion createDelete(String type, String name, Long requestedByUserId,
+                                                        Long targetReferenceValueId) {
+        validateTypeAndName(type, name);
+        requireUserId(requestedByUserId);
+        if (targetReferenceValueId == null) {
+            throw new IllegalArgumentException("targetReferenceValueId không được null khi đề xuất DELETE");
+        }
+        return new ReferenceValueSuggestion(
+                null, normalizeType(type), name.trim(), requestedByUserId,
+                SuggestionType.DELETE, targetReferenceValueId,
                 SuggestionStatus.PENDING, null, null,
                 LocalDateTime.now(), null
         );
@@ -1898,18 +1901,24 @@ public class ReferenceValueSuggestion {
 
     /** Dựng lại từ persistence. */
     public static ReferenceValueSuggestion restore(Long id, String type, String name, Long requestedByUserId,
+                                                   SuggestionType requestType, Long targetReferenceValueId,
                                                    SuggestionStatus status, Long reviewedByAdminId,
                                                    String reviewNote, LocalDateTime createdAt,
                                                    LocalDateTime reviewedAt) {
-        return new ReferenceValueSuggestion(id, type, name, requestedByUserId, status,
-                reviewedByAdminId, reviewNote, createdAt, reviewedAt);
+        return new ReferenceValueSuggestion(id, type, name, requestedByUserId, requestType, targetReferenceValueId,
+                status, reviewedByAdminId, reviewNote, createdAt, reviewedAt);
     }
 
     /**
-     * Admin duyệt đề xuất. Trả về một ReferenceValue mới (chưa persist) để tầng
-     * Application lưu vào bảng reference_values.
+     * Admin duyệt đề xuất — CHỈ chuyển trạng thái, KHÔNG còn tự tạo ReferenceValue nữa
+     * (khác bản cũ). Vì giờ có 3 loại request khác nhau (CREATE/EDIT/DELETE) với hệ quả
+     * khác nhau lên ReferenceValue, việc thực thi hệ quả đó thuộc về tầng Application
+     * (nơi có quyền truy cập ReferenceValueRepository), giữ domain aggregate này gọn.
+     *
+     * [BREAKING CHANGE so với bản cũ] approve() trước đây trả về ReferenceValue, giờ trả về void.
+     * Nơi gọi (AdminServiceImpl) cần cập nhật lại theo hướng dẫn ở snippet tiến độ 5.
      */
-    public ReferenceValue approve(Long adminId) {
+    public void approve(Long adminId) {
         ensurePending();
         if (adminId == null) {
             throw new IllegalArgumentException("adminId không được null");
@@ -1917,7 +1926,6 @@ public class ReferenceValueSuggestion {
         this.status = SuggestionStatus.APPROVED;
         this.reviewedByAdminId = adminId;
         this.reviewedAt = LocalDateTime.now();
-        return ReferenceValue.create(this.type, this.name);
     }
 
     /** Admin từ chối đề xuất, có thể kèm ghi chú lý do. */
@@ -1939,6 +1947,25 @@ public class ReferenceValueSuggestion {
         }
     }
 
+    private static void validateTypeAndName(String type, String name) {
+        if (type == null || type.isBlank()) {
+            throw new IllegalArgumentException("type không được để trống");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name không được để trống");
+        }
+    }
+
+    private static void requireUserId(Long requestedByUserId) {
+        if (requestedByUserId == null) {
+            throw new IllegalArgumentException("requestedByUserId không được null");
+        }
+    }
+
+    private static String normalizeType(String type) {
+        return type.trim().toUpperCase();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -1953,7 +1980,7 @@ public class ReferenceValueSuggestion {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\model\SuggestionStatus.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/model/SuggestionStatus.java
 ================================================================================
 
 package com.worklify.domain.referencedata.model;
@@ -1966,7 +1993,25 @@ public enum SuggestionStatus {
 
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\repository\ReferenceValueRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/model/SuggestionType.java
+================================================================================
+
+package com.worklify.domain.referencedata.model;
+
+/**
+ * Loại yêu cầu candidate gửi cho admin đối với 1 ReferenceValue (SKILL/LANGUAGE/...).
+ * - CREATE: đề xuất thêm giá trị mới (targetReferenceValueId = null)
+ * - EDIT:   đề xuất sửa tên 1 giá trị đã tồn tại (targetReferenceValueId trỏ tới giá trị đó)
+ * - DELETE: đề xuất xóa 1 giá trị đã tồn tại (targetReferenceValueId trỏ tới giá trị đó)
+ */
+public enum SuggestionType {
+    CREATE,
+    EDIT,
+    DELETE
+}
+
+================================================================================
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/repository/ReferenceValueRepository.java
 ================================================================================
 
 package com.worklify.domain.referencedata.repository;
@@ -1995,7 +2040,7 @@ public interface ReferenceValueRepository {
 }
 
 ================================================================================
-FILE: ./backend-core\domain\src\main\java\com\worklify\domain\referencedata\repository\ReferenceValueSuggestionRepository.java
+FILE: backend-core/domain/src/main/java/com/worklify/domain/referencedata/repository/ReferenceValueSuggestionRepository.java
 ================================================================================
 
 package com.worklify.domain.referencedata.repository;
@@ -2020,3 +2065,4 @@ public interface ReferenceValueSuggestionRepository {
 
     List<ReferenceValueSuggestion> findByType(String type);
 }
+
