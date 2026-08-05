@@ -39,6 +39,9 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/jobs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/employers/**").permitAll()
+                        // Endpoint nội bộ cho backend-ml gọi server-to-server (không có JWT user).
+                        // Tự bảo vệ bằng API key trong InternalReferenceValueController, không dựa vào Spring Security.
+                        .requestMatchers("/api/internal/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

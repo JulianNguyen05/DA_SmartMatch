@@ -1,13 +1,18 @@
 # app/api/endpoints/parser.py
 from __future__ import annotations
 
+import logging
+
 import httpx
 from fastapi import APIRouter, HTTPException, UploadFile, status
 
 from app.core.config import settings
+from app.core.ttl_cache import TTLCache
 from app.schemas.parser_schema import ParsedCvResponse
 from app.services.parser_service import ParserService
 from app.services.text_extractor import UnsupportedFileTypeError
+
+logger = logging.getLogger("worklify.parser")
 
 router = APIRouter(prefix="/parser", tags=["parser"])
 
@@ -17,25 +22,57 @@ _ALLOWED_CONTENT_TYPES = {
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 }
 
+# 5 phút: đủ ngắn để skill mới thêm/duyệt (qua ReferenceValueSuggestion) sớm có
+# hiệu lực, đủ dài để không spam backend-core mỗi lần có người upload CV.
+_SKILL_CATALOG_TTL_SECONDS = 5 * 60
 
-def _fetch_skill_catalog() -> dict[str, int]:
+
+def _fetch_skill_catalog_from_backend() -> dict[str, int]:
     """
-    Gọi ngược sang backend-core để lấy danh sách skill hiện có trong
-    reference_values, dùng cho dictionary matching. Có cache đơn giản
-    ở tầng gọi (xem NOTE bên dưới) để tránh gọi lại mỗi request.
+    Gọi endpoint nội bộ /api/internal/reference-values (permitAll + API key riêng,
+    xem InternalReferenceValueController bên backend-core) để lấy toàn bộ skill
+    trong reference_values, dùng cho dictionary matching.
+
+    Response ApiResponse<List<ReferenceValueResponse>> có field "name" (không phải
+    "value") — khớp với cột reference_values.name trong DB.
+
+    Cố ý KHÔNG catch lỗi ở đây — để lỗi propagate lên TTLCache, tránh cache lại
+    kết quả rỗng {} khi backend-core chỉ đang down tạm thời (xem _get_skill_catalog).
+    """
+    resp = httpx.get(
+        f"{settings.BACKEND_CORE_URL}/api/internal/reference-values",
+        params={"type": "SKILL"},
+        headers={"X-Internal-Api-Key": settings.INTERNAL_API_KEY},
+        timeout=5.0,
+    )
+    resp.raise_for_status()
+    items = resp.json()["data"]
+    return {item["name"].strip().lower(): item["id"] for item in items}
+
+
+_skill_catalog_cache: TTLCache[dict[str, int]] = TTLCache(
+    loader=_fetch_skill_catalog_from_backend,
+    ttl_seconds=_SKILL_CATALOG_TTL_SECONDS,
+)
+
+
+def _get_skill_catalog() -> dict[str, int]:
+    """
+    Wrapper dùng làm skill_catalog_provider cho ParserService.
+    Bắt lỗi ở ĐÂY (không phải trong loader) để lần gọi thất bại không bị cache lại
+    — request tiếp theo sẽ tự retry gọi backend-core thay vì chờ hết TTL.
     """
     try:
-        resp = httpx.get(f"{settings.BACKEND_CORE_URL}/api/reference-values/skills", timeout=5.0)
-        resp.raise_for_status()
-        data = resp.json()
-        return {item["value"].strip().lower(): item["id"] for item in data}
+        return _skill_catalog_cache.get()
     except httpx.HTTPError:
-        # Không chặn parser chạy nếu backend-core tạm thời không tới được —
-        # chỉ mất phần match skill_id, các field khác vẫn trích xuất bình thường
+        logger.warning(
+            "Không gọi được backend-core để lấy skill catalog, "
+            "tạm thời bỏ qua skill_id matching cho request này."
+        )
         return {}
 
 
-_service = ParserService(skill_catalog_provider=_fetch_skill_catalog)
+_service = ParserService(skill_catalog_provider=_get_skill_catalog)
 
 
 @router.post("/extract", response_model=ParsedCvResponse)
