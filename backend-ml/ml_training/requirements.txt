@@ -1,0 +1,8 @@
+# Dependencies riêng cho training NER — KHÔNG cài vào môi trường chạy service
+# (production service chỉ cần torch/transformers ở Giai đoạn 4 khi load model
+# đã fine-tune xong để inference, lúc đó thêm vào requirements.txt chính).
+transformers==4.45.2
+datasets==3.0.1
+torch==2.13.0
+seqeval==1.2.2
+accelerate==0.34.2
