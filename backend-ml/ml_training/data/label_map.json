@@ -1,0 +1,23 @@
+{
+  "tag_names": [
+    "O",
+    "B-College Name",
+    "I-College Name",
+    "B-Companies worked at",
+    "I-Companies worked at",
+    "B-Degree",
+    "I-Degree",
+    "B-Designation",
+    "I-Designation",
+    "B-Graduation Year",
+    "I-Graduation Year",
+    "B-Location",
+    "I-Location",
+    "B-Name",
+    "I-Name",
+    "B-Skills",
+    "I-Skills",
+    "B-Years of Experience",
+    "I-Years of Experience"
+  ]
+}

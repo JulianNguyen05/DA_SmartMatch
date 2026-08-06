@@ -26,7 +26,7 @@ import os
 import sys
 from pathlib import Path
 
-from datasets import Dataset, DatasetDict, ClassLabel, Sequence, Value, Features
+from datasets import Dataset, DatasetDict, Sequence, Value, Features
 from transformers import AutoTokenizer
 
 MODEL_CHECKPOINT = "bert-base-cased"  # cased vì "Python", "Django"... phân biệt hoa/thường có ý nghĩa
@@ -221,9 +221,14 @@ def main():
     if skipped:
         print(f"Bỏ qua {skipped} record rỗng content")
 
+    # Lưu ý: dùng Value("int64") thường cho "labels", KHÔNG dùng ClassLabel —
+    # vì ClassLabel chỉ chấp nhận giá trị trong [0, num_classes), trong khi
+    # -100 (đánh dấu token cần bỏ qua khi tính loss: CLS/SEP/PAD và subword
+    # thứ 2+ của 1 từ) nằm ngoài khoảng đó. tag_names vẫn lưu riêng trong
+    # label_map.json để train_ner.py dựng lại id2label/label2id.
     features = Features({
         "input_ids": Sequence(Value("int32")),
-        "labels": Sequence(ClassLabel(names=tag_names)),
+        "labels": Sequence(Value("int64")),
     })
     full_dataset = Dataset.from_dict(
         {"input_ids": all_input_ids, "labels": all_labels}, features=features
