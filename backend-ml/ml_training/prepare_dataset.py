@@ -22,6 +22,7 @@ gán B-/I- cho đúng token, nếu không model sẽ học sai vị trí nhãn h
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,6 +31,13 @@ from transformers import AutoTokenizer
 
 MODEL_CHECKPOINT = "bert-base-cased"  # cased vì "Python", "Django"... phân biệt hoa/thường có ý nghĩa
 MAX_LENGTH = 512
+
+# Nếu mạng chặn/inspect HTTPS tới huggingface.co (thường gặp ở mạng trường/KTX
+# hoặc antivirus tự chèn cert), tải thủ công qua trình duyệt 4 file
+# (config.json, tokenizer_config.json, vocab.txt, tokenizer.json) từ
+# https://huggingface.co/bert-base-cased/tree/main vào thư mục dưới đây,
+# script sẽ tự ưu tiên dùng bản local thay vì gọi mạng.
+_LOCAL_TOKENIZER_DIR = Path(__file__).parent / "model_cache" / "bert-base-cased"
 
 
 def load_dataturks_file(path: Path) -> list[dict]:
@@ -178,7 +186,11 @@ def main():
     tag2id = {t: i for i, t in enumerate(tag_names)}
 
     try:
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
+        if _LOCAL_TOKENIZER_DIR.exists() and any(_LOCAL_TOKENIZER_DIR.iterdir()):
+            print(f"Dùng tokenizer local tại: {_LOCAL_TOKENIZER_DIR} (không gọi mạng)")
+            tokenizer = AutoTokenizer.from_pretrained(str(_LOCAL_TOKENIZER_DIR), local_files_only=True)
+        else:
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_CHECKPOINT)
     except Exception as e:
         if "SSLError" in str(type(e)) or "SSL" in str(e) or "CERTIFICATE_VERIFY_FAILED" in str(e):
             print(
