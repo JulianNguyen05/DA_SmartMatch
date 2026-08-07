@@ -1,3 +1,4 @@
+# app/schemas/parser_schema.py
 """
 Schemas cho CV Parser.
 Field names được đặt khớp với các DTO Java hiện có bên backend-core
@@ -40,6 +41,10 @@ class ContactInfo(BaseModel):
     website_url: Optional[ExtractedField] = None
 
 
+# Name/Location tách riêng khỏi ContactInfo — không phải "cách liên hệ",
+# và nguồn dữ liệu khác (NER model thay vì regex).
+
+
 class EducationItem(BaseModel):
     school: Optional[ExtractedField] = None
     degree: Optional[ExtractedField] = None
@@ -68,6 +73,8 @@ class SkillItem(BaseModel):
 class ParsedCvResponse(BaseModel):
     raw_text: str
     contact: ContactInfo
+    full_name: Optional[ExtractedField] = None  # nguồn: NER (entity "Name", F1=0.82 trên test — khá tin cậy)
+    location: Optional[ExtractedField] = None    # nguồn: NER (entity "Location", F1=0.65 — khá tin cậy)
     educations: list[EducationItem] = []
     experiences: list[ExperienceItem] = []
     skills: list[SkillItem] = []

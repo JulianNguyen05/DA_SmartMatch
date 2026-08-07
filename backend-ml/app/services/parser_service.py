@@ -1,16 +1,25 @@
 # app/services/parser_service.py
 """
 Điều phối toàn bộ pipeline:
-  [1] extract text -> [2] preprocess -> [3] split sections
-  -> [4] rule-based extraction -> [5] response
+  [1] extract text -> [2] preprocess -> [3] split sections (rule-based)
+  -> [4] NER (nếu model có sẵn) + rule-based -> [5] response
 
-NER model (Giai đoạn 3) sẽ được chèn vào giữa bước [3] và [5] sau này,
-với rule-based là fallback khi NER confidence thấp — không thay thế
-hoàn toàn module này.
+Quyết định kiến trúc quan trọng (dựa trên F1 thực đo trên tập test sau khi
+fine-tune, xem ml_training/train_ner.py):
+  - Educations/Experiences/Name/Location: ƯU TIÊN NER khi có model
+    (F1 Name=0.82, Location=0.65, Designation=0.41, Degree=0.37 — đủ dùng
+    làm gợi ý auto-fill có confidence, không phải tuyệt đối chính xác).
+  - Skills: LUÔN dùng dictionary matching (rule_based_extractor), KHÔNG
+    dùng NER — F1 Skills chỉ 0.03 trên tập test, gần như vô dụng, có thể
+    do nhãn "Skills" trong dataset gốc là block text dài không đồng nhất.
+  - Nếu model NER chưa có sẵn (is_available=False): fallback về 100%
+    rule-based như Giai đoạn 1, không lỗi, không thiếu response.
 """
 from __future__ import annotations
 
+from app.models.model_loader import get_ner_model
 from app.schemas.parser_schema import ParsedCvResponse
+from app.services import ner_postprocessor as nerp
 from app.services import rule_based_extractor as rbe
 from app.services.text_extractor import UnsupportedFileTypeError, extract_text
 
@@ -53,11 +62,40 @@ class ParserService:
                 "xuất sẽ hạn chế, cần người dùng nhập tay bổ sung."
             )
 
+        ner_model = get_ner_model()
+        full_name = None
+        location = None
+
+        if ner_model.is_available:
+            ner_spans = ner_model.predict_entities(text)
+            educations = nerp.build_education_items(ner_spans)
+            experiences = nerp.build_experience_items(ner_spans)
+            full_name = nerp.pick_best_single(ner_spans, "Name")
+            location = nerp.pick_best_single(ner_spans, "Location")
+
+            # NER không tìm thấy mục nào (vd CV format quá lạ) -> fallback
+            # về rule-based cho riêng phần đó thay vì trả về rỗng
+            if not educations:
+                educations = rbe.extract_educations(education_block)
+            if not experiences:
+                experiences = rbe.extract_experiences(experience_block)
+        else:
+            warnings.append(
+                "Model NER chưa sẵn sàng, dùng rule-based extraction cho "
+                "học vấn/kinh nghiệm (độ chính xác hạn chế hơn)."
+            )
+            educations = rbe.extract_educations(education_block)
+            experiences = rbe.extract_experiences(experience_block)
+
         return ParsedCvResponse(
             raw_text=text,
             contact=contact,
-            educations=rbe.extract_educations(education_block),
-            experiences=rbe.extract_experiences(experience_block),
+            full_name=full_name,
+            location=location,
+            educations=educations,
+            experiences=experiences,
+            # Skills LUÔN dùng dictionary matching, không dùng NER — xem
+            # docstring đầu file.
             skills=rbe.extract_skills(skills_block, skill_catalog),
             summary_text=summary_block,
             warnings=warnings,
