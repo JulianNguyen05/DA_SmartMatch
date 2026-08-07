@@ -20,6 +20,8 @@ _MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
 _ALLOWED_CONTENT_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "image/jpeg",
+    "image/png",
 }
 
 # 5 phút: đủ ngắn để skill mới thêm/duyệt (qua ReferenceValueSuggestion) sớm có
@@ -80,7 +82,7 @@ async def extract_cv(file: UploadFile):
     if file.content_type not in _ALLOWED_CONTENT_TYPES:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Chỉ chấp nhận file .pdf hoặc .docx",
+            detail="Chỉ chấp nhận file .pdf, .docx, .jpg hoặc .png",
         )
 
     file_bytes = await file.read()

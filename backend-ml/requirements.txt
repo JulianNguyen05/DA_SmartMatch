@@ -8,4 +8,8 @@ pydantic-settings==2.5.2
 pdfplumber==0.11.4
 python-docx==1.1.2
 python-multipart==0.0.12
-torch==2.4.1
+
+# OCR cho PDF scan + ảnh CV chụp (JPG/PNG)
+pytesseract==0.3.13
+pillow==10.4.0
+pypdfium2==4.30.0  # pdfplumber dùng để rasterize trang PDF thành ảnh cho OCR

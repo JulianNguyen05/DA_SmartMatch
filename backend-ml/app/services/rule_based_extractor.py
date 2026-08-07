@@ -34,21 +34,41 @@ _WEBSITE_RE = re.compile(
     r"(?:https?://)?(?:www\.)?[\w-]+\.[a-z]{2,}(?:/[\w./-]*)?", re.I
 )
 
-# Heading phổ biến trong CV tiếng Việt lẫn tiếng Anh (không phân biệt hoa/thường)
+# Heading phổ biến trong CV tiếng Anh (không phân biệt hoa/thường).
+# Danh sách này khớp với các block type CV Builder của Worklify đã hỗ trợ
+# (candidate_activities, candidate_awards, candidate_certifications,
+# candidate_hobbies, candidate_projects trong DB) — cần nhận diện đủ, tránh
+# 1 section "nuốt" hết nội dung section sau nó do không tìm thấy boundary.
 _SECTION_HEADINGS = {
     "education": [
-        r"h[oọ]c\s*v[aấ]n", r"education", r"academic\s*background",
+        r"education", r"academic\s*background",
     ],
     "experience": [
-        r"kinh\s*nghi[eệ]m", r"experience", r"work\s*history",
-        r"qu[aá]\s*tr[iì]nh\s*l[aà]m\s*vi[eệ]c",
+        r"experience", r"work\s*history", r"employment\s*history",
     ],
     "skills": [
-        r"k[yỹ]\s*n[aă]ng", r"skills", r"technical\s*skills",
+        r"skills", r"technical\s*skills",
     ],
     "summary": [
-        r"gi[oớ]i\s*thi[eệ]u", r"summary", r"objective", r"about\s*me",
-        r"m[uụ]c\s*ti[eê]u",
+        r"summary", r"objective", r"about\s*me", r"profile",
+    ],
+    "activities": [
+        r"activities", r"extracurricular",
+    ],
+    "certifications": [
+        r"certificat\w*",
+    ],
+    "awards": [
+        r"awards?", r"honou?rs?",
+    ],
+    "hobbies": [
+        r"hobbies", r"interests?",
+    ],
+    "projects": [
+        r"projects?",
+    ],
+    "references": [
+        r"references?", r"referee",
     ],
 }
 
