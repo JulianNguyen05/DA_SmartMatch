@@ -35,3 +35,8 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+
+
+worklify:
+  ml:
+    base-url: http://backend-ml:8000

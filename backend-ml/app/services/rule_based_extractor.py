@@ -51,9 +51,10 @@ _SECTION_HEADINGS = {
     ],
     "summary": [
         r"summary", r"objective", r"about\s*me", r"profile",
+        r"career\s*(goal|objective)",
     ],
     "activities": [
-        r"activities", r"extracurricular",
+        r"activit\w*", r"extracurricular",
     ],
     "certifications": [
         r"certificat\w*",
@@ -62,7 +63,7 @@ _SECTION_HEADINGS = {
         r"awards?", r"honou?rs?",
     ],
     "hobbies": [
-        r"hobbies", r"interests?",
+        r"hobb\w*", r"interests?",
     ],
     "projects": [
         r"projects?",
@@ -134,30 +135,63 @@ def extract_skills(
 
     Vì skill catalog là closed-set, cách này chính xác hơn NER cho riêng
     trường skill, và không cần train gì cả.
+
+    Match 2 tầng vì dấu "/" mang 2 ý nghĩa xung đột nhau tùy ngữ cảnh:
+    - Trong CV: thường là dấu liệt kê nhiều skill khác nhau
+      (vd "PHP / JavaScript / MySQL" = 3 skill riêng biệt)
+    - Trong catalog thực tế (reference_values): có thể là 1 phần tên skill
+      ghép (vd "PHP / Laravel" = 1 skill duy nhất trong DB)
+    Nên PHẢI thử khớp cả cụm gốc (chưa tách theo "/") trước; chỉ tách nhỏ
+    theo "/" làm fallback khi cụm gốc không khớp catalog nào — tránh phá vỡ
+    đúng những skill ghép có thật trong catalog.
     """
     if not skills_block:
         return []
 
-    # Tách theo dấu phẩy, chấm phẩy, hoặc xuống dòng — layout skill block
-    # thường là danh sách rời rạc chứ không phải câu văn liền mạch
-    candidates = re.split(r"[,;\n•·|]", skills_block)
+    # Tầng 1: tách theo dấu phẩy/chấm phẩy/xuống dòng — KHÔNG tách theo "/"
+    # ở bước này, để giữ nguyên cụm ghép có thể khớp thẳng catalog.
+    coarse_candidates = re.split(r"[,;\n•·|]", skills_block)
 
     found: list[SkillItem] = []
     seen_ids: set[int] = set()
-    for raw in candidates:
-        cleaned = raw.strip(" -\t").lower()
+
+    for raw in coarse_candidates:
+        cleaned = raw.strip(" -\t")
         if not cleaned:
             continue
-        skill_id = skill_catalog.get(cleaned)
-        if skill_id is not None and skill_id not in seen_ids:
-            seen_ids.add(skill_id)
-            found.append(SkillItem(name=raw.strip(), matched_skill_id=skill_id, confidence=0.9))
+
+        skill_id = skill_catalog.get(cleaned.lower())
+        if skill_id is not None:
+            _add_matched(found, seen_ids, cleaned, skill_id)
+            continue
+
+        # Cụm gốc không khớp -> fallback tách nhỏ theo "/" và thử khớp từng
+        # phần riêng (case "PHP / JavaScript / MySQL" — 3 skill khác nhau,
+        # không có trong catalog dưới dạng cụm ghép).
+        if "/" in cleaned:
+            sub_parts = [p.strip() for p in cleaned.split("/") if p.strip()]
+            any_sub_matched = False
+            for part in sub_parts:
+                sub_skill_id = skill_catalog.get(part.lower())
+                if sub_skill_id is not None:
+                    _add_matched(found, seen_ids, part, sub_skill_id)
+                    any_sub_matched = True
+                else:
+                    found.append(SkillItem(name=part, matched_skill_id=None, confidence=0.2))
+            if any_sub_matched:
+                continue
         else:
-            # Không khớp catalog -> vẫn trả về để người dùng tự thêm reference
-            # value mới nếu cần, nhưng đánh dấu confidence thấp
-            found.append(SkillItem(name=raw.strip(), matched_skill_id=None, confidence=0.2))
+            # Không có "/" để fallback -> giữ nguyên như cũ, confidence thấp
+            found.append(SkillItem(name=cleaned, matched_skill_id=None, confidence=0.2))
 
     return found
+
+
+def _add_matched(found: list[SkillItem], seen_ids: set[int], name: str, skill_id: int) -> None:
+    if skill_id in seen_ids:
+        return
+    seen_ids.add(skill_id)
+    found.append(SkillItem(name=name, matched_skill_id=skill_id, confidence=0.9))
 
 
 def extract_educations(education_block: str) -> list[EducationItem]:

@@ -341,7 +341,15 @@ const candidateService = {
   getMyApplications: async (userId, page = 0, size = 10) => {
     const response = await axiosClient.get(`/applications/candidates/${userId}?page=${page}&size=${size}`);
     return response.data;
-  }
+  },
+
+  extractCv: async (userId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    // Không set Content-Type thủ công — để axios tự thêm boundary cho FormData
+    const response = await axiosClient.post(`/candidates/${userId}/cvs/extract`, formData);
+    return response.data; // = ApiResponse<ParsedCvResponse> nguyên vẹn — caller cần .data để lấy payload
+  },
 };
 
 export default candidateService;

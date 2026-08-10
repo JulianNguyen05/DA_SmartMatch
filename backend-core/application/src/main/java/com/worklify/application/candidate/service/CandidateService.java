@@ -100,4 +100,6 @@ public interface CandidateService {
     List<CandidateSkillResponse> reorderSkills(Long userId, SkillReorderRequest request);
 
     CandidateProfileFullResponse getFullProfile(Long userId);
+
+    ParsedCvResponse extractCvFromFile(Long userId, MultipartFile file);
 }

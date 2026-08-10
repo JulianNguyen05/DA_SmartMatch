@@ -541,4 +541,12 @@ public class CandidateController {
             @PathVariable("userId") Long userId) {
         return ApiResponse.success(candidateService.getFullProfile(userId));
     }
+
+    @PostMapping(value = "/{userId}/cvs/extract", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Trích xuất dữ liệu từ ảnh/PDF/docx CV (OCR + NER) để prefill CV Builder — KHÔNG lưu vào DB")
+    public ApiResponse<ParsedCvResponse> extractCv(
+            @PathVariable("userId") Long userId,
+            @RequestParam("file") MultipartFile file) {
+        return ApiResponse.success(candidateService.extractCvFromFile(userId, file), "Trích xuất CV thành công");
+    }
 }

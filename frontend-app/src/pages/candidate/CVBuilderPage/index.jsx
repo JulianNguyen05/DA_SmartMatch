@@ -9,10 +9,12 @@ import {
   Loader,
   CheckCircle2,
   ArrowLeft,
+  Upload,
 } from "lucide-react";
 import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { captureCvThumbnailAsFile } from "../../../components/cv-builder/shared/captureCvThumbnail";
+import mapParsedCvToCvData from "../../../components/cv-builder/shared/mapParsedCvToCvData";
 
 import TabPanel from "../../../components/cv-builder/sidebar/TabPanel";
 import DraggableItem from "../../../components/cv-builder/sidebar/DraggableItem";
@@ -122,9 +124,10 @@ const CVBuilderPage = () => {
   const [activeDragId, setActiveDragId] = useState(null);
   const [selectedSection, setSelectedSection] = useState(null);
 
-  const [uiState, setUiState] = useState({ isLoading: false, isSaving: false });
+  const [uiState, setUiState] = useState({ isLoading: false, isSaving: false, isExtracting: false });
   const [totalPages, setTotalPages] = useState(1);
   const paperRef = useRef(null);
+  const cvUploadInputRef = useRef(null);
 
   const [cvTitle, setCvTitle] = useState("CV chưa có tên");
   const [initialDataStr, setInitialDataStr] = useState("");
@@ -309,6 +312,46 @@ const CVBuilderPage = () => {
       3000,
     );
   };
+
+  const handleUploadCvImage = async (file) => {
+  const currentUser = authService.getCurrentUser();
+  if (!currentUser?.userId) {
+    showToastMsg("Vui lòng đăng nhập để dùng tính năng này.", "error");
+    return;
+  }
+
+  if (isDirty) {
+    const confirmOverwrite = window.confirm(
+      "Dữ liệu từ ảnh CV sẽ THAY THẾ toàn bộ nội dung đang chỉnh sửa. Tiếp tục?"
+    );
+    if (!confirmOverwrite) return;
+  }
+
+  setUiState((prev) => ({ ...prev, isExtracting: true }));
+  try {
+    const apiResponse = await candidateService.extractCv(currentUser.userId, file);
+    const parsedCv = apiResponse.data; // bóc payload khỏi ApiResponse wrapper
+
+    const prefillData = mapParsedCvToCvData(parsedCv);
+    setCvData((prev) => ({ ...prev, data: prefillData }));
+    setIsDirty(true);
+
+    if (parsedCv.warnings?.length) {
+      showToastMsg(parsedCv.warnings[0], "warning");
+    } else {
+      showToastMsg("Đã điền dữ liệu từ CV, vui lòng kiểm tra lại trước khi lưu.");
+    }
+  } catch (error) {
+    console.error("Lỗi khi trích xuất CV:", error);
+    const message =
+      error?.response?.data?.message ||
+      "Không thể phân tích ảnh/CV này, vui lòng thử file khác.";
+    showToastMsg(message, "error");
+  } finally {
+    setUiState((prev) => ({ ...prev, isExtracting: false }));
+    if (cvUploadInputRef.current) cvUploadInputRef.current.value = "";
+  }
+};
 
   const handleGoBack = () => {
     if (isDirty) {
@@ -714,6 +757,30 @@ const CVBuilderPage = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          
+          <input
+            ref={cvUploadInputRef}
+            type="file"
+            accept="image/jpeg,image/png,application/pdf,.docx"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUploadCvImage(file);
+            }}
+          />
+          <button
+            onClick={() => cvUploadInputRef.current?.click()}
+            disabled={uiState.isExtracting}
+            className="flex items-center gap-2 px-4 py-2 text-teal-600 bg-teal-50 hover:bg-teal-100 rounded-lg text-sm font-semibold transition-colors disabled:opacity-55 disabled:cursor-not-allowed"
+          >
+            {uiState.isExtracting ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <Upload size={18} />
+            )}
+            {uiState.isExtracting ? "Đang phân tích..." : "Upload ảnh CV"}
+          </button>
+          
           <button
             onClick={() => setIsPreviewOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"

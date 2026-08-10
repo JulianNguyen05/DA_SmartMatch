@@ -65,3 +65,8 @@ springdoc:
     display-request-duration: true # Hiển thị thời gian phản hồi (ms) khi test API
     syntax-highlight:
       theme: agate               # Đổi theme highlight cho các JSON response trông "ngầu" hơn
+
+
+worklify:
+  ml:
+    base-url: ${ML_BASE_URL:http://localhost:8000}

@@ -6,6 +6,7 @@ import com.worklify.application.candidate.dto.*;
 import com.worklify.application.candidate.service.CandidateService;
 import com.worklify.application.common.dto.PageResponse;
 import com.worklify.application.common.exception.ReferenceValueSuggestionPendingException;
+import com.worklify.application.common.port.CvParsingPort;
 import com.worklify.application.common.port.FileStoragePort;
 import com.worklify.application.referencedata.ReferenceValueType;
 import com.worklify.application.referencedata.dto.ReferenceValueResponse;
@@ -51,6 +52,7 @@ public class CandidateServiceImpl implements CandidateService {
     private final AwardRepository awardRepository;
     private final HobbyRepository hobbyRepository;
     private final LanguageRepository languageRepository;
+    private final CvParsingPort cvParsingPort;
 
     @Override
     public CandidateProfileResponse createProfile(Long userId, CandidateProfileRequest request) {
@@ -1228,6 +1230,15 @@ public class CandidateServiceImpl implements CandidateService {
                 .languages(getLanguagesByUserId(userId))
                 .projects(getProjectsByUserId(userId))
                 .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ParsedCvResponse extractCvFromFile(Long userId, MultipartFile file) {
+        log.info("userId={} yêu cầu trích xuất dữ liệu từ file CV: {}", userId, file.getOriginalFilename());
+        // Không check profile tồn tại — bước này chỉ để prefill, chưa ghi DB,
+        // nên cho phép dùng cả khi user chưa tạo hồ sơ (vd lần đầu vào CV Builder).
+        return cvParsingPort.extractCv(file);
     }
 
 }

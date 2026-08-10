@@ -10,8 +10,9 @@ Hỗ trợ 4 loại input:
 
 Cần cài Tesseract OCR (binary hệ thống, KHÔNG chỉ pip install pytesseract):
   Windows: https://github.com/UB-Mannheim/tesseract/wiki (chọn installer .exe)
-  Sau khi cài, nếu không tự vào PATH, set đường dẫn thủ công — xem
-  _TESSERACT_CMD_OVERRIDE bên dưới.
+  Code tự dò 2 đường dẫn cài mặc định phổ biến nhất trên Windows (xem
+  _WINDOWS_DEFAULT_PATHS bên dưới). Nếu cài ở vị trí khác, set biến môi
+  trường TESSERACT_CMD trỏ tới file .exe.
 """
 from __future__ import annotations
 
@@ -24,12 +25,27 @@ import pytesseract
 from docx import Document
 from PIL import Image
 
-# Nếu Tesseract cài trên Windows nhưng không tự thêm vào PATH (thường gặp),
-# set biến môi trường TESSERACT_CMD trỏ tới đường dẫn tesseract.exe, vd:
-#   set TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+# Nếu Tesseract cài trên Windows nhưng không tự thêm vào PATH (rất thường gặp
+# — installer mặc định KHÔNG tick "Add to PATH"), ưu tiên biến môi trường
+# TESSERACT_CMD nếu có set, nếu không thì tự dò các đường dẫn cài mặc định
+# phổ biến nhất trên Windows. Không hardcode 1 path cá nhân vào code vì sẽ
+# hỏng khi deploy lên máy/server khác (Linux thường có sẵn trong PATH, không
+# cần bước này).
+_WINDOWS_DEFAULT_PATHS = [
+    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+]
+
 _TESSERACT_CMD_OVERRIDE = os.environ.get("TESSERACT_CMD")
 if _TESSERACT_CMD_OVERRIDE:
     pytesseract.pytesseract.tesseract_cmd = _TESSERACT_CMD_OVERRIDE
+else:
+    for _path in _WINDOWS_DEFAULT_PATHS:
+        if os.path.isfile(_path):
+            pytesseract.pytesseract.tesseract_cmd = _path
+            break
+    # Nếu không set env var và không tìm thấy ở các path mặc định, giữ nguyên
+    # hành vi cũ của pytesseract (tìm theo PATH hệ thống) — đúng cho Linux/Docker.
 
 # Ngôn ngữ OCR: chỉ tiếng Anh, vì CV đầu vào cố định là tiếng Anh.
 _OCR_LANG = "eng"
